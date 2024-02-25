@@ -16,12 +16,14 @@ dev:
 	air
 
 build:
-	pnpm build
+	{{ if eq .Type "api"}}go build -o bin/main cmd/web/*.go
+	{{ else }}pnpm build
 	esbuild ./internal/pages/*.ts --bundle --outdir=./static/public/assets
 	templ generate
 	sqlc generate
 	tygo generate
 	go build -o bin/main cmd/web/*.go
+	{{ end }}
 
 db:
 	goose status

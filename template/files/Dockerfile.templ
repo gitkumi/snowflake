@@ -1,4 +1,25 @@
-FROM golang:1.21-bookworm AS builder
+{{ if eq .Type "api"}}FROM golang:1.21-alpine AS server
+
+ARG PORT=8080
+ENV PORT=${PORT}
+
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+ENV MIGRATE_DB=true
+
+ENV ENVIRONMENT=production
+ENV GIN_MODE=release
+
+WORKDIR /app
+
+COPY . .
+
+RUN make build
+
+EXPOSE 8080
+
+CMD ["./main"]
+{{else}}FROM golang:1.21-bookworm AS builder
 
 RUN go install github.com/a-h/templ/cmd/templ@latest
 RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
@@ -34,3 +55,4 @@ COPY --from=builder /app/bin/main /app/main
 EXPOSE 8080
 
 CMD ["./main"]
+{{end}}
