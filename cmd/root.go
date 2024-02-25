@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -34,31 +35,30 @@ func new() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "new",
 		Short: "Create a new project",
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			projectName := args[0]
 
-			err := fs.WalkDir(template.Files, ".", func(path string, d fs.DirEntry, err error) error {
+			cwd, err := os.Getwd()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			outputPath := cwd
+			if os.Getenv("ENVIRONMENT") == "development" {
+				outputPath = filepath.Join(cwd, "testdata")
+			}
+
+			err = fs.WalkDir(template.Files, "files", func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
 					return err
 				}
 
-				cwd, err := os.Getwd()
-				if err != nil {
-					return err
-				}
-
-				relativePath := strings.Replace(path, "files", projectName, 1)
-				outputPath := filepath.Join(cwd, "testdata")
+				fileName := strings.Replace(path, "files", projectName, 1)
 
 				if d.IsDir() {
-					err := os.MkdirAll(filepath.Join(outputPath, relativePath), 0777)
-
-					if err != nil {
-						return err
-					}
-
-					return nil
+					err := os.MkdirAll(filepath.Join(outputPath, fileName), 0777)
+					return err
 				}
 
 				content, err := template.Files.ReadFile(path)
@@ -66,17 +66,9 @@ func new() *cobra.Command {
 					return err
 				}
 
-				if err != nil {
-					return err
-				}
-
-				newFileName := filepath.Join(cwd, "testdata", relativePath)
-				err = os.WriteFile(newFileName, content, 0777)
-				if err != nil {
-					return err
-				}
-
-				return nil
+				newFilePath := filepath.Join(outputPath, fileName)
+				err = os.WriteFile(newFilePath, content, 0777)
+				return err
 			})
 
 			if err != nil {
