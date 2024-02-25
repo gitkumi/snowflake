@@ -1,0 +1,10 @@
+packages:
+  - path: "github.com/gitkumi/acme/internal/data"
+    output_path: "internal/data/types.ts"
+    type_mappings:
+      time.Time: "string /* RFC3339 */"
+      null.String: "null | string"
+      null.Bool: "null | boolean"
+      uuid.UUID: "string /* uuid */"
+      uuid.NullUUID: "null | string /* uuid */"
+      sql.NullString: "null | string"
