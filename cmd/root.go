@@ -1,14 +1,15 @@
 package cmd
 
 import (
-	"fmt"
+	"bytes"
 	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
-	"snowflake/template"
+	snowflaketemplate "snowflake/template"
 
 	"github.com/spf13/cobra"
 )
@@ -48,26 +49,35 @@ func new() *cobra.Command {
 			if os.Getenv("ENVIRONMENT") == "development" {
 				outputPath = filepath.Join(cwd, "testdata")
 			}
+			outputPath = filepath.Join(outputPath, projectName)
 
-			err = fs.WalkDir(template.Files, "files", func(path string, d fs.DirEntry, err error) error {
+			err = fs.WalkDir(snowflaketemplate.Files, "files", func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
 					return err
 				}
 
-				fileName := strings.Replace(path, "files", projectName, 1)
+				fileName := strings.Replace(path, "files", "", 1)
 
 				if d.IsDir() {
 					err := os.MkdirAll(filepath.Join(outputPath, fileName), 0777)
 					return err
 				}
 
-				content, err := template.Files.ReadFile(path)
+				content, err := snowflaketemplate.Files.ReadFile(path)
 				if err != nil {
 					return err
 				}
 
+				temp, err := template.New("test").Parse(string(content))
+				if err != nil {
+					return err
+				}
+
+				var buf bytes.Buffer
+				err = temp.Execute(&buf, nil)
+
 				newFilePath := filepath.Join(outputPath, fileName)
-				err = os.WriteFile(newFilePath, content, 0777)
+				err = os.WriteFile(newFilePath, buf.Bytes(), 0777)
 				return err
 			})
 
@@ -77,12 +87,11 @@ func new() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP("name", "n", "", "Name of the project.")
-	// cmd.Flags().StringP("type", "t", "", "Type of the project.")
-	// cmd.Flags().StringP("database", "d", "", "Database of the project.")
-
 	// type: Web or API
+	cmd.Flags().StringP("type", "t", "", "Type of the project.")
+
 	// db: none, sqlite, postgres, mysql/mariadb
+	cmd.Flags().StringP("database", "d", "", "Database of the project.")
 
 	return cmd
 }
