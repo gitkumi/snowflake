@@ -47,17 +47,17 @@ func new() *cobra.Command {
 			projectName := args[0]
 			projectType, err := cmd.Flags().GetString("type")
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal(err.Error())
 			}
 
 			projectDatabase, err := cmd.Flags().GetString("database")
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal(err.Error())
 			}
 
 			cwd, err := os.Getwd()
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal(err.Error())
 			}
 
 			project := &project{
@@ -66,67 +66,25 @@ func new() *cobra.Command {
 				Database: projectDatabase,
 			}
 
-			outputPath := cwd
+			outputPath := filepath.Join(cwd, projectName)
 			if os.Getenv("ENVIRONMENT") != "production" {
-				outputPath = filepath.Join(cwd, "testdata")
+				outputPath = filepath.Join(cwd, "testdata", projectName)
 			}
-			outputPath = filepath.Join(outputPath, projectName)
 
 			err = fs.WalkDir(snowflaketemplate.Files, "files", func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
 					return err
 				}
 
-				fileName := strings.Replace(path, "files", "", 1)
+				fileName := strings.TrimPrefix(path, "files")
 
-				if project.Type == "web" {
-					apiFiles := []string{
-						"/cmd/api",
-						"/cmd/api/main.go.templ",
-					}
-
-					isApi := false
-					for _, file := range apiFiles {
-						if file == fileName {
-							isApi = true
-							break
-						}
-					}
-
-					if isApi {
+				switch project.Type {
+				case "web":
+					if isWebFile(fileName) {
 						return nil
 					}
-				}
-
-				if project.Type == "api" {
-					webFiles := []string{
-						"/cmd/web",
-						"/cmd/web/main.go.templ",
-						"/tygo.yaml.templ",
-						"/package.json.templ",
-						"/tailwind.config.js.templ",
-						"/internal/pages",
-						"/internal/pages/error.templ.templ",
-						"/internal/pages/home.templ.templ",
-						"/internal/pages/home.ts.templ",
-						"/internal/gintemplrenderer",
-						"/internal/gintemplrenderer/renderer.go.templ",
-						"/static",
-						"/static/public",
-						"/static/public/assets",
-						"/static/public/assets/home.js.templ",
-						"/static/public/assets/style.css.templ",
-					}
-
-					isWeb := false
-					for _, file := range webFiles {
-						if file == fileName {
-							isWeb = true
-							break
-						}
-					}
-
-					if isWeb {
+				case "api":
+					if isAPIFile(fileName) {
 						return nil
 					}
 				}
@@ -141,13 +99,16 @@ func new() *cobra.Command {
 					return err
 				}
 
-				temp, err := template.New(fileName).Parse(string(content))
+				tmpl, err := template.New(fileName).Parse(string(content))
 				if err != nil {
 					return err
 				}
 
 				var buf bytes.Buffer
-				err = temp.Execute(&buf, project)
+				err = tmpl.Execute(&buf, project)
+				if err != nil {
+					return err
+				}
 
 				newFilePath := strings.TrimSuffix(filepath.Join(outputPath, fileName), ".templ")
 				err = os.WriteFile(newFilePath, buf.Bytes(), 0777)
@@ -155,16 +116,52 @@ func new() *cobra.Command {
 			})
 
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal(err.Error())
 			}
 		},
 	}
 
-	// type: Web or API
 	cmd.Flags().StringP("type", "t", "web", "Type of the project.")
-
-	// db: none, sqlite3, postgres, mysql/mariadb
 	cmd.Flags().StringP("database", "d", "sqlite3", "Database of the project.")
 
 	return cmd
+}
+
+func isWebFile(fileName string) bool {
+	webFiles := []string{
+		"/cmd/web",
+		"/cmd/web/main.go.templ",
+		"/tygo.yaml.templ",
+		"/package.json.templ",
+		"/tailwind.config.js.templ",
+		"/internal/pages",
+		"/internal/pages/error.templ.templ",
+		"/internal/pages/home.templ.templ",
+		"/internal/pages/home.ts.templ",
+		"/internal/gintemplrenderer",
+		"/internal/gintemplrenderer/renderer.go.templ",
+		"/static",
+		"/static/public",
+		"/static/public/assets",
+		"/static/public/assets/home.js.templ",
+		"/static/public/assets/style.css.templ",
+	}
+	return contains(webFiles, fileName)
+}
+
+func isAPIFile(fileName string) bool {
+	apiFiles := []string{
+		"/cmd/api",
+		"/cmd/api/main.go.templ",
+	}
+	return contains(apiFiles, fileName)
+}
+
+func contains(files []string, fileName string) bool {
+	for _, file := range files {
+		if file == fileName {
+			return true
+		}
+	}
+	return false
 }
