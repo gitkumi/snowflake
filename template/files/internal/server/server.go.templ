@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gitkumi/acme/static"
+	"{{ .Name }}/static"
 	"github.com/pressly/goose/v3"
 
 	{{ if eq .Database "sqlite3"}}_ "github.com/mattn/go-sqlite3"

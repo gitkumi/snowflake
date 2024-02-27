@@ -9,7 +9,7 @@ export GOOSE_DBSTRING?=$(DATABASE_URL)
 export GOOSE_MIGRATION_DIR:=./static/sql/migrations
 
 run:
-	go run cmd/web/*.go
+	{{ if eq .Type "api"}}go build -o bin/main cmd/api/*.go{{else}}go run cmd/web/*.go{{end}}
 
 test:
 	gotestsum
@@ -18,7 +18,7 @@ dev:
 	air
 
 build:
-	{{ if eq .Type "api"}}go build -o bin/main cmd/web/*.go
+	{{ if eq .Type "api"}}go build -o bin/main cmd/api/*.go
 	{{ else }}pnpm build
 	esbuild ./internal/pages/*.ts --bundle --outdir=./static/public/assets
 	templ generate

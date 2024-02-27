@@ -2,18 +2,18 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/gitkumi/acme/internal/gintemplrenderer"
-	"github.com/gitkumi/acme/static"
+	{{if eq .Type "web"}}"{{ .Name }}/static"
+	"{{ .Name }}/internal/gintemplrenderer"{{ end }}
 )
 
 func initRouter(app *application) *gin.Engine {
 	r := gin.Default()
-	r.HTMLRender = gintemplrenderer.Default
+	{{ if eq .Type "web"}}r.HTMLRender = gintemplrenderer.Default
 	r.SetTrustedProxies(nil)
 
 	r.Use(static.ServePublic())
 
-	{{ if eq .Type "web"}}r.GET("/", app.home){{ end }}
+	r.GET("/", app.home){{ end }}
 	r.GET("/health", app.health)
 
 	return r

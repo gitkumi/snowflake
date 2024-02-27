@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	{{ if eq .Type "web" }}"github.com/gitkumi/acme/internal/pages"{{ end }}
+	{{ if eq .Type "web" }}"{{ .Name }}/internal/pages"{{ end }}
 )
 
 {{ if eq .Type "web" }}func (app *application) home(c *gin.Context) {

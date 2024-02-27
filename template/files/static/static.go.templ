@@ -2,18 +2,18 @@ package static
 
 import (
 	"embed"
-	"mime"
+	{{if eq .Type "web"}}"mime"
 	"net/http"
 	"path"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"{{ end }}
 )
-
-//go:embed public/*
-var public embed.FS
 
 //go:embed sql/migrations/*.sql
 var Migration embed.FS
+
+{{if eq .Type "web"}}//go:embed public/*
+var public embed.FS
 
 func ServePublic() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -30,4 +30,4 @@ func ServePublic() gin.HandlerFunc {
 		c.Header("Content-Type", contentType)
 		c.Data(http.StatusOK, contentType, file)
 	}
-}
+}{{ end }}
