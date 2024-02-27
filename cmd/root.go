@@ -81,6 +81,8 @@ func new() *cobra.Command {
 
 				if project.Type == "api" {
 					webFiles := []string{
+						"/cmd/web",
+						"/cmd/web/main.go.templ",
 						"/tygo.yaml.templ",
 						"/package.json.templ",
 						"/tailwind.config.js.templ",
@@ -106,6 +108,25 @@ func new() *cobra.Command {
 					}
 
 					if isWeb {
+						return nil
+					}
+				}
+
+				if project.Type == "web" {
+					apiFiles := []string{
+						"cmd/api",
+						"cmd/api/main.go.templ",
+					}
+
+					isApi := false
+					for _, file := range apiFiles {
+						if file == fileName {
+							isApi = true
+							break
+						}
+					}
+
+					if isApi {
 						return nil
 					}
 				}
