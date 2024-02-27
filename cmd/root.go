@@ -15,8 +15,8 @@ import (
 )
 
 type project struct {
-	Name string
-	Type string
+	Name     string
+	Type     string
 	Database string
 }
 
@@ -61,8 +61,8 @@ func new() *cobra.Command {
 			}
 
 			project := &project{
-				Name: projectName,
-				Type: projectType,
+				Name:     projectName,
+				Type:     projectType,
 				Database: projectDatabase,
 			}
 
@@ -78,6 +78,25 @@ func new() *cobra.Command {
 				}
 
 				fileName := strings.Replace(path, "files", "", 1)
+
+				if project.Type == "web" {
+					apiFiles := []string{
+						"/cmd/api",
+						"/cmd/api/main.go.templ",
+					}
+
+					isApi := false
+					for _, file := range apiFiles {
+						if file == fileName {
+							isApi = true
+							break
+						}
+					}
+
+					if isApi {
+						return nil
+					}
+				}
 
 				if project.Type == "api" {
 					webFiles := []string{
@@ -112,25 +131,6 @@ func new() *cobra.Command {
 					}
 				}
 
-				if project.Type == "web" {
-					apiFiles := []string{
-						"cmd/api",
-						"cmd/api/main.go.templ",
-					}
-
-					isApi := false
-					for _, file := range apiFiles {
-						if file == fileName {
-							isApi = true
-							break
-						}
-					}
-
-					if isApi {
-						return nil
-					}
-				}
-
 				if d.IsDir() {
 					err := os.MkdirAll(filepath.Join(outputPath, fileName), 0777)
 					return err
@@ -141,7 +141,7 @@ func new() *cobra.Command {
 					return err
 				}
 
-				temp, err := template.New("test").Parse(string(content))
+				temp, err := template.New(fileName).Parse(string(content))
 				if err != nil {
 					return err
 				}
@@ -149,7 +149,7 @@ func new() *cobra.Command {
 				var buf bytes.Buffer
 				err = temp.Execute(&buf, project)
 
-				newFilePath := strings.TrimSuffix(filepath.Join(outputPath, fileName), ".templ") 
+				newFilePath := strings.TrimSuffix(filepath.Join(outputPath, fileName), ".templ")
 				err = os.WriteFile(newFilePath, buf.Bytes(), 0777)
 				return err
 			})
@@ -161,10 +161,10 @@ func new() *cobra.Command {
 	}
 
 	// type: Web or API
-	cmd.Flags().StringP("type", "t", "", "Type of the project.")
+	cmd.Flags().StringP("type", "t", "web", "Type of the project.")
 
-	// db: none, sqlite, postgres, mysql/mariadb
-	cmd.Flags().StringP("database", "d", "", "Database of the project.")
+	// db: none, sqlite3, postgres, mysql/mariadb
+	cmd.Flags().StringP("database", "d", "sqlite3", "Database of the project.")
 
 	return cmd
 }

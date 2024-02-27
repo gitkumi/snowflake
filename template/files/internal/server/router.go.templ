@@ -13,10 +13,8 @@ func initRouter(app *application) *gin.Engine {
 
 	r.Use(static.ServePublic())
 
-	r.GET("/", app.home)
-	r.GET("/create", app.createAuthor)
+	{{ if eq .Type "web"}}r.GET("/", app.home){{ end }}
 	r.GET("/health", app.health)
-	r.NoRoute(app.noRoute)
 
 	return r
 }
