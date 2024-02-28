@@ -33,4 +33,10 @@ db:
 migrate:
 	goose up
 
-.PHONY: run test dev build db migrate
+create:
+	goose create $(filter-out $@,$(MAKECMDGOALS)) sql
+
+%:
+	@:
+
+.PHONY: run test dev build db migrate create
