@@ -1,22 +1,57 @@
 # Snowflake
 
-Opinionated Go web application generator.  
+Opinionated Go web application generator.
 
 ## Quick Start
 
-Here is how to generate a web project using sqlite3 as database.
+Here is how to generate a web application with sqlite3 as database.
 
 ```sh
 snowflake new -t web -d sqlite3 acme
 ```
 
-### Flags
+## Flags
 
 - **type (-t)**
-  - `web`: Generates a web application that serves HTML.
-  - `api`: Generates RESTful API application.
+  - `web` - Generates a web application that serves HTML. (Requires `Node.js 20.x` and `pnpm`)
+  - `api` - Generates RESTful API application.
 
 - **database (-d)**
   - `sqlite3`
   - `postgres`
   - `mysql`
+
+## Stack
+
+Snowflake is built with these packages. Make sure to check their documentation.
+
+#### Dev
+
+- [air](https://github.com/cosmtrek/air)
+- [gotestsum](https://github.com/gotestyourself/gotestsum)
+
+#### Routing
+
+- [Gin](https://gin-gonic.com/)
+
+#### Database
+
+- [sqlc](https://github.com/sqlc-dev/sqlc)
+- [goose](https://github.com/pressly/goose)
+
+#### Front-end (Web only)
+
+- [templ](https://templ.guide/)
+- [Tailwind](https://tailwindcss.com/)
+- [esbuild](https://esbuild.github.io/)
+- [tygo](https://github.com/gzuidhof/tygo)
+
+## Make Commands
+
+- `make dev` - Start the development environment with hot reload.
+- `make test` - Run tests.
+- `make build` - Build the project.
+- `make run` - Run the build.
+- `make db` - Check database status.
+- `make migrate` - Run database migration.
+- `make create <table_name>` - Create an empty migration file.

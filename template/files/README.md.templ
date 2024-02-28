@@ -1,8 +1,16 @@
 # Snowflake
 
-## Install
+## Getting Started
 
-```
+{{ if eq .Type "web"}}0. Make sure you have Node 20.x and install `pnpm`
+
+```sh
+npm i -g pnpm
+```{{ end }}
+
+1. Install these packages:
+
+```sh
 go install github.com/cosmtrek/air@latest &&
 go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest &&
 go install github.com/pressly/goose/v3/cmd/goose@latest &&
@@ -12,29 +20,43 @@ go install github.com/gzuidhof/tygo@latest &&
 go install github.com/evanw/esbuild/cmd/esbuild@latest{{ end }}
 ```
 
-## Gin
-https://gin-gonic.com/
+2. Start the development environment:
 
-## air
-https://github.com/cosmtrek/air
+```sh
+make dev
+````
 
-## sqlc
-https://github.com/sqlc-dev/sqlc  
+## Stack
 
-## goose
-https://github.com/pressly/goose  
+Snowflake is built with these packages. Make sure to check their documentation.
 
-## gotestsum
-https://github.com/gotestyourself/gotestsum
+#### Dev
 
-{{if eq .Type "web"}}## templ
-https://templ.guide/
+- [air](https://github.com/cosmtrek/air)
+- [gotestsum](https://github.com/gotestyourself/gotestsum)
 
-## tygo
-https://github.com/gzuidhof/tygo  
+#### Routing
 
-## Tailwind
-https://tailwindcss.com/
+- [Gin](https://gin-gonic.com/)
 
-## esbuild
-https://esbuild.github.io/{{ end }}
+#### Database
+
+- [sqlc](https://github.com/sqlc-dev/sqlc)
+- [goose](https://github.com/pressly/goose)
+
+{{ if eq .Type "web"}}#### Front-end
+
+- [templ](https://templ.guide/)
+- [Tailwind](https://tailwindcss.com/)
+- [esbuild](https://esbuild.github.io/)
+- [tygo](https://github.com/gzuidhof/tygo){{ end }}
+
+## Make Commands
+
+- `make dev` - Start the development environment with hot reload.
+- `make test` - Run tests.
+- `make build` - Build the project.
+- `make run` - Run the build.
+- `make db` - Check database status.
+- `make migrate` - Run database migration.
+- `make create <table_name>` - Create an empty migration file.
