@@ -2,6 +2,12 @@
 
 Opinionated Go web application generator.
 
+## Installation
+
+```sh
+go install github.com/gitkumi/snowflake@latest
+```
+
 ## Quick Start
 
 Here is how to generate a web application with sqlite3 as database.
