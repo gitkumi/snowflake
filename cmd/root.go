@@ -62,9 +62,9 @@ func new() *cobra.Command {
 			}
 
 			project := &project{
-				Name:     projectName,
-				Type:     projectType,
-				Database: projectDatabase,
+				Name:     strings.ToLower(projectName),
+				Type:     strings.ToLower(projectType),
+				Database: strings.ToLower(projectDatabase),
 			}
 
 			outputPath := filepath.Join(cwd, projectName)
@@ -136,8 +136,8 @@ func new() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP("type", "t", "web", "Type of the project.")
-	cmd.Flags().StringP("database", "d", "sqlite3", "Database of the project.")
+	cmd.Flags().StringP("type", "t", "web", "Type of the project. \"web\" or \"api\".")
+	cmd.Flags().StringP("database", "d", "sqlite3", "Database of the project. \"sqlite3\", \"postgres\", or \"mysql\".")
 
 	return cmd
 }
