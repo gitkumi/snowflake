@@ -68,9 +68,6 @@ func new() *cobra.Command {
 			}
 
 			outputPath := filepath.Join(cwd, projectName)
-			if os.Getenv("ENVIRONMENT") != "production" {
-				outputPath = filepath.Join(cwd, "testdata", projectName)
-			}
 
 			err = fs.WalkDir(snowflaketemplate.Files, "files", func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
@@ -80,11 +77,11 @@ func new() *cobra.Command {
 				fileName := strings.TrimPrefix(path, "files")
 
 				switch project.Type {
-				case "web":
+				case "api":
 					if isWebFile(fileName) {
 						return nil
 					}
-				case "api":
+				case "web":
 					if isAPIFile(fileName) {
 						return nil
 					}

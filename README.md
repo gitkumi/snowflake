@@ -5,7 +5,7 @@ Yet another Go web application generator.
 Features:
 - Opinionated with the best practices.
 - Simplicity with batteries.
-- Idiomatic because every Gopher loves that word.
+- Idiomatic. Every Gopher loves that word.
 
 ## Installation
 
@@ -25,7 +25,7 @@ snowflake new -t web -d sqlite3 acme
 
 - **type (-t)**
   - `web` - Generates a web application that serves HTML. (Requires `Node.js 20.x` and `pnpm`)
-  - `api` - Generates RESTful API application.
+  - `api` - Generates a RESTful API application.
 
 - **database (-d)**
   - `sqlite3`
