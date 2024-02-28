@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -115,6 +116,20 @@ func new() *cobra.Command {
 				return err
 			})
 
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			command := exec.Command("go", "mod", "init", project.Name)
+			command.Dir = outputPath
+			err = command.Run()
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			command = exec.Command("go", "mod", "tidy")
+			command.Dir = outputPath
+			err = command.Run()
 			if err != nil {
 				log.Fatal(err.Error())
 			}
