@@ -10,7 +10,7 @@ import (
 	"strings"
 	"text/template"
 
-	snowflaketemplate "snowflake/template"
+	snowflaketemplate "github.com/gitkumi/snowflake/template"
 
 	"github.com/spf13/cobra"
 )

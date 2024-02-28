@@ -1,6 +1,6 @@
-module snowflake
+module github.com/gitkumi/snowflake
 
-go 1.21.0
+go 1.22.0
 
 require github.com/spf13/cobra v1.8.0
 

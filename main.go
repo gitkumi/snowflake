@@ -1,6 +1,6 @@
 package main
 
-import "snowflake/cmd"
+import "github.com/gitkumi/snowflake/cmd"
 
 func main() {
 	cmd.Execute()

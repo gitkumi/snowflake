@@ -1,6 +1,11 @@
 # Snowflake
 
-Opinionated Go web application generator.
+Yet another Go web application generator.
+
+Features:
+- Opinionated with the best practices.
+- Simplicity with batteries.
+- Idiomatic because every Gopher loves that word.
 
 ## Installation
 
