@@ -1,5 +1,5 @@
 export PORT?=8080
-export DATABASE_URL?=./acme.db
+export DATABASE_URL?=./{{ .Name}}.db
 export MIGRATE_DB?=false
 
 export GOOSE_DBSTRING?=$(DATABASE_URL)
