@@ -130,6 +130,13 @@ func new() *cobra.Command {
 			if err != nil {
 				log.Fatal(err.Error())
 			}
+
+			command = exec.Command("gofmt", "-w", "-s", ".")
+			command.Dir = outputPath
+			err = command.Run()
+			if err != nil {
+				log.Fatal(err.Error())
+			}
 		},
 	}
 
