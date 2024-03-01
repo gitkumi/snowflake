@@ -7,3 +7,4 @@ sql:
       go:
         package: "data"
         out: "internal/data"
+        {{ if eq .Type "api"}}emit_json_tags: true{{ end }}
