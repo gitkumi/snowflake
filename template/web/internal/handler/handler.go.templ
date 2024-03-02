@@ -1,0 +1,36 @@
+package handler
+
+import (
+	"database/sql"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"zeroweb/internal/pages"
+)
+
+type Handler struct {
+	db *sql.DB
+}
+
+func Init(db *sql.DB) *Handler {
+	return &Handler{db: db}
+}
+
+func (h *Handler) Home(c *gin.Context) {
+	c.HTML(http.StatusOK, "", pages.Home())
+}
+
+func (h *Handler) Health(c *gin.Context) {
+	err := h.db.Ping()
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": err,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "OK",
+	})
+}

@@ -1,0 +1,91 @@
+package main
+
+import (
+	"database/sql"
+	"log"
+	"os"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pressly/goose/v3"
+	"zero/internal/handler"
+	"zero/static"
+
+	_ "github.com/mattn/go-sqlite3"
+)
+
+type config struct {
+	port         int
+	runMigration bool
+}
+
+func main() {
+	config := initConfig()
+	db := initDb(config)
+
+	if config.runMigration {
+		goose.SetBaseFS(static.Migration)
+
+		if err := goose.SetDialect("sqlite3"); err != nil {
+			log.Fatal(err)
+		}
+
+		if err := goose.Up(db, "sql/migrations"); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	router := initRouter(db)
+	port := strconv.Itoa(config.port)
+	if err := router.Run(":" + port); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func initRouter(db *sql.DB) *gin.Engine {
+	r := gin.Default()
+	handler := handler.Init(db)
+
+	api := r.Group("/api")
+	api.GET("/health", handler.Health)
+
+	author := api.Group("/authors")
+	{
+		author.GET("/", handler.ListAuthor)
+		author.GET("/:id", handler.GetAuthor)
+		author.POST("/", handler.CreateAuthor)
+		author.PUT("/", handler.UpdateAuthor)
+		author.DELETE("/", handler.DeleteAuthor)
+	}
+
+	return r
+}
+
+func initConfig() *config {
+	config := &config{}
+
+	port, err := strconv.Atoi(os.Getenv("PORT"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	config.port = port
+
+	runMigration, err := strconv.ParseBool(os.Getenv("MIGRATE_DB"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	config.runMigration = runMigration
+
+	return config
+}
+
+func initDb(config *config) *sql.DB {
+	db, err := sql.Open("sqlite3", os.Getenv("DATABASE_URL"))
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return db
+}
+

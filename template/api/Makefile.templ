@@ -1,0 +1,34 @@
+export PORT?=8080
+export DATABASE_URL?=./zero.db
+export MIGRATE_DB?=false
+
+export GOOSE_DBSTRING?=$(DATABASE_URL)
+export GOOSE_DRIVER:=sqlite3
+
+export GOOSE_MIGRATION_DIR:=./static/sql/migrations
+
+run:
+	go build -o bin/main cmd/api/*.go
+
+test:
+	gotestsum
+
+dev:
+	air
+
+build:
+	go build -o bin/main cmd/api/*.go
+
+db:
+	goose status
+
+migrate:
+	goose up
+
+create:
+	goose create $(filter-out $@,$(MAKECMDGOALS)) sql
+
+%:
+	@:
+
+.PHONY: run test dev build db migrate create

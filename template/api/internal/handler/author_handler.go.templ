@@ -1,0 +1,140 @@
+package handler
+
+import (
+	"database/sql"
+	"net/http"
+	"strconv"
+
+	"zero/internal/data"
+	"github.com/gin-gonic/gin"
+)
+
+type validAuthor struct {
+	Name string `json:"name" binding:"required"`
+	Bio  string `json:"bio" binding:"required"`
+}
+
+func (v validAuthor) toCreateParams() data.CreateAuthorParams {
+	return data.CreateAuthorParams{
+		Name: v.Name,
+		Bio: sql.NullString{
+			Valid:  true,
+			String: v.Bio,
+		},
+	}
+}
+
+func (v validAuthor) toUpdateParams() data.UpdateAuthorParams {
+	return data.UpdateAuthorParams{
+		Name: v.Name,
+		Bio: sql.NullString{
+			Valid:  true,
+			String: v.Bio,
+		},
+	}
+}
+
+func (h *Handler) GetAuthor(c *gin.Context) {
+	q := data.New(h.db)
+
+	authorId := c.Param("id")
+	id, err := strconv.ParseInt(authorId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	author, err := q.GetAuthor(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, author)
+}
+
+func (h *Handler) ListAuthor(c *gin.Context) {
+	q := data.New(h.db)
+
+	authors, err := q.ListAuthors(c)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, authors)
+}
+
+func (h *Handler) CreateAuthor(c *gin.Context) {
+	q := data.New(h.db)
+
+	var validated validAuthor
+	if err := c.BindJSON(&validated); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	newAuthor := validated.toCreateParams()
+	res, err := q.CreateAuthor(c, newAuthor)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) UpdateAuthor(c *gin.Context) {
+	q := data.New(h.db)
+
+	var validatedAuthor validAuthor
+	if err := c.BindJSON(&validatedAuthor); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	updatedAuthor := validatedAuthor.toUpdateParams()
+	author, err := q.UpdateAuthor(c, updatedAuthor)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, author)
+}
+
+func (h *Handler) DeleteAuthor(c *gin.Context) {
+	q := data.New(h.db)
+
+	authorId := c.Param("id")
+	id, err := strconv.ParseInt(authorId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	err = q.DeleteAuthor(c, id)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
