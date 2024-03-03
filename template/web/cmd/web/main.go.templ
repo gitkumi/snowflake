@@ -29,7 +29,7 @@ func main() {
 	if config.runMigration {
 		goose.SetBaseFS(static.Migration)
 
-		if err := goose.SetDialect("sqlite3"); err != nil {
+		if err := goose.SetDialect("{{.Database}}"); err != nil {
 			log.Fatal(err)
 		}
 
@@ -79,7 +79,7 @@ func initConfig() *config {
 }
 
 func initDb(config *config) *sql.DB {
-	db, err := sql.Open("sqlite3", os.Getenv("DATABASE_URL"))
+	db, err := sql.Open("{{.Database}}", os.Getenv("DATABASE_URL"))
 
 	if err != nil {
 		log.Fatal(err)

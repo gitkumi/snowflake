@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -74,7 +75,7 @@ func new() *cobra.Command {
 				templateFiles = snowflaketemplate.ApiFiles
 			}
 
-			err = fs.WalkDir(templateFiles, "files", func(path string, d fs.DirEntry, err error) error {
+			err = fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
 					return err
 				}
