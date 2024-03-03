@@ -142,6 +142,29 @@ func new() *cobra.Command {
 				if err != nil {
 					log.Fatal(err.Error())
 				}
+
+				command = exec.Command("git", "add", "-A")
+				command.Dir = outputPath
+				err = command.Run()
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+
+				command = exec.Command("git", "commit", "-m", "Snowflake init")
+				command.Dir = outputPath
+				err = command.Run()
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+			}
+
+			if project.Type == "web" {
+				command = exec.Command("pnpm", "i")
+				command.Dir = outputPath
+				err = command.Run()
+				if err != nil {
+					log.Fatal(err.Error())
+				}
 			}
 		},
 	}
