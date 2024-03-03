@@ -48,6 +48,7 @@ func new() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			projectName := args[0]
+
 			projectType, err := cmd.Flags().GetString("type")
 			if err != nil {
 				log.Fatal(err.Error())
@@ -150,13 +151,4 @@ func new() *cobra.Command {
 	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
 
 	return cmd
-}
-
-func contains(files []string, fileName string) bool {
-	for _, file := range files {
-		if file == fileName {
-			return true
-		}
-	}
-	return false
 }
