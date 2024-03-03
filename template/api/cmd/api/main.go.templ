@@ -54,10 +54,10 @@ func initRouter(db *sql.DB) *gin.Engine {
 	author := api.Group("/authors")
 	{
 		author.GET("/", handler.ListAuthor)
-		author.GET("/:id", handler.GetAuthor)
 		author.POST("/", handler.CreateAuthor)
-		author.PUT("/", handler.UpdateAuthor)
-		author.DELETE("/", handler.DeleteAuthor)
+		author.GET("/:id", handler.GetAuthor)
+		author.PUT("/:id", handler.UpdateAuthor)
+		author.DELETE("/:id", handler.DeleteAuthor)
 	}
 
 	return r

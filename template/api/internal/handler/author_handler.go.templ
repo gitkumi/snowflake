@@ -99,6 +99,22 @@ func (h *Handler) CreateAuthor(c *gin.Context) {
 func (h *Handler) UpdateAuthor(c *gin.Context) {
 	q := data.New(h.db)
 
+	authorId := c.Param("id")
+	id, err := strconv.ParseInt(authorId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	author, err := q.GetAuthor(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
 	var validatedAuthor validAuthor
 	if err := c.BindJSON(&validatedAuthor); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -108,7 +124,9 @@ func (h *Handler) UpdateAuthor(c *gin.Context) {
 	}
 
 	updatedAuthor := validatedAuthor.toUpdateParams()
-	author, err := q.UpdateAuthor(c, updatedAuthor)
+	updatedAuthor.ID = author.ID
+
+	author, err = q.UpdateAuthor(c, updatedAuthor)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
