@@ -79,7 +79,7 @@ func new() *cobra.Command {
 					return err
 				}
 
-				fileName := strings.TrimPrefix(path, "files")
+				fileName := strings.TrimPrefix(path, project.Type)
 
 				if d.IsDir() {
 					err := os.MkdirAll(filepath.Join(outputPath, fileName), 0777)
