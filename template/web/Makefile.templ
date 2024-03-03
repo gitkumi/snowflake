@@ -1,10 +1,11 @@
 export PORT?=8080
-export DATABASE_URL?=./acme.db
+export DATABASE_URL?=./{{ .Name}}.db
 export MIGRATE_DB?=false
 
 export GOOSE_DBSTRING?=$(DATABASE_URL)
-export GOOSE_DRIVER:=sqlite3
-
+{{ if eq .Database "sqlite3"}}export GOOSE_DRIVER:=sqlite3
+{{ else if eq .Database "mysql"}}export GOOSE_DRIVER:=mysql
+{{ else if eq .Database "postgres"}}export GOOSE_DRIVER:=postgres{{end}}
 export GOOSE_MIGRATION_DIR:=./static/sql/migrations
 
 run:

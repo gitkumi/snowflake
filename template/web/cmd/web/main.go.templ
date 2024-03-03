@@ -8,11 +8,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pressly/goose/v3"
-	"zeroweb/internal/handler"
-	"zeroweb/internal/gintemplrenderer"
-	"zeroweb/static"
+	"{{ .Name}}/internal/handler"
+	"{{ .Name}}/internal/gintemplrenderer"
+	"{{ .Name}}/static"
 
-	_ "github.com/mattn/go-sqlite3"
+	{{ if eq .Database "sqlite3"}}_ "github.com/mattn/go-sqlite3"
+	{{ else if eq .Database "mysql"}}_ "github.com/go-sql-driver/mysql"
+	{{ else if eq .Database "postgres"}}_ "github.com/lib/pq"{{ end }}
 )
 
 type config struct {
