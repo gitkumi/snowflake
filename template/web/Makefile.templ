@@ -21,8 +21,8 @@ build:
 	pnpm build
 	esbuild ./internal/pages/*.ts --bundle --outdir=./static/public/assets
 	templ generate
-	tygo generate
 	sqlc generate
+	tygo generate
 	go build -o bin/main cmd/web/*.go
 	
 
