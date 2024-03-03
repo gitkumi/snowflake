@@ -46,6 +46,7 @@ func (h *Handler) GetAuthor(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	author, err := q.GetAuthor(c, id)
@@ -91,6 +92,7 @@ func (h *Handler) CreateAuthor(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	c.JSON(http.StatusOK, res)
@@ -105,6 +107,7 @@ func (h *Handler) UpdateAuthor(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	author, err := q.GetAuthor(c, id)
@@ -146,6 +149,7 @@ func (h *Handler) DeleteAuthor(c *gin.Context) {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	err = q.DeleteAuthor(c, id)
