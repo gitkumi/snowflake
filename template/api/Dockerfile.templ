@@ -1,0 +1,22 @@
+FROM golang:1.21-alpine AS server
+
+ARG PORT=8080
+ENV PORT=${PORT}
+
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+ENV MIGRATE_DB=true
+
+ENV ENVIRONMENT=production
+ENV GIN_MODE=release
+
+WORKDIR /app
+
+COPY . .
+
+RUN make build
+
+EXPOSE 8080
+
+CMD ["./main"]
+

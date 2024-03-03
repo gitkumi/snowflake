@@ -24,7 +24,7 @@ type project struct {
 func Execute() {
 	cmd := &cobra.Command{
 		Use:   "snowflake",
-		Short: "Snowflake is an opinionated Go application generator.",
+		Short: "Snowflake is an opinionated Go web application generator.",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},
@@ -40,6 +40,8 @@ func Execute() {
 }
 
 func new() *cobra.Command {
+	var initGit bool
+
 	cmd := &cobra.Command{
 		Use:   "new",
 		Short: "Create a new project",
@@ -69,30 +71,24 @@ func new() *cobra.Command {
 
 			outputPath := filepath.Join(cwd, projectName)
 
-			err = fs.WalkDir(snowflaketemplate.Files, "files", func(path string, d fs.DirEntry, err error) error {
+			templateFiles := snowflaketemplate.WebFiles
+			if project.Type == "api" {
+				templateFiles = snowflaketemplate.ApiFiles
+			}
+
+			err = fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
 					return err
 				}
 
-				fileName := strings.TrimPrefix(path, "files")
-
-				switch project.Type {
-				case "api":
-					if isWebFile(fileName) {
-						return nil
-					}
-				case "web":
-					if isAPIFile(fileName) {
-						return nil
-					}
-				}
+				fileName := strings.TrimPrefix(path, project.Type)
 
 				if d.IsDir() {
 					err := os.MkdirAll(filepath.Join(outputPath, fileName), 0777)
 					return err
 				}
 
-				content, err := snowflaketemplate.Files.ReadFile(path)
+				content, err := templateFiles.ReadFile(path)
 				if err != nil {
 					return err
 				}
@@ -137,43 +133,23 @@ func new() *cobra.Command {
 			if err != nil {
 				log.Fatal(err.Error())
 			}
+
+			if initGit {
+				command = exec.Command("git", "init")
+				command.Dir = outputPath
+				err = command.Run()
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+			}
 		},
 	}
 
 	cmd.Flags().StringP("type", "t", "web", "Type of the project. \"web\" or \"api\".")
 	cmd.Flags().StringP("database", "d", "sqlite3", "Database of the project. \"sqlite3\", \"postgres\", or \"mysql\".")
+	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
 
 	return cmd
-}
-
-func isWebFile(fileName string) bool {
-	webFiles := []string{
-		"/cmd/web",
-		"/cmd/web/main.go.templ",
-		"/tygo.yaml.templ",
-		"/package.json.templ",
-		"/tailwind.config.js.templ",
-		"/internal/pages",
-		"/internal/pages/error.templ.templ",
-		"/internal/pages/home.templ.templ",
-		"/internal/pages/home.ts.templ",
-		"/internal/gintemplrenderer",
-		"/internal/gintemplrenderer/renderer.go.templ",
-		"/static",
-		"/static/public",
-		"/static/public/assets",
-		"/static/public/assets/home.js.templ",
-		"/static/public/assets/style.css.templ",
-	}
-	return contains(webFiles, fileName)
-}
-
-func isAPIFile(fileName string) bool {
-	apiFiles := []string{
-		"/cmd/api",
-		"/cmd/api/main.go.templ",
-	}
-	return contains(apiFiles, fileName)
 }
 
 func contains(files []string, fileName string) bool {

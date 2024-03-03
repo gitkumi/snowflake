@@ -2,5 +2,8 @@ package template
 
 import "embed"
 
-//go:embed files/*
-var Files embed.FS
+//go:embed api/*
+var ApiFiles embed.FS
+
+//go:embed web/*
+var WebFiles embed.FS

@@ -1,0 +1,36 @@
+export PORT?=8080
+export DATABASE_URL?=./{{ .Name}}.db
+export MIGRATE_DB?=false
+
+export GOOSE_DBSTRING?=$(DATABASE_URL)
+{{ if eq .Database "sqlite3"}}export GOOSE_DRIVER:=sqlite3
+{{ else if eq .Database "mysql"}}export GOOSE_DRIVER:=mysql
+{{ else if eq .Database "postgres"}}export GOOSE_DRIVER:=postgres{{end}}
+export GOOSE_MIGRATION_DIR:=./static/sql/migrations
+
+run:
+	go run cmd/api/*.go
+
+test:
+	gotestsum
+
+dev:
+	air
+
+build:
+	sqlc generate
+	go build -o bin/main cmd/api/*.go
+
+db:
+	goose status
+
+migrate:
+	goose up
+
+create:
+	goose create $(filter-out $@,$(MAKECMDGOALS)) sql
+
+%:
+	@:
+
+.PHONY: run test dev build db migrate create
