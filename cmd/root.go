@@ -40,6 +40,8 @@ func Execute() {
 }
 
 func new() *cobra.Command {
+	var initGit bool
+
 	cmd := &cobra.Command{
 		Use:   "new",
 		Short: "Create a new project",
@@ -131,11 +133,21 @@ func new() *cobra.Command {
 			if err != nil {
 				log.Fatal(err.Error())
 			}
+
+			if initGit {
+				command = exec.Command("git", "init")
+				command.Dir = outputPath
+				err = command.Run()
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+			}
 		},
 	}
 
 	cmd.Flags().StringP("type", "t", "web", "Type of the project. \"web\" or \"api\".")
 	cmd.Flags().StringP("database", "d", "sqlite3", "Database of the project. \"sqlite3\", \"postgres\", or \"mysql\".")
+	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
 
 	return cmd
 }
