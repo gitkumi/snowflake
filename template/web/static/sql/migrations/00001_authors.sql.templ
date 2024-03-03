@@ -1,3 +1,4 @@
+{{ if eq .Database "sqlite3"}}
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE authors (
@@ -11,3 +12,16 @@ CREATE TABLE authors (
 -- +goose StatementBegin
 DROP TABLE authors;
 -- +goose StatementEnd
+{{ else if eq .Database "mysql" }}
+CREATE TABLE authors (
+  id   BIGINT  NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  name text    NOT NULL,
+  bio  text
+);
+{{ else if eq .Database "postgres" }}
+CREATE TABLE authors (
+  id   BIGSERIAL PRIMARY KEY,
+  name text      NOT NULL,
+  bio  text
+);
+{{ end }}
