@@ -24,7 +24,14 @@ build:
 db:
 	goose status
 
-migrate:
+up:
+	goose up
+
+down:
+	goose down
+
+reset:
+	goose down-to 0
 	goose up
 
 create:
@@ -33,4 +40,4 @@ create:
 %:
 	@:
 
-.PHONY: run test dev build db migrate create
+.PHONY: run test dev build db up down reset create
