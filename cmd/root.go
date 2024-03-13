@@ -150,7 +150,7 @@ func new() *cobra.Command {
 					log.Fatal(err.Error())
 				}
 
-				command = exec.Command("git", "commit", "-m", "Snowflake init")
+				command = exec.Command("git", "commit", "-m", "Snowflake Init")
 				command.Dir = outputPath
 				err = command.Run()
 				if err != nil {
