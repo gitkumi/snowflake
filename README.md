@@ -39,7 +39,6 @@ Snowflake is built with these packages. Make sure to check their documentation.
 #### Dev
 
 - [air](https://github.com/air-verse/air)
-- [gotestsum](https://github.com/gotestyourself/gotestsum)
 
 #### Routing
 
