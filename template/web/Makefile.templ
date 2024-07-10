@@ -19,7 +19,7 @@ dev:
 
 build:
 	pnpm build
-	esbuild ./internal/pages/*.ts --bundle --outdir=./static/public/assets
+	pnpm dlx esbuild ./internal/pages/*.ts --bundle --outdir=./static/public/assets
 	templ generate
 	sqlc generate
 	tygo generate
@@ -45,3 +45,7 @@ create:
 	@:
 
 .PHONY: run test dev build db up down reset create
+
+
+
+

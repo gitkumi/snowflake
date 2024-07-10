@@ -136,13 +136,6 @@ func new() *cobra.Command {
 				log.Fatal(err.Error())
 			}
 
-			command = exec.Command("make", "build")
-			command.Dir = outputPath
-			err = command.Run()
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-
 			if initGit {
 				command = exec.Command("git", "init")
 				command.Dir = outputPath
@@ -167,12 +160,19 @@ func new() *cobra.Command {
 			}
 
 			if project.Type == "web" {
-				command = exec.Command("pnpm", "i")
+				command = exec.Command("pnpm", "install")
 				command.Dir = outputPath
 				err = command.Run()
 				if err != nil {
 					log.Fatal(err.Error())
 				}
+			}
+
+			command = exec.Command("make", "build")
+			command.Dir = outputPath
+			err = command.Run()
+			if err != nil {
+				log.Fatal(err.Error())
 			}
 
 			fmt.Println("Initialized Snowflake project.")
