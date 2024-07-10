@@ -85,6 +85,23 @@ func initDb(config *config) *sql.DB {
 		log.Fatal(err)
 	}
 
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxIdleTime(5 * time.Minute)
+	db.SetConnMaxLifetime(1 * time.Hour)
+
+	if config.runMigration {
+		goose.SetBaseFS(static.Migration)
+
+		if err := goose.SetDialect("{{.Database}}"); err != nil {
+			log.Fatal(err)
+		}
+
+		if err := goose.Up(db, "sql/migrations"); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	return db
 }
 
