@@ -18,7 +18,7 @@ go install github.com/gitkumi/snowflake@latest
 Here is how to generate a web application with sqlite3 as database.
 
 ```sh
-snowflake new -t web -d sqlite3 acme
+snowflake new -t api -d sqlite3 acme
 ```
 
 ## Flags
