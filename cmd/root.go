@@ -169,7 +169,7 @@ func new() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP("type", "t", "web", "Type of the project. \"web\" or \"api\".")
+	cmd.Flags().StringP("type", "t", "api", "Type of the project. \"web\" or \"api\".")
 	cmd.Flags().StringP("database", "d", "sqlite3", "Database of the project. \"sqlite3\", \"postgres\", or \"mysql\".")
 	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
 
