@@ -25,7 +25,7 @@ func (h *Handler) Health(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": err,
+			"message": err.Error(),
 		})
 		return
 	}
