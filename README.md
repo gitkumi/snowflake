@@ -1,6 +1,6 @@
 # Snowflake
 
-Yet another Go web application generator.
+Yet another Go REST API application generator.
 
 Features:
 - Opinionated with the best practices.
@@ -15,17 +15,13 @@ go install github.com/gitkumi/snowflake@latest
 
 ## Quick Start
 
-Here is how to generate a web application with sqlite3 as database.
+Here is how to generate an application with sqlite3 as database.
 
 ```sh
-snowflake new -t api -d sqlite3 acme
+snowflake new -d sqlite3 acme
 ```
 
 ## Flags
-
-- **type (-t)**
-  - `web` - Generates a web application that serves HTML. (Requires `Node.js 20.x` and `pnpm`)
-  - `api` - Generates a RESTful API application.
 
 - **database (-d)**
   - `sqlite3`
@@ -49,13 +45,6 @@ Snowflake is built with these packages. Make sure to check their documentation.
 - [sqlc](https://github.com/sqlc-dev/sqlc)
 - [goose](https://github.com/pressly/goose)
 
-#### Front-end (Web only)
-
-- [templ](https://templ.guide/)
-- [Tailwind](https://tailwindcss.com/)
-- [esbuild](https://esbuild.github.io/)
-- [tygo](https://github.com/gzuidhof/tygo)
-
 ## Make Commands
 
 - `make dev` - Start the development environment with hot reload.
@@ -63,7 +52,9 @@ Snowflake is built with these packages. Make sure to check their documentation.
 - `make build` - Build the project.
 - `make run` - Run the build.
 - `make db` - Check database status.
-- `make up` - Run database migration.
-- `make down` - Roll back database migration by 1.
-- `make reset` - Roll back all migration.
+- `make db.up` - Run database migration.
+- `make db.down` - Roll back database migration by 1.
+- `make db.create` - Create database.
+- `make db.destroy` - Destroy database.
+- `make db.reset` - Destroy and create database.
 - `make create <table_name>` - Create an empty migration file.

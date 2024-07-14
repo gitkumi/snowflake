@@ -16,16 +16,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type project struct {
+type Project struct {
 	Name     string
-	Type     string
 	Database string
 }
 
 func Execute() {
 	cmd := &cobra.Command{
 		Use:   "snowflake",
-		Short: "Snowflake is an opinionated Go web application generator.",
+		Short: "Snowflake is an opinionated Go REST API application generator.",
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Help()
 		},
@@ -50,11 +49,6 @@ func new() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			projectName := args[0]
 
-			projectType, err := cmd.Flags().GetString("type")
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-
 			projectDatabase, err := cmd.Flags().GetString("database")
 			if err != nil {
 				log.Fatal(err.Error())
@@ -65,25 +59,21 @@ func new() *cobra.Command {
 				log.Fatal(err.Error())
 			}
 
-			project := &project{
+			project := &Project{
 				Name:     strings.ToLower(projectName),
-				Type:     strings.ToLower(projectType),
 				Database: strings.ToLower(projectDatabase),
 			}
 
 			outputPath := filepath.Join(cwd, projectName)
 
-			templateFiles := snowflaketemplate.WebFiles
-			if project.Type == "api" {
-				templateFiles = snowflaketemplate.ApiFiles
-			}
+			templateFiles := snowflaketemplate.ApiFiles
 
 			err = fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
 					return err
 				}
 
-				fileName := strings.TrimPrefix(path, project.Type)
+				fileName := strings.TrimPrefix(path, "api")
 
 				if d.IsDir() {
 					err := os.MkdirAll(filepath.Join(outputPath, fileName), 0777)
@@ -136,6 +126,13 @@ func new() *cobra.Command {
 				log.Fatal(err.Error())
 			}
 
+			command = exec.Command("make", "build")
+			command.Dir = outputPath
+			err = command.Run()
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
 			if initGit {
 				command = exec.Command("git", "init")
 				command.Dir = outputPath
@@ -159,27 +156,10 @@ func new() *cobra.Command {
 				}
 			}
 
-			if project.Type == "web" {
-				command = exec.Command("pnpm", "install")
-				command.Dir = outputPath
-				err = command.Run()
-				if err != nil {
-					log.Fatal(err.Error())
-				}
-			}
-
-			command = exec.Command("make", "build")
-			command.Dir = outputPath
-			err = command.Run()
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-
 			fmt.Println("Initialized Snowflake project.")
 		},
 	}
 
-	cmd.Flags().StringP("type", "t", "api", "Type of the project. \"web\" or \"api\".")
 	cmd.Flags().StringP("database", "d", "sqlite3", "Database of the project. \"sqlite3\", \"postgres\", or \"mysql\".")
 	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
 
