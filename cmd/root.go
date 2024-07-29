@@ -32,10 +32,23 @@ func Execute() {
 	cmd.Root().CompletionOptions.DisableDefaultCmd = true
 
 	cmd.AddCommand(new())
+	cmd.AddCommand(version())
 
 	if err := cmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func version() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "version",
+		Short: "Display version",
+		Run: func(_cmd *cobra.Command, _args []string) {
+			fmt.Println("v0.5.0")
+		},
+	}
+
+	return cmd
 }
 
 func new() *cobra.Command {
