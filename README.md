@@ -15,18 +15,14 @@ go install github.com/gitkumi/snowflake@latest
 
 ## Quick Start
 
-Here is how to generate an application with sqlite3 as database.
+Here is how to generate an application.
 
 ```sh
-snowflake new -d sqlite3 acme
+snowflake new acme
 ```
 
-## Flags
-
-- **database (-d)**
-  - `sqlite3`
-  - `postgres`
-  - `mysql`
+Snowflake uses sqlite3 for database.  
+If you need a different database, you will need to customize the generated code.  
 
 ## Stack
 

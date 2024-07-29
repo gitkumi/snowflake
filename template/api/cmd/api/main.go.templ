@@ -7,9 +7,7 @@ import (
 
 	"{{ .Name }}/internal/server"
 
-	{{ if eq .Database "sqlite3"}}_ "github.com/mattn/go-sqlite3"
-	{{ else if eq .Database "mysql"}}_ "github.com/go-sql-driver/mysql"
-	{{ else if eq .Database "postgres"}}_ "github.com/lib/pq"{{ end }}
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {

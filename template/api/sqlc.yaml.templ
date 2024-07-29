@@ -1,6 +1,6 @@
 version: "2"
 sql:
-- engine: {{ if eq .Database "sqlite3"}}"sqlite"{{ else if eq .Database "mysql"}}"mysql"{{ else if eq .Database "postgres"}}"postgresql"{{ end }}
+- engine: "sqlite"
   queries: "static/sql/queries/"
   schema: "static/sql/migrations/"
   gen:

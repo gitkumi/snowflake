@@ -17,8 +17,7 @@ import (
 )
 
 type Project struct {
-	Name     string
-	Database string
+	Name string
 }
 
 func Execute() {
@@ -49,19 +48,13 @@ func new() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			projectName := args[0]
 
-			projectDatabase, err := cmd.Flags().GetString("database")
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-
 			cwd, err := os.Getwd()
 			if err != nil {
 				log.Fatal(err.Error())
 			}
 
 			project := &Project{
-				Name:     strings.ToLower(projectName),
-				Database: strings.ToLower(projectDatabase),
+				Name: strings.ToLower(projectName),
 			}
 
 			outputPath := filepath.Join(cwd, projectName)
@@ -160,7 +153,6 @@ func new() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP("database", "d", "sqlite3", "Database of the project. \"sqlite3\", \"postgres\", or \"mysql\".")
 	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
 
 	return cmd
