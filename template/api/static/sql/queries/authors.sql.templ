@@ -41,6 +41,12 @@ INSERT INTO authors (
   ?, ?
 );
 
+-- name: UpdateAuthor :exec
+UPDATE authors
+  set name = ?,
+  bio = ?
+WHERE id = ?;
+
 -- name: DeleteAuthor :exec
 DELETE FROM authors
 WHERE id = ?;

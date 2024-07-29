@@ -1,0 +1,13 @@
+package server
+
+func (s *Server) RegisterRoutes() {
+	s.Router.GET("/health", s.Health)
+
+	api := s.Router.Group("/api")
+
+	api.GET("/authors", s.ListAuthor)
+	api.GET("/authors/:id", s.GetAuthor)
+	api.DELETE("/authors/:id", s.DeleteAuthor)
+	api.PUT("/authors/:id", s.UpdateAuthor)
+	api.POST("/authors", s.CreateAuthor)
+}

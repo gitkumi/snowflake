@@ -1,6 +1,5 @@
-export PORT?=8080
-export DATABASE_URL?=./{{ .Name}}.db
-export MIGRATE_DB?=false
+# Dev environment
+export DATABASE_URL?=./{{ .Name }}.db
 
 export GOOSE_DBSTRING?=$(DATABASE_URL)
 {{ if eq .Database "sqlite3"}}export GOOSE_DRIVER:=sqlite3
@@ -8,36 +7,44 @@ export GOOSE_DBSTRING?=$(DATABASE_URL)
 {{ else if eq .Database "postgres"}}export GOOSE_DRIVER:=postgres{{end}}
 export GOOSE_MIGRATION_DIR:=./static/sql/migrations
 
+# Production environment
+export ENVIRONMENT?=development
+export GIN_MODE?=debug
+export PORT?=8080
+export MIGRATE_DB?=false
+
+.PHONY: run
 run:
 	go run cmd/api/*.go
 
+.PHONY: test
 test:
 	go test ./...
 
+.PHONY: dev
 dev:
 	air
 
+.PHONY: build
 build:
 	sqlc generate
 	go build -o bin/main cmd/api/*.go
 
+.PHONY: db
 db:
 	goose status
 
-up:
-	goose up
-
-down:
-	goose down
-
-reset:
-	goose down-to 0
-	goose up
-
-create:
+.PHONY: db.gen
+db.gen:
 	goose create $(filter-out $@,$(MAKECMDGOALS)) sql
+
+.PHONY: db.up
+db.up:
+	goose up
+
+.PHONY: db.down
+db.down:
+	goose down
 
 %:
 	@:
-
-.PHONY: run test dev build db up down reset create

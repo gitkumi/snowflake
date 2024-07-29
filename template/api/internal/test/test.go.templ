@@ -1,0 +1,27 @@
+package test
+
+import (
+	"{{ .Name }}/internal/server"
+
+	_ "github.com/mattn/go-sqlite3"
+)
+
+type TestServer struct {
+	Server *server.Server
+}
+
+func Init() (*TestServer, error) {
+	serv, err := server.Init(&server.Config{
+		DatabaseUrl: "file::memory:?cache=shared",
+		MigrateDb:   true,
+		GinMode:     "test",
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &TestServer{
+		Server: serv,
+	}, nil
+}

@@ -14,14 +14,14 @@ DROP TABLE authors;
 -- +goose StatementEnd
 {{ else if eq .Database "mysql" }}
 CREATE TABLE authors (
-  id   BIGINT  NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  name text    NOT NULL,
-  bio  text
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    bio TEXT
 );
 {{ else if eq .Database "postgres" }}
 CREATE TABLE authors (
-  id   BIGSERIAL PRIMARY KEY,
-  name text      NOT NULL,
-  bio  text
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    bio TEXT
 );
 {{ end }}

@@ -1,0 +1,490 @@
+package server
+
+import (
+	"database/sql"
+	"net/http"
+	"strconv"
+
+	"{{ .Name }}/internal/data"
+
+	"github.com/gin-gonic/gin"
+)
+
+{{ if eq .Database "sqlite3"}}
+func (s *Server) ListAuthor(c *gin.Context) {
+	authors, err := s.Query.ListAuthors(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if authors == nil {
+		authors = []data.Author{}
+	}
+
+	resp := make([]AuthorResponse, len(authors))
+	for i, author := range authors {
+		resp[i] = authorResponse(author)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+func (s *Server) GetAuthor(c *gin.Context) {
+	authorId := c.Param("id")
+	id, err := strconv.ParseInt(authorId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	author, err := s.Query.GetAuthor(c, id)
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusOK, gin.H{})
+		return
+	}
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	resp := authorResponse(author)
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+func (s *Server) CreateAuthor(c *gin.Context) {
+	var input CreateAuthorInput
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	params := createAuthorParams(input)
+	author, err := s.Query.CreateAuthor(c, params)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	resp := authorResponse(author)
+	c.JSON(http.StatusCreated, gin.H{"data": resp})
+}
+
+func (s *Server) UpdateAuthor(c *gin.Context) {
+	authorId := c.Param("id")
+	id, err := strconv.ParseInt(authorId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	var input UpdateAuthorInput
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	author, err := s.Query.GetAuthor(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	params := createUpdateParams(input, author)
+	author, err = s.Query.UpdateAuthor(c, params)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	resp := authorResponse(author)
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+func (s *Server) DeleteAuthor(c *gin.Context) {
+	authorId := c.Param("id")
+	id, err := strconv.ParseInt(authorId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	err = s.Query.DeleteAuthor(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+{{ else if eq .Database "mysql"}}
+func (s *Server) ListAuthor(c *gin.Context) {
+	authors, err := s.Query.ListAuthors(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if authors == nil {
+		authors = []data.Author{}
+	}
+
+	resp := make([]AuthorResponse, len(authors))
+	for i, author := range authors {
+		resp[i] = authorResponse(author)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+func (s *Server) GetAuthor(c *gin.Context) {
+	authorId := c.Param("id")
+	id, err := strconv.ParseInt(authorId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	author, err := s.Query.GetAuthor(c, id)
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusOK, gin.H{})
+		return
+	}
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	resp := authorResponse(author)
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+func (s *Server) CreateAuthor(c *gin.Context) {
+	var input CreateAuthorInput
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	params := createAuthorParams(input)
+	result, err := s.Query.CreateAuthor(c, params)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	authorId, err := result.LastInsertId()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	author, err := s.Query.GetAuthor(c, authorId)
+
+	resp := authorResponse(author)
+	c.JSON(http.StatusCreated, gin.H{"data": resp})
+}
+
+func (s *Server) UpdateAuthor(c *gin.Context) {
+	authorId := c.Param("id")
+	id, err := strconv.ParseInt(authorId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	var input UpdateAuthorInput
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	author, err := s.Query.GetAuthor(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	params := createUpdateParams(input, author)
+	err = s.Query.UpdateAuthor(c, params)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	author, err = s.Query.GetAuthor(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	resp := authorResponse(author)
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+func (s *Server) DeleteAuthor(c *gin.Context) {
+	authorId := c.Param("id")
+	id, err := strconv.ParseInt(authorId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	err = s.Query.DeleteAuthor(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+{{ else if eq .Database "postgres"}}
+func (s *Server) ListAuthor(c *gin.Context) {
+	authors, err := s.Query.ListAuthors(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if authors == nil {
+		authors = []data.Author{}
+	}
+
+	resp := make([]AuthorResponse, len(authors))
+	for i, author := range authors {
+		resp[i] = authorResponse(author)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+func (s *Server) GetAuthor(c *gin.Context) {
+	authorId := c.Param("id")
+	id, err := strconv.ParseInt(authorId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	author, err := s.Query.GetAuthor(c, id)
+	if err == sql.ErrNoRows {
+		c.JSON(http.StatusOK, gin.H{})
+		return
+	}
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	resp := authorResponse(author)
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+func (s *Server) CreateAuthor(c *gin.Context) {
+	var input CreateAuthorInput
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	params := createAuthorParams(input)
+	author, err := s.Query.CreateAuthor(c, params)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	resp := authorResponse(author)
+	c.JSON(http.StatusCreated, gin.H{"data": resp})
+}
+
+func (s *Server) UpdateAuthor(c *gin.Context) {
+	authorId := c.Param("id")
+	id, err := strconv.ParseInt(authorId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	var input UpdateAuthorInput
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	author, err := s.Query.GetAuthor(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	params := createUpdateParams(input, author)
+	err = s.Query.UpdateAuthor(c, params)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	author, err = s.Query.GetAuthor(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	resp := authorResponse(author)
+	c.JSON(http.StatusOK, gin.H{"data": resp})
+}
+
+func (s *Server) DeleteAuthor(c *gin.Context) {
+	authorId := c.Param("id")
+	id, err := strconv.ParseInt(authorId, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	err = s.Query.DeleteAuthor(c, id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+{{ end }}
+
+type CreateAuthorInput struct {
+	Name string  `json:"name" binding:"required"`
+	Bio  *string `json:"bio"`
+}
+
+func createAuthorParams(a CreateAuthorInput) data.CreateAuthorParams {
+	var bio sql.NullString
+	if a.Bio != nil {
+		bio = sql.NullString{String: *a.Bio, Valid: true}
+	} else {
+		bio = sql.NullString{Valid: false}
+	}
+
+	return data.CreateAuthorParams{
+		Name: a.Name,
+		Bio:  bio,
+	}
+}
+
+type UpdateAuthorInput struct {
+	Name *string `json:"name"`
+	Bio  *string `json:"bio"`
+}
+
+func createUpdateParams(a UpdateAuthorInput, current data.Author) data.UpdateAuthorParams {
+	params := data.UpdateAuthorParams{
+		ID:   current.ID,
+		Name: current.Name,
+		Bio:  current.Bio,
+	}
+
+	if a.Name != nil {
+		params.Name = *a.Name
+	}
+
+	if a.Bio != nil {
+		params.Bio = sql.NullString{String: *a.Bio, Valid: true}
+	}
+
+	return params
+}
+
+type AuthorResponse struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+	Bio  string `json:"bio"`
+}
+
+func authorResponse(author data.Author) AuthorResponse {
+	res := AuthorResponse{
+		ID:   author.ID,
+		Name: author.Name,
+	}
+
+	if author.Bio.Valid {
+		res.Bio = author.Bio.String
+	}
+
+	return res
+}

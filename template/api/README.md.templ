@@ -40,9 +40,11 @@ Snowflake is built with these packages. Make sure to check their documentation.
 - `make build` - Build the project.
 - `make run` - Run the build.
 - `make db` - Check database status.
-- `make up` - Run database migration.
-- `make down` - Roll back database migration by 1.
-- `make reset` - Roll back all migration.
+- `make db.up` - Run database migration.
+- `make db.down` - Roll back database migration by 1.
+- `make db.create` - Create database.
+- `make db.destroy` - Destroy database.
+- `make db.reset` - Destroy and create database.
 - `make create <table_name>` - Create an empty migration file.
 
 

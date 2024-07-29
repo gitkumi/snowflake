@@ -1,99 +1,40 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"os"
 	"strconv"
-	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/pressly/goose/v3"
-	"{{ .Name}}/internal/handler"
-	"{{ .Name}}/static"
+	"{{ .Name }}/internal/server"
 
 	{{ if eq .Database "sqlite3"}}_ "github.com/mattn/go-sqlite3"
 	{{ else if eq .Database "mysql"}}_ "github.com/go-sql-driver/mysql"
 	{{ else if eq .Database "postgres"}}_ "github.com/lib/pq"{{ end }}
 )
 
-type config struct {
-	port         int
-	runMigration bool
-}
-
 func main() {
-	config := initConfig()
-	db := initDb(config)
-
-	router := initRouter(db)
-	port := strconv.Itoa(config.port)
-	if err := router.Run(":" + port); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func initRouter(db *sql.DB) *gin.Engine {
-	r := gin.Default()
-	handler := handler.Init(db)
-
-	api := r.Group("/api")
-	api.GET("/health", handler.Health)
-
-	author := api.Group("/authors")
-	{
-		author.GET("/", handler.ListAuthor)
-		author.POST("/", handler.CreateAuthor)
-		author.GET("/:id", handler.GetAuthor)
-		author.PUT("/:id", handler.UpdateAuthor)
-		author.DELETE("/:id", handler.DeleteAuthor)
-	}
-
-	return r
-}
-
-func initConfig() *config {
-	config := &config{}
-
 	port, err := strconv.Atoi(os.Getenv("PORT"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	config.port = port
 
-	runMigration, err := strconv.ParseBool(os.Getenv("MIGRATE_DB"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	config.runMigration = runMigration
-
-	return config
-}
-
-func initDb(config *config) *sql.DB {
-	db, err := sql.Open("{{.Database}}", os.Getenv("DATABASE_URL"))
-
+	migrateDb, err := strconv.ParseBool(os.Getenv("MIGRATE_DB"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db.SetMaxOpenConns(25)
-	db.SetMaxIdleConns(25)
-	db.SetConnMaxIdleTime(5 * time.Minute)
-	db.SetConnMaxLifetime(1 * time.Hour)
+	serv, err := server.Init(&server.Config{
+		DatabaseUrl: os.Getenv("DATABASE_URL"),
+		Port:        port,
+		MigrateDb:   migrateDb,
+		GinMode:     os.Getenv("GIN_MODE"),
+	})
 
-	if config.runMigration {
-		goose.SetBaseFS(static.Migration)
-
-		if err := goose.SetDialect("{{.Database}}"); err != nil {
-			log.Fatal(err)
-		}
-
-		if err := goose.Up(db, "sql/migrations"); err != nil {
-			log.Fatal(err)
-		}
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	return db
+	if err := serv.Run(); err != nil {
+		log.Fatal(err)
+	}
 }
-

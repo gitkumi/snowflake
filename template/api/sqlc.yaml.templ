@@ -1,10 +1,9 @@
 version: "2"
 sql:
-  {{ if eq .Database "sqlite3"}}- engine: "sqlite"{{ else if eq .Database "mysql"}}- engine: "mysql"{{ else if eq .Database "postgres"}}- engine: "postgres"{{ end }}
-    queries: "static/sql/queries/"
-    schema: "static/sql/migrations/"
-    gen:
-      go:
-        package: "data"
-        out: "internal/data"
-        emit_json_tags: true
+- engine: {{ if eq .Database "sqlite3"}}"sqlite"{{ else if eq .Database "mysql"}}"mysql"{{ else if eq .Database "postgres"}}"postgresql"{{ end }}
+  queries: "static/sql/queries/"
+  schema: "static/sql/migrations/"
+  gen:
+    go:
+      package: "data"
+      out: "internal/data"

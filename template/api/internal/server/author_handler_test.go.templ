@@ -1,0 +1,156 @@
+package server_test
+
+import (
+	"{{ .Name }}/internal/data"
+	"{{ .Name }}/internal/server"
+	"{{ .Name }}/internal/test"
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strconv"
+	"testing"
+)
+
+func TestListAuthor(t *testing.T) {
+	ts, _ := test.Init()
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/authors", nil)
+	ts.Server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected %d got %d", http.StatusOK, rr.Code)
+	}
+
+	var response struct {
+		Data []server.AuthorResponse `json:"data"`
+	}
+	if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
+		t.Fatalf("Unable to parse response: %v", err)
+	}
+}
+
+func TestGetAuthor(t *testing.T) {
+	ts, _ := test.Init()
+	author := ts.CreateAuthorFixture(data.CreateAuthorParams{
+		Name: "Lorem",
+	})
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/authors/"+strconv.FormatInt(author.ID, 10), nil)
+	ts.Server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected %d got %d", http.StatusOK, rr.Code)
+	}
+
+	var response struct {
+		Data server.AuthorResponse `json:"data"`
+	}
+	if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
+		t.Fatalf("Unable to parse response: %v", err)
+	}
+
+	if response.Data.ID != author.ID {
+		t.Fatalf("Expected author ID %d got %d", author.ID, response.Data.ID)
+	}
+
+	if response.Data.Name != author.Name {
+		t.Fatalf("Expected author name %s got %s", author.Name, response.Data.Name)
+	}
+}
+
+func TestCreateAuthor(t *testing.T) {
+	ts, _ := test.Init()
+	jsonValue, _ := json.Marshal(map[string]string{"name": "Jane"})
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/authors", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+
+	ts.Server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusCreated {
+		t.Fatalf("Expected %d got %d", http.StatusCreated, rr.Code)
+	}
+
+	var response struct {
+		Data server.AuthorResponse `json:"data"`
+	}
+	if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
+		t.Fatalf("Unable to parse response: %v", err)
+	}
+}
+
+func TestUpdateAuthor(t *testing.T) {
+	ts, _ := test.Init()
+
+	tests := []struct {
+		name string
+		json map[string]string
+	}{
+		{"Updated", map[string]string{"name": "Updated"}},
+		{"", map[string]string{"name": ""}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			author := ts.CreateAuthorFixture(data.CreateAuthorParams{})
+			jsonValue, _ := json.Marshal(tt.json)
+
+			rr := httptest.NewRecorder()
+			req, _ := http.NewRequest("PUT", "/api/authors/"+strconv.FormatInt(author.ID, 10), bytes.NewBuffer(jsonValue))
+			req.Header.Set("Content-Type", "application/json")
+
+			ts.Server.Router.ServeHTTP(rr, req)
+
+			if rr.Code != http.StatusOK {
+				t.Fatalf("Expected %d got %d", http.StatusOK, rr.Code)
+			}
+
+			var response struct {
+				Data server.AuthorResponse `json:"data"`
+			}
+			if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
+				t.Fatalf("Unable to parse response: %v", err)
+			}
+
+			if response.Data.Name != tt.name {
+				t.Fatalf("Expected %s but got %s", tt.name, response.Data.Name)
+			}
+
+			if response.Data.Bio != author.Bio.String {
+				t.Fatalf("Expected %s but got %s", author.Bio.String, response.Data.Bio)
+			}
+		})
+	}
+}
+
+func TestDeleteAuthor(t *testing.T) {
+	ts, _ := test.Init()
+	author := ts.CreateAuthorFixture(data.CreateAuthorParams{})
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/api/authors/"+strconv.FormatInt(author.ID, 10), nil)
+	ts.Server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusNoContent {
+		t.Fatalf("Expected %d got %d", http.StatusNoContent, rr.Code)
+	}
+
+	rr = httptest.NewRecorder()
+	req, _ = http.NewRequest("GET", "/api/authors/"+strconv.FormatInt(author.ID, 10), nil)
+	ts.Server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected %d got %d", http.StatusOK, rr.Code)
+	}
+
+	expected := "{}"
+	got := rr.Body.String()
+
+	if got != expected {
+		t.Fatalf("Expected %s but got %s", expected, got)
+	}
+}

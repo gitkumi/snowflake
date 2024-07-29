@@ -1,0 +1,53 @@
+package test
+
+import (
+	"{{ .Name }}/internal/data"
+	"context"
+	"database/sql"
+	"log"
+	"reflect"
+
+	"github.com/jaswdr/faker"
+)
+
+func isZeroValue(v reflect.Value) bool {
+	zeroValue := reflect.Zero(v.Type())
+	return reflect.DeepEqual(v.Interface(), zeroValue.Interface())
+}
+
+func mergeParams(left data.CreateAuthorParams, right data.CreateAuthorParams) data.CreateAuthorParams {
+	leftValue := reflect.ValueOf(&left).Elem()
+	rightValue := reflect.ValueOf(&right).Elem()
+
+	for i := 0; i < leftValue.NumField(); i++ {
+		leftField := leftValue.Field(i)
+		rightField := rightValue.Field(i)
+
+		if !isZeroValue(rightField) {
+			leftField.Set(rightField)
+		}
+	}
+
+	return left
+}
+
+func (t TestServer) CreateAuthorFixture(customAuthor data.CreateAuthorParams) data.Author {
+	ctx := context.Background()
+	fake := faker.New()
+
+	defaultAuthor := data.CreateAuthorParams{
+		Name: fake.RandomStringWithLength(10),
+		Bio: sql.NullString{
+			String: fake.Lorem().Paragraph(3),
+			Valid:  true,
+		},
+	}
+
+	merged := mergeParams(defaultAuthor, customAuthor)
+	res, err := t.Server.Query.CreateAuthor(ctx, merged)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return res
+}
