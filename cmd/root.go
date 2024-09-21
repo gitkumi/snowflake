@@ -44,7 +44,7 @@ func version() *cobra.Command {
 		Use:   "version",
 		Short: "Display version",
 		Run: func(_cmd *cobra.Command, _args []string) {
-			fmt.Println("v0.5.0")
+			fmt.Println("v0.6.0")
 		},
 	}
 
@@ -154,7 +154,7 @@ func new() *cobra.Command {
 					log.Fatal(err.Error())
 				}
 
-				command = exec.Command("git", "commit", "-m", "Snowflake Init")
+				command = exec.Command("git", "commit", "-m", "Initialize Snowflake project")
 				command.Dir = outputPath
 				err = command.Run()
 				if err != nil {

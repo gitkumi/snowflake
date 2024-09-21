@@ -5,9 +5,12 @@ func (s *Server) RegisterRoutes() {
 
 	api := s.Router.Group("/api")
 
-	api.GET("/authors", s.ListAuthor)
-	api.GET("/authors/:id", s.GetAuthor)
-	api.DELETE("/authors/:id", s.DeleteAuthor)
-	api.PUT("/authors/:id", s.UpdateAuthor)
-	api.POST("/authors", s.CreateAuthor)
+	api.POST("/auth/register", s.Register)
+	api.POST("/auth/login", s.Login)
+	api.POST("/auth/email-login", s.CreateMagicLink)
+	api.POST("/auth/email-login/:token", s.ConsumeMagicLink)
+	api.POST("/auth/confirm-email", s.CreateConfirmEmail)
+	api.POST("/auth/confirm-email/:token", s.ConsumeConfirmEmail)
+	api.POST("/auth/reset-password", s.CreateResetPassword)
+	api.POST("/auth/reset-password/:token", s.ConsumeResetPassword)
 }
