@@ -1,0 +1,113 @@
+package middleware_test
+
+import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"{{ .Name}}/internal/data"
+	"{{ .Name}}/internal/middleware"
+	"{{ .Name}}/internal/test"
+	"{{ .Name}}/internal/utils"
+
+	"github.com/gin-gonic/gin"
+)
+
+func TestAuthenticationMiddleware(t *testing.T) {
+	ts, _ := test.Init()
+
+	_, user, _ := ts.CreateMembershipFixture(data.CreateMembershipParams{})
+
+	token, _ := utils.CreateJwt(user.Email)
+
+	testCases := []struct {
+		name           string
+		authHeader     string
+		expectedStatus int
+	}{
+		{
+			name:           "Valid token and membership",
+			authHeader:     "Bearer " + token,
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "No Authorization header",
+			authHeader:     "",
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:           "Invalid token format",
+			authHeader:     "Bearer invalidtoken",
+			expectedStatus: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+
+			r := gin.Default()
+			r.Use(middleware.Authentication(ts.Server.Query))
+			r.GET("/protected", func(c *gin.Context) {
+				c.String(http.StatusOK, "Success")
+			})
+
+			rr := httptest.NewRecorder()
+			req, _ := http.NewRequest("GET", "/protected", nil)
+			if tt.authHeader != "" {
+				req.Header.Set("Authorization", tt.authHeader)
+			}
+
+			r.ServeHTTP(rr, req)
+
+			if rr.Code != tt.expectedStatus {
+				t.Fatalf("Expected %d got %d", tt.expectedStatus, rr.Code)
+			}
+		})
+	}
+}
+
+func TestAuthenticationUserNotFound(t *testing.T) {
+	ts, _ := test.Init()
+
+	token, _ := utils.CreateJwt("nonexistent@example.com")
+
+	r := gin.Default()
+	r.Use(middleware.Authentication(ts.Server.Query))
+	r.GET("/protected", func(c *gin.Context) {
+		c.String(http.StatusOK, "Success")
+	})
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/protected", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	r.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Fatalf("Expected %d got %d", http.StatusInternalServerError, rr.Code)
+	}
+}
+
+func TestAuthenticationMembershipNotFound(t *testing.T) {
+	ts, _ := test.Init()
+
+	user := ts.CreateUserFixture(data.CreateUserParams{})
+
+	token, _ := utils.CreateJwt(user.Email)
+
+	r := gin.Default()
+
+	r.Use(middleware.Authentication(ts.Server.Query))
+	r.GET("/protected", func(c *gin.Context) {
+		c.String(http.StatusOK, "Success")
+	})
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/protected", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	r.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusNotFound {
+		t.Fatalf("Expected %d got %d", http.StatusNotFound, rr.Code)
+	}
+}

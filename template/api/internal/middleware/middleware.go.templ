@@ -1,0 +1,83 @@
+package middleware
+
+import (
+	"net/http"
+	"strings"
+	"{{ .Name}}/internal/constants"
+	"{{ .Name}}/internal/data"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+)
+
+func Authentication(q *data.Queries) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized."})
+			c.Abort()
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid Bearer Authorization format."})
+			c.Abort()
+			return
+		}
+
+		token, err := jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
+			return constants.SigningKey, nil
+		})
+
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token."})
+			c.Abort()
+			return
+		}
+
+		if !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token."})
+			c.Abort()
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+
+		if !ok {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse token."})
+			return
+		}
+
+		sub, err := claims.GetSubject()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse token."})
+		}
+
+		user, err := q.GetUserByEmail(c, sub)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user."})
+			return
+		}
+
+		memberships, err := q.ListMemberships(c, user.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch memberships."})
+			return
+		}
+
+		if len(memberships) <= 0 {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Membership does not exist.",
+				"user":  user.Email,
+			})
+			c.Abort()
+			return
+		}
+
+		c.Set("X-USER", user)
+		c.Set("X-MEMBERSHIP", memberships[0])
+
+		c.Next()
+	}
+}

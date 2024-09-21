@@ -1,0 +1,17 @@
+package utils
+
+import (
+	"time"
+	"{{ .Name}}/internal/constants"
+
+	"github.com/golang-jwt/jwt/v5"
+)
+
+func CreateJwt(sub string) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["exp"] = time.Now().Add(1 * time.Hour).Unix()
+	claims["sub"] = sub
+
+	return token.SignedString(constants.SigningKey)
+}

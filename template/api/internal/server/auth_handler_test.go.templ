@@ -1,0 +1,204 @@
+package server_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"{{ .Name }}/internal/data"
+	"{{ .Name }}/internal/server"
+	"{{ .Name }}/internal/test"
+	"testing"
+
+	gonanoid "github.com/matoous/go-nanoid/v2"
+)
+
+func TestRegister(t *testing.T) {
+	ts, _ := test.Init()
+
+	nanoid, _ := gonanoid.New()
+
+	jsonValue, _ := json.Marshal(map[string]string{
+		"email":    nanoid + "@example.com",
+		"password": "notsecure",
+		"username": nanoid,
+	})
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/auth/register", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+
+	ts.Server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusCreated {
+		t.Fatalf("Expected %d got %d. %s. %s", http.StatusCreated, rr.Code, nanoid, rr.Body.String())
+	}
+
+	var response struct {
+		Data server.UserResponse `json:"data"`
+	}
+	if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
+		t.Fatalf("Unable to parse response: %v", err)
+	}
+}
+
+func TestLogin(t *testing.T) {
+	ts, _ := test.Init()
+
+	user := ts.CreateUserFixture(data.CreateUserParams{})
+
+	correctPassword, _ := json.Marshal(map[string]string{
+		"email":    user.Email,
+		"password": "notsecure",
+	})
+
+	incorrectPassword, _ := json.Marshal(map[string]string{
+		"email":    user.Email,
+		"password": "wrongpassword",
+	})
+
+	testCases := []struct {
+		name      string
+		jsonValue []byte
+		expected  int
+	}{
+		{
+			name:      "Valid",
+			jsonValue: correctPassword,
+			expected:  http.StatusOK,
+		},
+		{
+			name:      "Invalid",
+			jsonValue: incorrectPassword,
+			expected:  http.StatusNotFound,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+
+			req, _ := http.NewRequest("POST", "/api/auth/login", bytes.NewBuffer(tc.jsonValue))
+			req.Header.Set("Content-Type", "application/json")
+
+			ts.Server.Router.ServeHTTP(rr, req)
+
+			if rr.Code != tc.expected {
+				t.Fatalf("Expected %d got %d", tc.expected, rr.Code)
+			}
+
+			var response struct {
+				Data server.UserResponse `json:"data"`
+			}
+			if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
+				t.Fatalf("Unable to parse response: %v", err)
+			}
+		})
+	}
+}
+
+func TestCreateMagicLink(t *testing.T) {
+	ts, _ := test.Init()
+
+	user := ts.CreateUserFixture(data.CreateUserParams{})
+
+	jsonValue, _ := json.Marshal(map[string]string{
+		"email": user.Email,
+	})
+
+	rr := httptest.NewRecorder()
+
+	req, _ := http.NewRequest("POST", "/api/auth/email-login", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+
+	ts.Server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusCreated {
+		t.Fatalf("Expected %d got %d", http.StatusCreated, rr.Code)
+	}
+}
+
+func TestConsumeMagicLink(t *testing.T) {
+	ts, _ := test.Init()
+
+	token := ts.CreateTokenFixture(data.CreateAuthTokenParams{
+		Type: "magic_link",
+	})
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/auth/email-login/"+token.ID, nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	ts.Server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected %d got %d", http.StatusOK, rr.Code)
+	}
+}
+
+func TestConsumeConfirmEmail(t *testing.T) {
+	ts, _ := test.Init()
+
+	token := ts.CreateTokenFixture(data.CreateAuthTokenParams{
+		Type: "confirm_email",
+	})
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/auth/confirm-email/"+token.ID, nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	ts.Server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected %d got %d", http.StatusOK, rr.Code)
+	}
+
+	var response struct {
+		Data server.UserResponse `json:"data"`
+	}
+
+	if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
+		t.Fatalf("Unable to parse response: %v", err)
+	}
+
+	if response.Data.ConfirmedAt == nil {
+		t.Fatalf("User confirmed_at was not updated.")
+	}
+}
+
+func TestConsumeResetPassword(t *testing.T) {
+	ts, _ := test.Init()
+
+	user := ts.CreateUserFixture(data.CreateUserParams{})
+
+	token := ts.CreateTokenFixture(data.CreateAuthTokenParams{
+		UserID: user.ID,
+		Type:   "reset_password",
+	})
+
+	jsonValue, _ := json.Marshal(map[string]string{
+		"email":    user.Email,
+		"password": "updated_password",
+	})
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/auth/reset-password/"+token.ID, bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+
+	ts.Server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected %d got %d", http.StatusOK, rr.Code)
+	}
+
+	// Test login after updated pw
+	rr = httptest.NewRecorder()
+	req, _ = http.NewRequest("POST", "/api/auth/login", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
+
+	ts.Server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected %d got %d", http.StatusOK, rr.Code)
+	}
+}

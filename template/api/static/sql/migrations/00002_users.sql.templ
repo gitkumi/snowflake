@@ -1,0 +1,30 @@
+-- +goose Up
+-- +goose StatementBegin
+CREATE TABLE users (
+  id INTEGER PRIMARY KEY,
+  email TEXT NOT NULL,
+  username TEXT NOT NULL,
+  hashed_password TEXT,
+  first_name TEXT,
+  last_name TEXT,
+  confirmed_at DATETIME,
+  created_at DATETIME NOT NULL DEFAULT current_timestamp,
+  updated_at DATETIME NOT NULL DEFAULT current_timestamp,
+  UNIQUE(email),
+  UNIQUE(username)
+);
+
+CREATE TRIGGER update_users_updated_at
+AFTER UPDATE ON users
+WHEN old.updated_at <> current_timestamp
+BEGIN
+    UPDATE users
+    SET updated_at = current_timestamp
+    WHERE id = OLD.id;
+END;
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE users;
+-- +goose StatementEnd

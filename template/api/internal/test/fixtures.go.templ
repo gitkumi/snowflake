@@ -1,13 +1,15 @@
 package test
 
 import (
-	"{{ .Name }}/internal/data"
 	"context"
 	"database/sql"
 	"log"
 	"reflect"
+	"{{ .Name }}/internal/data"
 
+	"github.com/alexedwards/argon2id"
 	"github.com/jaswdr/faker"
+	"github.com/matoous/go-nanoid/v2"
 )
 
 func isZeroValue(v reflect.Value) bool {
@@ -15,7 +17,7 @@ func isZeroValue(v reflect.Value) bool {
 	return reflect.DeepEqual(v.Interface(), zeroValue.Interface())
 }
 
-func mergeParams(left data.CreateAuthorParams, right data.CreateAuthorParams) data.CreateAuthorParams {
+func mergeParams[T any](left, right T) T {
 	leftValue := reflect.ValueOf(&left).Elem()
 	rightValue := reflect.ValueOf(&right).Elem()
 
@@ -31,20 +33,93 @@ func mergeParams(left data.CreateAuthorParams, right data.CreateAuthorParams) da
 	return left
 }
 
-func (t TestServer) CreateAuthorFixture(customAuthor data.CreateAuthorParams) data.Author {
+func (t TestServer) CreateUserFixture(custom data.CreateUserParams) data.User {
 	ctx := context.Background()
 	fake := faker.New()
 
-	defaultAuthor := data.CreateAuthorParams{
-		Name: fake.RandomStringWithLength(10),
-		Bio: sql.NullString{
-			String: fake.Lorem().Paragraph(3),
+	usernanoid, _ := gonanoid.New()
+
+	hashed, _ := argon2id.CreateHash("notsecure", argon2id.DefaultParams)
+
+	defaultData := data.CreateUserParams{
+		HashedPassword: sql.NullString{
+			String: hashed,
+			Valid:  true,
+		},
+		Username: usernanoid,
+		Email:    usernanoid + "@example.com",
+		FirstName: sql.NullString{
+			String: fake.Lorem().Text(10),
+			Valid:  true,
+		},
+		LastName: sql.NullString{
+			String: fake.Lorem().Text(10),
 			Valid:  true,
 		},
 	}
 
-	merged := mergeParams(defaultAuthor, customAuthor)
-	res, err := t.Server.Query.CreateAuthor(ctx, merged)
+	merged := mergeParams(defaultData, custom)
+	res, err := t.Server.Query.CreateUser(ctx, merged)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return res
+}
+
+func (t TestServer) CreateOrganizationFixture(custom data.CreateOrganizationParams) data.Organization {
+	ctx := context.Background()
+	fake := faker.New()
+
+	defaultData := data.CreateOrganizationParams{
+		Name: fake.Beer().Name(),
+		Type: "personal",
+	}
+
+	merged := mergeParams(defaultData, custom)
+	res, err := t.Server.Query.CreateOrganization(ctx, merged)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return res
+}
+
+func (t TestServer) CreateMembershipFixture(custom data.CreateMembershipParams) (data.Organization, data.User, data.Membership) {
+	ctx := context.Background()
+
+	user := t.CreateUserFixture(data.CreateUserParams{})
+	org := t.CreateOrganizationFixture(data.CreateOrganizationParams{})
+
+	defaultData := data.CreateMembershipParams{
+		UserID:         user.ID,
+		OrganizationID: org.ID,
+		Role:           "owner",
+	}
+
+	merged := mergeParams(defaultData, custom)
+	res, err := t.Server.Query.CreateMembership(ctx, merged)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return org, user, res
+}
+
+func (t TestServer) CreateTokenFixture(custom data.CreateAuthTokenParams) data.UserAuthToken {
+	ctx := context.Background()
+
+	user := t.CreateUserFixture(data.CreateUserParams{})
+	nanoid, err := gonanoid.New()
+
+	defaultData := data.CreateAuthTokenParams{
+		ID:     nanoid,
+		UserID: user.ID,
+		Type:   "confirm_email",
+	}
+
+	merged := mergeParams(defaultData, custom)
+	res, err := t.Server.Query.CreateAuthToken(ctx, merged)
 	if err != nil {
 		log.Fatal(err)
 	}
