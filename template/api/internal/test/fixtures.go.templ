@@ -88,16 +88,28 @@ func (t TestServer) CreateOrganizationFixture(custom data.CreateOrganizationPara
 func (t TestServer) CreateMembershipFixture(custom data.CreateMembershipParams) (data.Organization, data.User, data.Membership) {
 	ctx := context.Background()
 
-	user := t.CreateUserFixture(data.CreateUserParams{})
-	org := t.CreateOrganizationFixture(data.CreateOrganizationParams{})
+	var user data.User
+	var org data.Organization
+
+	if custom.UserID == 0 {
+		user = t.CreateUserFixture(data.CreateUserParams{})
+	} else {
+		user, _ = t.Server.Query.GetUser(ctx, custom.UserID)
+	}
+
+	if custom.OrganizationID == 0 {
+		org = t.CreateOrganizationFixture(data.CreateOrganizationParams{})
+	} else {
+		org, _ = t.Server.Query.GetOrganization(ctx, custom.OrganizationID)
+	}
 
 	defaultData := data.CreateMembershipParams{
 		UserID:         user.ID,
 		OrganizationID: org.ID,
 		Role:           "owner",
 	}
-
 	merged := mergeParams(defaultData, custom)
+
 	res, err := t.Server.Query.CreateMembership(ctx, merged)
 	if err != nil {
 		log.Fatal(err)
@@ -109,7 +121,14 @@ func (t TestServer) CreateMembershipFixture(custom data.CreateMembershipParams) 
 func (t TestServer) CreateTokenFixture(custom data.CreateAuthTokenParams) data.UserAuthToken {
 	ctx := context.Background()
 
-	user := t.CreateUserFixture(data.CreateUserParams{})
+	var user data.User
+
+	if custom.UserID == 0 {
+		user = t.CreateUserFixture(data.CreateUserParams{})
+	} else {
+		user, _ = t.Server.Query.GetUser(ctx, custom.UserID)
+	}
+
 	nanoid, err := gonanoid.New()
 
 	defaultData := data.CreateAuthTokenParams{
