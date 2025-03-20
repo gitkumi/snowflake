@@ -14,7 +14,8 @@ snowflake requires git and the following Go libraries.
 ```sh
 go install github.com/air-verse/air@latest &&
 go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && 
-go install github.com/pressly/goose/v3/cmd/goose@latest
+go install github.com/pressly/goose/v3/cmd/goose@latest &&
+go install honnef.co/go/tools/cmd/staticcheck@latest
 ```
 
 ## Installation
