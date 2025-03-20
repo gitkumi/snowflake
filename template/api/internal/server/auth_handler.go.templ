@@ -21,7 +21,7 @@ func (h *Server) Register(c *gin.Context) {
 		return
 	}
 
-	data, err := createCreateUserParams(registerParams)
+	data, err := registerParams.Data()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -355,103 +355,4 @@ func (h *Server) ConsumeConfirmEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"data": createUserResponse(confirmed),
 	})
-}
-
-type CreateMagicLinkInput struct {
-	Email string `json:"email" binding:"required"`
-}
-
-type CreateConfirmEmailInput struct {
-	Email string `json:"email" binding:"required,email"`
-}
-
-type CreateResetPasswordInput struct {
-	Email string `json:"email" binding:"required,email"`
-}
-
-type ResetPasswordInput struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6,max=72"`
-}
-
-type LoginInput struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
-type RegisterInput struct {
-	Email     string  `json:"email" binding:"required,email"`
-	Password  string  `json:"password" binding:"required,min=6,max=72"`
-	Username  string  `json:"username" binding:"required,min=3,max=21"`
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-}
-
-type UserResponse struct {
-	ID          int64   `json:"id"`
-	Email       string  `json:"email"`
-	Username    string  `json:"username"`
-	FirstName   *string `json:"first_name"`
-	LastName    *string `json:"last_name"`
-	ConfirmedAt *string `json:"confirmed_at"`
-	CreatedAt   string  `json:"created_at"`
-	UpdatedAt   string  `json:"updated_at"`
-}
-
-func createCreateUserParams(u RegisterInput) (data.CreateUserParams, error) {
-	hashed, err := argon2id.CreateHash(u.Password, argon2id.DefaultParams)
-
-	if err != nil {
-		return data.CreateUserParams{}, err
-	}
-
-	user := data.CreateUserParams{
-		Email: u.Email,
-		HashedPassword: sql.NullString{
-			String: hashed,
-			Valid:  true,
-		},
-		Username: u.Username,
-	}
-
-	if u.FirstName != nil {
-		user.FirstName = sql.NullString{
-			String: *u.FirstName,
-			Valid:  true,
-		}
-	}
-
-	if u.LastName != nil {
-		user.LastName = sql.NullString{
-			String: *u.LastName,
-			Valid:  true,
-		}
-	}
-
-	return user, nil
-}
-
-func createUserResponse(u data.User) UserResponse {
-	user := UserResponse{
-		ID:        u.ID,
-		Email:     u.Email,
-		Username:  u.Username,
-		CreatedAt: u.CreatedAt.String(),
-		UpdatedAt: u.UpdatedAt.String(),
-	}
-
-	if u.FirstName.Valid {
-		user.FirstName = &u.FirstName.String
-	}
-
-	if u.LastName.Valid {
-		user.LastName = &u.LastName.String
-	}
-
-	if u.ConfirmedAt.Valid {
-		confirmedAt := u.ConfirmedAt.Time.String()
-		user.ConfirmedAt = &confirmedAt
-	}
-
-	return user
 }
