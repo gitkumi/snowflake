@@ -3,9 +3,14 @@ package server
 import (
 	"{{ .Name }}/internal/data"
 	"{{ .Name }}/static"
+	"context"
 	"database/sql"
+	"errors"
+	"fmt"
 	"net/http"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -63,9 +68,39 @@ func Init(cfg *Config) (*Server, error) {
 }
 
 func (s *Server) Run() error {
-	portStr := strconv.Itoa(s.Config.Port)
-	return s.Router.Run("localhost:" + portStr)
+	srv := &http.Server{
+		Addr:    ":" + strconv.Itoa(s.Config.Port),
+		Handler: s.Router,
+	}
+
+	errCh := make(chan error, 1)
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errCh <- fmt.Errorf("listen and serve returned err: %w", err)
+		}
+	}()
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	select {
+	case <-ctx.Done():
+
+	case err := <-errCh:
+		return err
+	}
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		return err
+	}
+
+	return nil
 }
+
 
 func (s *Server) Health(c *gin.Context) {
 	err := s.DB.Ping()
