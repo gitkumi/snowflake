@@ -1,0 +1,21 @@
+package storage
+
+import "mime/multipart"
+
+type MockStorage struct{}
+
+func (m *MockStorage) Get(key string) (string, error) {
+	return "", nil
+}
+
+func (m *MockStorage) List() ([]string, error) {
+	return []string{}, nil
+}
+
+func (m *MockStorage) Upload(key string, file multipart.File) (string, error) {
+	return "", nil
+}
+
+func (m *MockStorage) Delete(key string) error {
+	return nil
+}

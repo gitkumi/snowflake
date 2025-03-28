@@ -22,13 +22,15 @@ type Config struct {
 	Port        int
 	MigrateDb   bool
 	GinMode     string
+	Storage     storage.Storage
 }
 
 type Server struct {
-	Config *Config
-	Router *gin.Engine
-	DB     *sql.DB
-	Query  *data.Queries
+	Config  *Config
+	Router  *gin.Engine
+	DB      *sql.DB
+	Query   *data.Queries
+	Storage *storage.Storage
 }
 
 func Init(cfg *Config) (*Server, error) {
@@ -56,10 +58,11 @@ func Init(cfg *Config) (*Server, error) {
 	gin.SetMode(cfg.GinMode)
 
 	s := &Server{
-		Config: cfg,
-		DB:     db,
-		Query:  data.New(db),
-		Router: gin.Default(),
+		Config:  cfg,
+		DB:      db,
+		Query:   data.New(db),
+		Router:  gin.Default(),
+		Storage: &cfg.Storage,
 	}
 
 	s.RegisterRoutes()
@@ -100,7 +103,6 @@ func (s *Server) Run() error {
 
 	return nil
 }
-
 
 func (s *Server) Health(c *gin.Context) {
 	err := s.DB.Ping()
