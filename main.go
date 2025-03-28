@@ -1,7 +1,7 @@
 package main
 
-import "github.com/gitkumi/snowflake/cmd"
+import "github.com/gitkumi/snowflake/cmd/cli"
 
 func main() {
-	cmd.Execute()
+	cli.Execute()
 }
