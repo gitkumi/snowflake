@@ -53,7 +53,12 @@ Snowflake is built with these packages. Make sure to check their documentation.
 - [sqlc](https://github.com/sqlc-dev/sqlc)
 - [goose](https://github.com/pressly/goose)
 
-## Make Commands
+## Features
+
+- Auth
+- Storage (S3)
+
+## Commands
 
 - `make dev` - Start the development environment with hot reload.
 - `make test` - Run tests.
@@ -66,3 +71,14 @@ Snowflake is built with these packages. Make sure to check their documentation.
 - `make db.destroy` - Destroy database.
 - `make db.reset` - Destroy and create database.
 - `make create <table_name>` - Create an empty migration file.
+
+## TODO
+
+- Cron
+- Rate Limiting
+- DB Seeding
+- mysql and postgres support
+- CORS
+- Background Jobs (SQS)
+- Mail (SES)
+- Billing (Stripe)
