@@ -13,40 +13,40 @@ export MIGRATE_DB?=false
 
 .PHONY: lint
 lint:
-staticcheck ./...
+  staticcheck ./...
 
 .PHONY: run
 run:
-go run cmd/api/*.go
+  go run cmd/api/*.go
 
 .PHONY: test
 test:
-go test ./...
+  go test ./...
 
 .PHONY: dev
 dev:
-air
+  air
 
 .PHONY: build
-build:
-sqlc generate
-go build -o bin/main cmd/api/*.go
+  build:
+  sqlc generate
+  go build -o bin/main cmd/api/*.go
 
 .PHONY: db
 db:
-goose status
+  goose status
 
 .PHONY: db.gen
 db.gen:
-goose create $(filter-out $@,$(MAKECMDGOALS)) sql
+  goose create $(filter-out $@,$(MAKECMDGOALS)) sql
 
 .PHONY: db.up
 db.up:
-goose up
+  goose up
 
 .PHONY: db.down
 db.down:
-goose down
+  goose down
 
 %:
 @:
