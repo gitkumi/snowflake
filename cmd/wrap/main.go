@@ -18,6 +18,7 @@ func main() {
 	testPath := filepath.Join(cwd, "template", "devapi")
 
 	buildFiles := []string{
+		".git",
 		"bin/main",
 		"go.mod",
 		"go.sum",
