@@ -25,7 +25,7 @@ func main() {
 		"go.sum",
 		".snowflake",
 		".snowflake/emails",
-		"tmp"
+		"tmp",
 	}
 
 	for _, fileName := range buildFiles {
