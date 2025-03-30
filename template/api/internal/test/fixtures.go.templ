@@ -4,10 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"{{ .Name }}/internal/data"
+	"{{ .Name }}/internal/password"
 	"log"
 	"reflect"
 
-	"github.com/alexedwards/argon2id"
 	"github.com/jaswdr/faker"
 	"github.com/matoous/go-nanoid/v2"
 )
@@ -39,7 +39,7 @@ func (t TestServer) CreateUserFixture(custom data.CreateUserParams) data.User {
 
 	nanoid, _ := gonanoid.New()
 
-	hashed, _ := argon2id.CreateHash("notsecure", argon2id.DefaultParams)
+	hashed, _ := password.HashPassword("notsecure")
 
 	defaultData := data.CreateUserParams{
 		HashedPassword: sql.NullString{

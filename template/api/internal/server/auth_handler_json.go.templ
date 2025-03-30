@@ -3,8 +3,7 @@ package server
 import (
 	"database/sql"
 	"{{ .Name }}/internal/data"
-
-	"github.com/alexedwards/argon2id"
+	"{{ .Name }}/internal/password"
 )
 
 type CreateMagicLinkInput struct {
@@ -49,7 +48,7 @@ type UserResponse struct {
 }
 
 func (u RegisterInput) Data() (data.CreateUserParams, error) {
-	hashed, err := argon2id.CreateHash(u.Password, argon2id.DefaultParams)
+	hashed, err := password.HashPassword(u.Password)
 
 	if err != nil {
 		return data.CreateUserParams{}, err

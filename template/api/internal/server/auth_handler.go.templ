@@ -63,14 +63,14 @@ func (s *Server) Login(c *gin.Context) {
 
 	if user == (data.User{}) {
 		// Fake run
-		_, _ = password.Verify(login.Password, "notsecure")
+		_, _ = password.VerifyPassword(login.Password, "notsecure")
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Invalid username or password.",
 		})
 		return
 	}
 
-	match, err := password.Verify(login.Password, user.HashedPassword.String)
+	match, err := password.VerifyPassword(login.Password, user.HashedPassword.String)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Invalid username or password.",
@@ -300,7 +300,7 @@ func (s *Server) ConsumeResetPassword(c *gin.Context) {
 		return
 	}
 
-	hashed, err := password.Hash(resetPasswordParams.Password)
+	hashed, err := password.HashPassword(resetPasswordParams.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
