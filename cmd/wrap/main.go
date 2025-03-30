@@ -19,6 +19,7 @@ func main() {
 
 	buildFiles := []string{
 		".git",
+		"bin",
 		"bin/main",
 		"go.mod",
 		"go.sum",
@@ -26,7 +27,7 @@ func main() {
 
 	for _, fileName := range buildFiles {
 		filePath := filepath.Join(testPath, fileName)
-		os.Remove(filePath)
+		os.RemoveAll(filePath)
 	}
 
 	err = filepath.WalkDir(testPath, func(filePath string, d fs.DirEntry, err error) error {

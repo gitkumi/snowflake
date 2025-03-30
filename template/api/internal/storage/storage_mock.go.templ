@@ -1,6 +1,10 @@
 package storage
 
-import "mime/multipart"
+import (
+	"mime/multipart"
+
+	"github.com/aws/aws-sdk-go/service/s3"
+)
 
 type MockStorage struct{}
 
@@ -8,8 +12,8 @@ func (m *MockStorage) Get(key string) (string, error) {
 	return "", nil
 }
 
-func (m *MockStorage) List() ([]string, error) {
-	return []string{}, nil
+func (m *MockStorage) List(prefix string) ([]*s3.Object, error) {
+	return []*s3.Object{}, nil
 }
 
 func (m *MockStorage) Upload(key string, file multipart.File) (string, error) {

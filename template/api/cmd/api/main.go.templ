@@ -22,12 +22,23 @@ func main() {
 		log.Fatal(err)
 	}
 
+	baseUrl := os.Getenv("BASE_URL")
+	if len(baseUrl) <= 0 {
+		baseUrl = "localhost:8080"
+	}
+
 	serv, err := server.Init(&server.Config{
-		DatabaseUrl: os.Getenv("DATABASE_URL"),
-		Port:        port,
-		MigrateDb:   migrateDb,
-		GinMode:     os.Getenv("GIN_MODE"),
-		Storage:     &storage.S3Storage{},
+		BaseUrl:   baseUrl,
+		Port:      port,
+		MigrateDb: migrateDb,
+		GinMode:   os.Getenv("GIN_MODE"),
+		Storage: &storage.S3Storage{
+			AccessKey:   "",
+			SecretKey:   "",
+			EndpointUrl: "",
+			Region:      "",
+			Bucket:      "",
+		},
 	})
 
 	if err != nil {
