@@ -16,7 +16,6 @@ func Init() (*TestServer, error) {
 		Environment: os.Getenv("ENVIRONMENT"),
 		BaseURL:     os.Getenv("BASE_URL"),
 		DatabaseURL: "file::memory:?cache=shared",
-		MigrateDB:   true,
 		GinMode:     "test",
 	})
 

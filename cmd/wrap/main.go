@@ -19,12 +19,10 @@ func main() {
 
 	buildFiles := []string{
 		".git",
-		"bin",
-		"bin/main",
 		"go.mod",
 		"go.sum",
+		"bin",
 		".snowflake",
-		".snowflake/emails",
 		"tmp",
 	}
 

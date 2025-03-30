@@ -24,32 +24,28 @@ import (
 
 type Config struct {
 	Environment string
-
-	BaseURL string
-	Port    int
-
-	GinMode string
-
+	BaseURL     string
+	GinMode     string
 	DatabaseURL string
-	MigrateDB   bool
 }
 
 type Server struct {
 	BaseURL string
 	Port    int
-
-	Router *gin.Engine
-
-	DB    *sql.DB
-	Query *data.Queries
-
+	Router  *gin.Engine
+	DB      *sql.DB
+	Query   *data.Queries
 	Storage storage.Storage
 	Mailer  smtp.Mailer
-
-	wg sync.WaitGroup
+	wg      sync.WaitGroup
 }
 
 func Init(cfg *Config) (*Server, error) {
+	port, err := strconv.Atoi(os.Getenv("PORT"))
+	if err != nil {
+		return nil, err
+	}
+
 	db, err := createDB(cfg)
 	if err != nil {
 		return nil, err
@@ -61,12 +57,11 @@ func Init(cfg *Config) (*Server, error) {
 	}
 
 	router := createRouter(cfg)
-
 	storage := createStorage(cfg)
 
 	s := &Server{
+		Port:    port,
 		BaseURL: cfg.BaseURL,
-		Port:    cfg.Port,
 		DB:      db,
 		Query:   data.New(db),
 		Router:  router,
@@ -116,7 +111,12 @@ func createDB(cfg *Config) (*sql.DB, error) {
 	db.SetMaxIdleConns(25)
 	db.SetConnMaxLifetime(2 * time.Minute)
 
-	if cfg.MigrateDB {
+	migrateDB, err := strconv.ParseBool(os.Getenv("MIGRATE_DB"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if migrateDB {
 		goose.SetBaseFS(static.Migration)
 
 		if err := goose.SetDialect("sqlite3"); err != nil {
