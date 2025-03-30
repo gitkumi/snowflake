@@ -68,5 +68,3 @@ Snowflake is built with these packages. Make sure to check their documentation.
 ## TODO
 
 - mysql and postgres support
-- Background Jobs (SQS)
-- Billing (Stripe)
