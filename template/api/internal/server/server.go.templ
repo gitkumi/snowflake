@@ -136,21 +136,21 @@ func createMailer(cfg *Config) (smtp.Mailer, error) {
 		return &smtp.MockMailer{}, nil
 	}
 
-	mailerHost := os.Getenv("MAILER_HOST")
-	mailerUsername := os.Getenv("MAILER_USERNAME")
-	mailerPassword := os.Getenv("MAILER_PASSWORD")
-	mailerFrom := os.Getenv("MAILER_FROM")
-	mailerPort, err := strconv.Atoi(os.Getenv("MAILER_PORT"))
+	smtpHost := os.Getenv("SMTP_HOST")
+	smtpUsername := os.Getenv("SMTP_USERNAME")
+	smtpPassword := os.Getenv("SMTP_PASSWORD")
+	smtpFrom := os.Getenv("SMTP_FROM")
+	smtpPort, err := strconv.Atoi(os.Getenv("SMTP_PORT"))
 	if err != nil {
 		return nil, err
 	}
 
 	return smtp.NewMailer(
-		mailerHost,
-		mailerPort,
-		mailerUsername,
-		mailerPassword,
-		mailerFrom,
+		smtpHost,
+		smtpPort,
+		smtpUsername,
+		smtpPassword,
+		smtpFrom,
 	)
 }
 
