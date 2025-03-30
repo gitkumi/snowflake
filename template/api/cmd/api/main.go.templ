@@ -22,13 +22,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	baseURL := os.Getenv("BASE_URL")
-	if len(baseURL) <= 0 {
-		baseURL = "localhost:8080"
-	}
-
 	serv, err := server.Init(&server.Config{
-		BaseURL:   baseURL,
+		BaseURL:   os.Getenv("BASE_URL"),
 		Port:      port,
 		MigrateDB: migrateDB,
 		GinMode:   os.Getenv("GIN_MODE"),
@@ -45,7 +40,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := serv.Run(); err != nil {
-		log.Fatal(err)
-	}
+	serv.Run()
 }

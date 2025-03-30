@@ -8,8 +8,7 @@ import (
 	"{{ .Name }}/internal/storage"
 	"{{ .Name }}/static"
 	"errors"
-	"fmt"
-	"log/slog"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,33 +19,32 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/lmittmann/tint"
 	"github.com/pressly/goose/v3"
 )
 
 type Config struct {
 	BaseURL string
+	Port    int
 
 	GinMode string
-	Port    int
 
 	DatabaseURL string
 	MigrateDB   bool
 
 	Storage storage.Storage
-	Mailer  smtp.Mailer
 }
 
 type Server struct {
 	BaseURL string
 	Port    int
 
-	Router  *gin.Engine
-	DB      *sql.DB
-	Query   *data.Queries
+	Router *gin.Engine
+
+	DB    *sql.DB
+	Query *data.Queries
+
 	Storage *storage.Storage
 	Mailer  *smtp.Mailer
-	Logger  *slog.Logger
 
 	wg sync.WaitGroup
 }
@@ -74,21 +72,37 @@ func Init(cfg *Config) (*Server, error) {
 	}
 
 	gin.SetMode(cfg.GinMode)
-
 	router := gin.Default()
 	router.Use(cors.Default())
 
-	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug}))
+	mailerHost := os.Getenv("MAILER_HOST")
+	mailerUsername := os.Getenv("MAILER_USERNAME")
+	mailerPassword := os.Getenv("MAILER_PASSWORD")
+	mailerFrom := os.Getenv("MAILER_FROM")
+	mailerPort, err := strconv.Atoi(os.Getenv("MAILER_PORT"))
+	if err != nil {
+		return nil, err
+	}
+
+	mailer, err := smtp.NewMailer(
+		mailerHost,
+		mailerPort,
+		mailerUsername,
+		mailerPassword,
+		mailerFrom,
+	)
+	if err != nil {
+		return nil, err
+	}
 
 	s := &Server{
 		BaseURL: cfg.BaseURL,
 		Port:    cfg.Port,
+		Storage: &cfg.Storage,
 		DB:      db,
 		Query:   data.New(db),
 		Router:  router,
-		Storage: &cfg.Storage,
-		Mailer:  &cfg.Mailer,
-		Logger:  logger,
+		Mailer:  mailer,
 	}
 
 	s.RegisterRoutes()
@@ -96,39 +110,31 @@ func Init(cfg *Config) (*Server, error) {
 	return s, nil
 }
 
-func (s *Server) Run() error {
+func (s *Server) Run() {
 	srv := &http.Server{
 		Addr:    ":" + strconv.Itoa(s.Port),
 		Handler: s.Router,
 	}
 
-	errCh := make(chan error, 1)
-
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			errCh <- fmt.Errorf("listen and serve returned err: %w", err)
-		}
-	}()
-
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	select {
-	case <-ctx.Done():
+	go func() {
+		<-ctx.Done()
 
-	case err := <-errCh:
-		return err
-	}
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			log.Println("Server shutdown", err)
+		}
+	}()
 
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		return err
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Println("Listen and server error", err)
 	}
 
 	s.wg.Wait()
-	return nil
 }
 
 func (s *Server) Health(c *gin.Context) {
@@ -136,13 +142,13 @@ func (s *Server) Health(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": err.Error(),
+			"db": err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "OK",
+		"db": "OK",
 	})
 }
 
@@ -154,7 +160,7 @@ func (s *Server) Task(fn func() error) {
 
 		err := fn()
 		if err != nil {
-			s.Logger.Error(err.Error())
+			log.Println("Task Error", err)
 		}
 	}()
 }

@@ -3,6 +3,7 @@ package test
 import (
 	"{{ .Name }}/internal/server"
 	"{{ .Name }}/internal/storage"
+	"os"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -13,7 +14,7 @@ type TestServer struct {
 
 func Init() (*TestServer, error) {
 	serv, err := server.Init(&server.Config{
-		BaseURL:     "localhost:8080",
+		BaseURL:     os.Getenv("BASE_URL"),
 		DatabaseURL: "file::memory:?cache=shared",
 		MigrateDB:   true,
 		GinMode:     "test",
