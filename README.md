@@ -56,7 +56,7 @@ Snowflake is built with these packages. Make sure to check their documentation.
 - `make build` - Build the project.
 - `make run` - Run the build.
 - `make audit` - Audit the project.
-- `make tidy` - Tidy the modules and format.
+- `make tidy` - Tidy the modules and format the project.
 - `make db` - Check database status.
 - `make db.up` - Run database migration.
 - `make db.down` - Roll back database migration by 1.
