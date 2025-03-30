@@ -1,50 +1,11 @@
 package smtp
 
-import (
-	"time"
-
-	"github.com/wneessen/go-mail"
-)
-
-const defaultTimeout = 10 * time.Second
-
-type Mailer struct {
-	client *mail.Client
-	from   string
+type Email struct {
+	To      string
+	Subject string
+	Body    string
 }
 
-func NewMailer(host string, port int, username, password, from string) (*Mailer, error) {
-	client, err := mail.NewClient(host, mail.WithTimeout(defaultTimeout), mail.WithSMTPAuth(mail.SMTPAuthLogin), mail.WithPort(port), mail.WithUsername(username), mail.WithPassword(password))
-	if err != nil {
-		return nil, err
-	}
-
-	mailer := &Mailer{
-		client: client,
-		from:   from,
-	}
-
-	return mailer, nil
-}
-
-func (m *Mailer) Send(to, subject, body string) error {
-	message := mail.NewMsg()
-	if err := message.From(m.from); err != nil {
-		return err
-	}
-	if err := message.To(to); err != nil {
-		return err
-	}
-	message.Subject(subject)
-	message.SetBodyString(mail.TypeTextPlain, body)
-
-	var err error
-	for i := 0; i < 5; i++ {
-		if err = m.client.DialAndSend(message); err == nil {
-			return nil
-		}
-		time.Sleep(2 * time.Second)
-	}
-
-	return err
+type Mailer interface {
+	Send(email Email) error
 }

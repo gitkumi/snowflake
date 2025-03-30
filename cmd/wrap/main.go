@@ -23,6 +23,9 @@ func main() {
 		"bin/main",
 		"go.mod",
 		"go.sum",
+		".snowflake",
+		".snowflake/emails",
+		"tmp"
 	}
 
 	for _, fileName := range buildFiles {

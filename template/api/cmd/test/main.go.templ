@@ -1,0 +1,20 @@
+package main
+
+import (
+	"{{ .Name }}/internal/smtp"
+	"log"
+)
+
+func main() {
+	mailer := smtp.MockMailer{}
+
+	err := mailer.Send(smtp.Email{
+		To:      "Test",
+		Subject: "Subject",
+		Body:    "Body",
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+}

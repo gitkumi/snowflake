@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"{{ .Name }}/internal/data"
 	"{{ .Name }}/internal/password"
+	"{{ .Name }}/internal/smtp"
 	"{{ .Name }}/internal/utils"
 	"net/http"
 	"path"
@@ -136,7 +137,9 @@ func (s *Server) CreateMagicLink(c *gin.Context) {
 	}
 
 	loginURL := path.Join(s.BaseURL, "auth", "email-login", token.ID)
-	s.Mailer.Send(user.Email, "Login", loginURL)
+	s.Mailer.Send(smtp.Email{
+		To: user.Email, Subject: "Login", Body: loginURL,
+	})
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Please check your email for the magic link.",
@@ -179,7 +182,9 @@ func (s *Server) CreateResetPassword(c *gin.Context) {
 	}
 
 	resetPasswordURL := path.Join(s.BaseURL, "auth", "reset-password", token.ID)
-	s.Mailer.Send(user.Email, "Password Reset", resetPasswordURL)
+	s.Mailer.Send(smtp.Email{
+		To: user.Email, Subject: "Password Reset", Body: resetPasswordURL,
+	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Please check your email for the reset password link.",
@@ -224,7 +229,9 @@ func (s *Server) CreateConfirmEmail(c *gin.Context) {
 	}
 
 	confirmEmailURL := path.Join(s.BaseURL, "auth", "confirm-email", token.ID)
-	s.Mailer.Send(user.Email, "Confirm Email", confirmEmailURL)
+	s.Mailer.Send(smtp.Email{
+		To: user.Email, Subject: "Confirm Email", Body: confirmEmailURL,
+	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Please check your email for the confirmation link.",

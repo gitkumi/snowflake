@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"{{ .Name }}/internal/server"
-	"{{ .Name }}/internal/storage"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -23,17 +22,11 @@ func main() {
 	}
 
 	serv, err := server.Init(&server.Config{
-		BaseURL:   os.Getenv("BASE_URL"),
-		Port:      port,
-		MigrateDB: migrateDB,
-		GinMode:   os.Getenv("GIN_MODE"),
-		Storage: &storage.S3Storage{
-			AccessKey:   "",
-			SecretKey:   "",
-			EndpointURL: "",
-			Region:      "",
-			Bucket:      "",
-		},
+		Environment: os.Getenv("ENVIRONMENT"),
+		BaseURL:     os.Getenv("BASE_URL"),
+		Port:        port,
+		MigrateDB:   migrateDB,
+		GinMode:     os.Getenv("GIN_MODE"),
 	})
 
 	if err != nil {
