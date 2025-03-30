@@ -17,25 +17,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	migrateDb, err := strconv.ParseBool(os.Getenv("MIGRATE_DB"))
+	migrateDB, err := strconv.ParseBool(os.Getenv("MIGRATE_DB"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	baseUrl := os.Getenv("BASE_URL")
-	if len(baseUrl) <= 0 {
-		baseUrl = "localhost:8080"
+	baseURL := os.Getenv("BASE_URL")
+	if len(baseURL) <= 0 {
+		baseURL = "localhost:8080"
 	}
 
 	serv, err := server.Init(&server.Config{
-		BaseUrl:   baseUrl,
+		BaseURL:   baseURL,
 		Port:      port,
-		MigrateDb: migrateDb,
+		MigrateDB: migrateDB,
 		GinMode:   os.Getenv("GIN_MODE"),
 		Storage: &storage.S3Storage{
 			AccessKey:   "",
 			SecretKey:   "",
-			EndpointUrl: "",
+			EndpointURL: "",
 			Region:      "",
 			Bucket:      "",
 		},

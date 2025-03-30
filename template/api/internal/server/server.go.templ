@@ -25,20 +25,20 @@ import (
 )
 
 type Config struct {
-	BaseUrl string
+	BaseURL string
 
 	GinMode string
 	Port    int
 
-	DatabaseUrl string
-	MigrateDb   bool
+	DatabaseURL string
+	MigrateDB   bool
 
 	Storage storage.Storage
 	Mailer  smtp.Mailer
 }
 
 type Server struct {
-	BaseUrl string
+	BaseURL string
 	Port    int
 
 	Router  *gin.Engine
@@ -52,7 +52,7 @@ type Server struct {
 }
 
 func Init(cfg *Config) (*Server, error) {
-	db, err := sql.Open("sqlite3", cfg.DatabaseUrl)
+	db, err := sql.Open("sqlite3", cfg.DatabaseURL)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func Init(cfg *Config) (*Server, error) {
 	db.SetMaxIdleConns(25)
 	db.SetConnMaxLifetime(2 * time.Minute)
 
-	if cfg.MigrateDb {
+	if cfg.MigrateDB {
 		goose.SetBaseFS(static.Migration)
 
 		if err := goose.SetDialect("sqlite3"); err != nil {
@@ -81,7 +81,7 @@ func Init(cfg *Config) (*Server, error) {
 	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug}))
 
 	s := &Server{
-		BaseUrl: cfg.BaseUrl,
+		BaseURL: cfg.BaseURL,
 		Port:    cfg.Port,
 		DB:      db,
 		Query:   data.New(db),

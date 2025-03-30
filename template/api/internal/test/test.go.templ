@@ -13,9 +13,9 @@ type TestServer struct {
 
 func Init() (*TestServer, error) {
 	serv, err := server.Init(&server.Config{
-		BaseUrl:     "localhost:8080",
-		DatabaseUrl: "file::memory:?cache=shared",
-		MigrateDb:   true,
+		BaseURL:     "localhost:8080",
+		DatabaseURL: "file::memory:?cache=shared",
+		MigrateDB:   true,
 		GinMode:     "test",
 		Storage:     &storage.MockStorage{},
 	})
