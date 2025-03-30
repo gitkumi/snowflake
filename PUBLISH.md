@@ -7,5 +7,5 @@ https://go.dev/doc/modules/publishing
 2. Publish
 
 ```bash
-GOPROXY=proxy.golang.org go list -m github.com/gitkumi/snowflake@v0.10.0
+GOPROXY=proxy.golang.org go list -m github.com/gitkumi/snowflake@v0.11.0
 ```

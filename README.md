@@ -78,7 +78,6 @@ Snowflake is built with these packages. Make sure to check their documentation.
 - Rate Limiting
 - DB Seeding
 - mysql and postgres support
-- CORS
 - Background Jobs (SQS)
 - Mail (SES)
 - Billing (Stripe)
