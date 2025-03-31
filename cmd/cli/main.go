@@ -10,34 +10,30 @@ import (
 )
 
 func Execute() {
+	var showVersion bool
+
 	cmd := &cobra.Command{
 		Use:   "snowflake",
 		Short: "Snowflake is an opinionated Go REST API application generator.",
 		Run: func(cmd *cobra.Command, args []string) {
+			if showVersion {
+				fmt.Println("v0.16.0")
+				return
+			}
+
 			cmd.Help()
 		},
 	}
 
+	cmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Show snowflake version")
+
 	cmd.Root().CompletionOptions.DisableDefaultCmd = true
 
 	cmd.AddCommand(new())
-	cmd.AddCommand(version())
 
 	if err := cmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func version() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "version",
-		Short: "Display version",
-		Run: func(_cmd *cobra.Command, _args []string) {
-			fmt.Println("v0.16.0")
-		},
-	}
-
-	return cmd
 }
 
 func new() *cobra.Command {
