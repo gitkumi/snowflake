@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"{{ .Name }}/internal/constants"
+	"{{ .Name }}/internal/password"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,5 +13,5 @@ func CreateJwt(sub string) (string, error) {
 	claims["exp"] = time.Now().Add(1 * time.Hour).Unix()
 	claims["sub"] = sub
 
-	return token.SignedString(constants.SigningKey)
+	return token.SignedString(password.SigningKey)
 }

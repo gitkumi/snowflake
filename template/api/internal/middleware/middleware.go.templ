@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"{{ .Name }}/internal/constants"
 	"{{ .Name }}/internal/data"
+	"{{ .Name }}/internal/password"
 	"net/http"
 	"strings"
 
@@ -27,7 +27,7 @@ func Authentication(q *data.Queries) gin.HandlerFunc {
 		}
 
 		token, err := jwt.Parse(parts[1], func(token *jwt.Token) (interface{}, error) {
-			return constants.SigningKey, nil
+			return password.SigningKey, nil
 		})
 
 		if err != nil {

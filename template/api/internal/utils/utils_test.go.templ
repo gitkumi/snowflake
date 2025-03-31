@@ -1,7 +1,7 @@
 package utils_test
 
 import (
-	"{{ .Name }}/internal/constants"
+	"{{ .Name }}/internal/password"
 	"{{ .Name }}/internal/utils"
 	"github.com/golang-jwt/jwt/v5"
 	"testing"
@@ -17,7 +17,7 @@ func TestCreateJwt(t *testing.T) {
 	}
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return constants.SigningKey, nil
+		return password.SigningKey, nil
 	})
 
 	if err != nil {

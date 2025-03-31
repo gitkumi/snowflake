@@ -60,11 +60,11 @@ func Init(cfg *Config) (*Server, error) {
 	storage := createStorage(cfg)
 
 	s := &Server{
-		Port:    port,
 		BaseURL: cfg.BaseURL,
+		Port:    port,
+		Router:  router,
 		DB:      db,
 		Query:   data.New(db),
-		Router:  router,
 		Mailer:  mailer,
 		Storage: storage,
 	}
