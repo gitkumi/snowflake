@@ -13,16 +13,31 @@ import (
 	snowflaketemplate "github.com/gitkumi/snowflake/template"
 )
 
+const (
+	SQLite3  Database = "sqlite3"
+	Postgres Database = "postgres"
+	MySQL    Database = "mysql"
+)
+
 type Project struct {
-	Name string
+	Name     string
+	Database Database
 }
 
-func Create(projectName string, initGit bool, outputDir string) error {
+type Config struct {
+	Name      string
+	Database  Database
+	Git       bool
+	OutputDir string
+}
+
+func Create(cfg *Config) error {
 	project := &Project{
-		Name: strings.ToLower(projectName),
+		Name:     strings.ToLower(cfg.Name),
+		Database: cfg.Database,
 	}
 
-	outputPath := filepath.Join(outputDir, projectName)
+	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
 
 	templateFiles := snowflaketemplate.ApiFiles
 
@@ -96,7 +111,7 @@ func Create(projectName string, initGit bool, outputDir string) error {
 		return err
 	}
 
-	if initGit {
+	if cfg.Git {
 		fmt.Println("Running git init..")
 		command = exec.Command("git", "init")
 		command.Dir = outputPath

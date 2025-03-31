@@ -14,7 +14,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = files.Create("devapi", true, path.Join(cwd, "template"))
+	err = files.Create(&files.Config{
+		Name:      "devapi",
+		Git:       true,
+		OutputDir: path.Join(cwd, "template"),
+		Database:  "sqlite3",
+	})
 	if err != nil {
 		log.Fatal(err)
 	}

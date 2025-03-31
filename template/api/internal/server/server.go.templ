@@ -101,8 +101,15 @@ func (s *Server) Run() {
 	s.wg.Wait()
 }
 
+
 func createDB(cfg *Config) (*sql.DB, error) {
+	{{ if eq .Database "sqlite3" }}
 	db, err := sql.Open("sqlite3", cfg.DatabaseURL)
+	{{ else if eq .Database "mysql" }}
+	db, err := sql.Open("mysql", cfg.DatabaseURL)
+	{{ else if eq .Database "postgres" }}
+	db, err := sql.Open("postgres", cfg.DatabaseURL)
+	{{ end }}
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +126,13 @@ func createDB(cfg *Config) (*sql.DB, error) {
 	if migrateDB {
 		goose.SetBaseFS(static.Migration)
 
+		{{ if eq .Database "sqlite3" }}
 		if err := goose.SetDialect("sqlite3"); err != nil {
+		{{ else if eq .Database "mysql" }}
+		if err := goose.SetDialect("mysql"); err != nil {
+		{{ else if eq .Database "postgres" }}
+		if err := goose.SetDialect("postgres"); err != nil {
+		{{ end }}
 			return nil, err
 		}
 

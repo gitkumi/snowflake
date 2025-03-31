@@ -38,6 +38,7 @@ func Execute() {
 
 func new() *cobra.Command {
 	var initGit bool
+	var db files.Database = files.SQLite3
 
 	cmd := &cobra.Command{
 		Use:   "new",
@@ -49,7 +50,12 @@ func new() *cobra.Command {
 				log.Fatal(err.Error())
 			}
 
-			err = files.Create(args[0], initGit, cwd)
+			err = files.Create(&files.Config{
+				Name:      args[0],
+				Git:       initGit,
+				OutputDir: cwd,
+				Database:  db,
+			})
 			if err != nil {
 				log.Fatal(err.Error())
 			}
@@ -57,6 +63,7 @@ func new() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
+	cmd.Flags().VarP(&db, "database", "d", "Database to use (sqlite3, postgres, mysql)")
 
 	return cmd
 }

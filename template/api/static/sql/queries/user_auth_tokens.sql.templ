@@ -1,3 +1,4 @@
+{{ if eq .Database "sqlite3" }}
 -- name: GetUserAuthTokens :one
 SELECT 
   user_auth_tokens.id,
@@ -19,3 +20,49 @@ INSERT INTO user_auth_tokens (
   ?, ?, ?
 )
 RETURNING *;
+
+{{ else if eq .Database "mysql" }}
+-- name: GetUserAuthTokens :one
+SELECT 
+  user_auth_tokens.id,
+  user_auth_tokens.user_id,
+  user_auth_tokens.type,
+  users.email
+FROM user_auth_tokens
+JOIN users ON user_auth_tokens.user_id = users.id
+WHERE user_auth_tokens.id = ?
+  AND user_auth_tokens.type = ?
+LIMIT 1;
+
+-- name: CreateAuthToken :exec
+INSERT INTO user_auth_tokens (
+  id,
+  user_id,
+  type
+) VALUES (
+  ?, ?, ?
+);
+
+{{ else if eq .Database "postgres" }}
+-- name: GetUserAuthTokens :one
+SELECT 
+  user_auth_tokens.id,
+  user_auth_tokens.user_id,
+  user_auth_tokens.type,
+  users.email
+FROM user_auth_tokens
+JOIN users ON user_auth_tokens.user_id = users.id
+WHERE user_auth_tokens.id = $1
+  AND user_auth_tokens.type = $2
+LIMIT 1;
+
+-- name: CreateAuthToken :one
+INSERT INTO user_auth_tokens (
+  id,
+  user_id,
+  type
+) VALUES (
+  $1, $2, $3
+)
+RETURNING *;
+{{ end }}

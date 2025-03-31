@@ -1,3 +1,4 @@
+{{ if eq .Database "sqlite3" }}
 -- name: ListMemberships :many
 SELECT * FROM memberships
 WHERE user_id = ?
@@ -17,9 +18,9 @@ RETURNING *;
 
 -- name: UpdateMembership :one
 UPDATE memberships
-set organization_id  = ?,
-user_id  = ?,
-role = ?
+SET organization_id = ?,
+    user_id = ?,
+    role = ?
 WHERE id = ?
 RETURNING *;
 
@@ -27,3 +28,61 @@ RETURNING *;
 DELETE FROM memberships
 WHERE id = ?;
 
+{{ else if eq .Database "mysql" }}
+-- name: ListMemberships :many
+SELECT * FROM memberships
+WHERE user_id = ?
+ORDER BY id;
+
+-- name: GetMembership :one
+SELECT * FROM memberships
+WHERE id = ? LIMIT 1;
+
+-- name: CreateMembership :exec
+INSERT INTO memberships (
+  organization_id, user_id, role
+) VALUES (
+  ?, ?, ?
+);
+
+-- name: UpdateMembership :exec
+UPDATE memberships
+SET organization_id = ?,
+    user_id = ?,
+    role = ?
+WHERE id = ?;
+
+-- name: DeleteMembership :exec
+DELETE FROM memberships
+WHERE id = ?;
+
+{{ else if eq .Database "postgres" }}
+-- name: ListMemberships :many
+SELECT * FROM memberships
+WHERE user_id = $1
+ORDER BY id;
+
+-- name: GetMembership :one
+SELECT * FROM memberships
+WHERE id = $1 LIMIT 1;
+
+-- name: CreateMembership :one
+INSERT INTO memberships (
+  organization_id, user_id, role
+) VALUES (
+  $1, $2, $3
+)
+RETURNING *;
+
+-- name: UpdateMembership :one
+UPDATE memberships
+SET organization_id = $1,
+    user_id = $2,
+    role = $3
+WHERE id = $4
+RETURNING *;
+
+-- name: DeleteMembership :exec
+DELETE FROM memberships
+WHERE id = $1;
+{{ end }}

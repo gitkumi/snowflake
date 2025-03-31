@@ -1,3 +1,4 @@
+{{ if eq .Database "sqlite3" }}
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE organizations (
@@ -22,3 +23,55 @@ END;
 -- +goose StatementBegin
 DROP TABLE organizations;
 -- +goose StatementEnd
+
+{{ else if eq .Database "mysql" }}
+-- +goose Up
+-- +goose StatementBegin
+CREATE TABLE organizations (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  name VARCHAR(255) NOT NULL,
+  type ENUM('personal', 'pro', 'enterprise') NOT NULL DEFAULT 'personal',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE organizations;
+-- +goose StatementEnd
+
+{{ else if eq .Database "postgres" }}
+-- +goose Up
+-- +goose StatementBegin
+CREATE TABLE organizations (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL CHECK(type IN ('personal', 'pro', 'enterprise')) DEFAULT 'personal',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE OR REPLACE FUNCTION update_organizations_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+-- +goose StatementEnd
+
+-- +goose StatementBegin
+CREATE TRIGGER update_organizations_updated_at
+BEFORE UPDATE ON organizations
+FOR EACH ROW
+EXECUTE FUNCTION update_organizations_updated_at();
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE organizations CASCADE;
+-- +goose StatementEnd
+{{ end }}
