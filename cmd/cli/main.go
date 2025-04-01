@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/gitkumi/snowflake/internal/files"
+	"github.com/gitkumi/snowflake/internal/generator"
 	"github.com/spf13/cobra"
 )
 
@@ -49,7 +49,7 @@ func new() *cobra.Command {
 				log.Fatal(err.Error())
 			}
 
-			err = files.Create(args[0], initGit, cwd)
+			err = generator.Generate(args[0], initGit, cwd)
 			if err != nil {
 				log.Fatal(err.Error())
 			}

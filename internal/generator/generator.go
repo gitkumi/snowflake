@@ -1,4 +1,4 @@
-package files
+package generator
 
 import (
 	"bytes"
@@ -17,7 +17,7 @@ type Project struct {
 	Name string
 }
 
-func Create(projectName string, initGit bool, outputDir string) error {
+func Generate(projectName string, initGit bool, outputDir string) error {
 	project := &Project{
 		Name: strings.ToLower(projectName),
 	}
@@ -26,7 +26,7 @@ func Create(projectName string, initGit bool, outputDir string) error {
 
 	templateFiles := snowflaketemplate.ProjectFiles
 
-	fmt.Println("Creating files..")
+	fmt.Println("Generating files..")
 	err := fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err

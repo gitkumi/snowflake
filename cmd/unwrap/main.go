@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/gitkumi/snowflake/internal/files"
+	"github.com/gitkumi/snowflake/internal/generator"
 )
 
 func main() {
@@ -14,7 +14,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = files.Create("devproject", true, path.Join(cwd, "template"))
+	err = generator.Generate("devproject", true, path.Join(cwd, "template"))
 	if err != nil {
 		log.Fatal(err)
 	}
