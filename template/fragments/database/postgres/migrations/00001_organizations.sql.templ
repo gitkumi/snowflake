@@ -1,33 +1,9 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TYPE organization_type AS ENUM ('personal', 'pro', 'enterprise');
 
-CREATE TABLE organizations (
-  id BIGSERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  type organization_type NOT NULL DEFAULT 'personal',
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
-CREATE TRIGGER update_organizations_updated_at
-    BEFORE UPDATE ON organizations
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TRIGGER IF EXISTS update_organizations_updated_at ON organizations;
-DROP FUNCTION IF EXISTS update_updated_at_column();
-DROP TABLE organizations;
-DROP TYPE organization_type;
+
 -- +goose StatementEnd 

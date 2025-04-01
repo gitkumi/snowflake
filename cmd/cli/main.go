@@ -66,7 +66,7 @@ func new() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
-	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type (%v)", generator.AllDatabases))
+	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", generator.AllDatabases))
 
 	return cmd
 }
