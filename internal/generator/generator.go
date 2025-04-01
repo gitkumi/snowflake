@@ -13,6 +13,11 @@ import (
 	snowflaketemplate "github.com/gitkumi/snowflake/template"
 )
 
+type Project struct {
+	Name     string
+	Database Database
+}
+
 func Generate(projectName string, initGit bool, outputDir string, db Database) error {
 	project := &Project{
 		Name:     strings.ToLower(projectName),
