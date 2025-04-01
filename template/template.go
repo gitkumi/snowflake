@@ -2,5 +2,5 @@ package template
 
 import "embed"
 
-//go:embed project/*
-var ProjectFiles embed.FS
+//go:embed base/*
+var BaseFiles embed.FS

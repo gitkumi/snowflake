@@ -19,7 +19,7 @@ func Generate(projectName string, initGit bool, outputDir string, db Database) e
 		Database: db,
 	}
 	outputPath := filepath.Join(outputDir, projectName)
-	templateFiles := snowflaketemplate.ProjectFiles
+	templateFiles := snowflaketemplate.BaseFiles
 
 	fmt.Println("Generating files...")
 	err := fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
@@ -27,7 +27,7 @@ func Generate(projectName string, initGit bool, outputDir string, db Database) e
 			return err
 		}
 
-		fileName := strings.TrimPrefix(path, "project")
+		fileName := strings.TrimPrefix(path, "base")
 		targetPath := filepath.Join(outputPath, fileName)
 
 		if d.IsDir() {
@@ -117,4 +117,3 @@ func runCmd(workingDir, message, name string, args ...string) error {
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
-
