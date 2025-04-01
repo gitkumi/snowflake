@@ -47,6 +47,19 @@ func (d Database) Driver() string {
 	}
 }
 
+func (d Database) SQLCEngine() string {
+	switch d {
+	case SQLite3:
+		return "sqlite"
+	case Postgres:
+		return "postgresql"
+	case MySQL:
+		return "mysql"
+	default:
+		return ""
+	}
+}
+
 func LoadDatabaseMigration(db Database, filename string) (string, error) {
 	fragmentPath := filepath.Join("fragments/database", string(db), "migrations", filename)
 	content, err := snowflaketemplate.DatabaseFragments.ReadFile(fragmentPath)

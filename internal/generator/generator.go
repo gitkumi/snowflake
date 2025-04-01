@@ -23,14 +23,15 @@ func Generate(projectName string, initGit bool, outputDir string, db Database) e
 		Name:     strings.ToLower(projectName),
 		Database: db,
 	}
-	outputPath := filepath.Join(outputDir, projectName)
-	templateFiles := snowflaketemplate.BaseFiles
 
-	funcMap := template.FuncMap{
+	templateFuncs := template.FuncMap{
 		"DatabaseMigration": func(filename string) (string, error) {
 			return LoadDatabaseMigration(db, filename)
 		},
 	}
+
+	outputPath := filepath.Join(outputDir, projectName)
+	templateFiles := snowflaketemplate.BaseFiles
 
 	fmt.Println("Generating files...")
 	err := fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
@@ -50,7 +51,7 @@ func Generate(projectName string, initGit bool, outputDir string, db Database) e
 			return err
 		}
 
-		tmpl, err := template.New(fileName).Funcs(funcMap).Parse(string(content))
+		tmpl, err := template.New(fileName).Funcs(templateFuncs).Parse(string(content))
 		if err != nil {
 			return err
 		}
