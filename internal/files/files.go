@@ -24,7 +24,7 @@ func Create(projectName string, initGit bool, outputDir string) error {
 
 	outputPath := filepath.Join(outputDir, projectName)
 
-	templateFiles := snowflaketemplate.ApiFiles
+	templateFiles := snowflaketemplate.ProjectFiles
 
 	fmt.Println("Creating files..")
 	err := fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
@@ -32,7 +32,7 @@ func Create(projectName string, initGit bool, outputDir string) error {
 			return err
 		}
 
-		fileName := strings.TrimPrefix(path, "api")
+		fileName := strings.TrimPrefix(path, "project")
 
 		if d.IsDir() {
 			err := os.MkdirAll(filepath.Join(outputPath, fileName), 0777)

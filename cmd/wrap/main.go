@@ -15,7 +15,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	testPath := filepath.Join(cwd, "template", "devapi")
+	testPath := filepath.Join(cwd, "template", "devproject")
 
 	buildFiles := []string{
 		".git",
@@ -45,7 +45,7 @@ func main() {
 			return err
 		}
 
-		newContent := strings.ReplaceAll(string(data), "devapi", "{{ .Name }}")
+		newContent := strings.ReplaceAll(string(data), "devproject", "{{ .Name }}")
 
 		newFilePath := filePath + ".templ"
 
