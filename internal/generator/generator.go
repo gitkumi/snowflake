@@ -30,7 +30,6 @@ func Generate(projectName string, initGit bool, outputDir string) error {
 			return err
 		}
 
-		// Remove the "project" prefix from the template path.
 		fileName := strings.TrimPrefix(path, "project")
 		targetPath := filepath.Join(outputPath, fileName)
 
@@ -53,7 +52,6 @@ func Generate(projectName string, initGit bool, outputDir string) error {
 			return err
 		}
 
-		// Remove the ".templ" extension if present.
 		newFilePath := strings.TrimSuffix(targetPath, ".templ")
 		return os.WriteFile(newFilePath, buf.Bytes(), 0777)
 	})
@@ -61,12 +59,10 @@ func Generate(projectName string, initGit bool, outputDir string) error {
 		return err
 	}
 
-	// Run post-generation commands.
 	if err := runPostCommands(project, outputPath); err != nil {
 		return err
 	}
 
-	// Optionally run Git commands.
 	if initGit {
 		if err := runGitCommands(outputPath); err != nil {
 			return err
@@ -77,17 +73,6 @@ func Generate(projectName string, initGit bool, outputDir string) error {
 	return nil
 }
 
-// runCmd executes a command with the specified working directory, message, command name, and arguments.
-func runCmd(workingDir, message, name string, args ...string) error {
-	fmt.Println(message)
-	cmd := exec.Command(name, args...)
-	cmd.Dir = workingDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
-}
-
-// runPostCommands executes the Go module and build commands.
 func runPostCommands(project *Project, outputPath string) error {
 	commands := []struct {
 		message string
@@ -108,7 +93,6 @@ func runPostCommands(project *Project, outputPath string) error {
 	return nil
 }
 
-// runGitCommands executes the Git commands to initialize a repository and commit the changes.
 func runGitCommands(outputPath string) error {
 	commands := []struct {
 		message string
@@ -126,4 +110,13 @@ func runGitCommands(outputPath string) error {
 		}
 	}
 	return nil
+}
+
+func runCmd(workingDir, message, name string, args ...string) error {
+	fmt.Println(message)
+	cmd := exec.Command(name, args...)
+	cmd.Dir = workingDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
