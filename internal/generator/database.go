@@ -81,3 +81,12 @@ func LoadDatabaseMigration(db Database, filename string) (string, error) {
 	}
 	return string(content), nil
 }
+
+func LoadDatabaseQuery(db Database, filename string) (string, error) {
+	fragmentPath := filepath.Join("fragments/database", string(db), "queries", filename)
+	content, err := snowflaketemplate.DatabaseFragments.ReadFile(fragmentPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read database query fragment: %w", err)
+	}
+	return string(content), nil
+}

@@ -28,6 +28,9 @@ func Generate(projectName string, initGit bool, outputDir string, db Database) e
 		"DatabaseMigration": func(filename string) (string, error) {
 			return LoadDatabaseMigration(db, filename)
 		},
+		"DatabaseQuery": func(filename string) (string, error) {
+			return LoadDatabaseQuery(db, filename)
+		},
 	}
 
 	outputPath := filepath.Join(outputDir, projectName)
