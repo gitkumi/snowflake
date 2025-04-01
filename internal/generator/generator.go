@@ -13,13 +13,10 @@ import (
 	snowflaketemplate "github.com/gitkumi/snowflake/template"
 )
 
-type Project struct {
-	Name string
-}
-
-func Generate(projectName string, initGit bool, outputDir string) error {
+func Generate(projectName string, initGit bool, outputDir string, db Database) error {
 	project := &Project{
-		Name: strings.ToLower(projectName),
+		Name:     strings.ToLower(projectName),
+		Database: db,
 	}
 	outputPath := filepath.Join(outputDir, projectName)
 	templateFiles := snowflaketemplate.ProjectFiles
@@ -120,3 +117,4 @@ func runCmd(workingDir, message, name string, args ...string) error {
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
+

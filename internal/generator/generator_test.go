@@ -1,21 +1,25 @@
-package generator_test
+package generator
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
-
-	"github.com/gitkumi/snowflake/internal/generator"
 )
 
-func TestGenerateFiles(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "generator_test")
+func TestGenerate(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
 	if err != nil {
-		t.Fatalf("failed to create temporary directory: %v", err)
+		t.Fatal(err)
 	}
-
 	defer os.RemoveAll(tmpDir)
 
-	if err := generator.Generate("acme", false, tmpDir); err != nil {
-		t.Fatalf("generator.Create returned an error: %v", err)
+	err = Generate("acme", false, tmpDir, SQLite3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+		t.Fatal("Project directory was not created")
 	}
 }
