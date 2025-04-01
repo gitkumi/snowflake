@@ -60,6 +60,19 @@ func (d Database) SQLCEngine() string {
 	}
 }
 
+func (d Database) Import() string {
+	switch d {
+	case SQLite3:
+		return "github.com/mattn/go-sqlite3"
+	case Postgres:
+		return "github.com/lib/pq"
+	case MySQL:
+		return "github.com/go-sql-driver/mysql"
+	default:
+		return ""
+	}
+}
+
 func LoadDatabaseMigration(db Database, filename string) (string, error) {
 	fragmentPath := filepath.Join("fragments/database", string(db), "migrations", filename)
 	content, err := snowflaketemplate.DatabaseFragments.ReadFile(fragmentPath)
