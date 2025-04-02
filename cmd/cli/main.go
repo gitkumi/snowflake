@@ -37,7 +37,10 @@ func Execute() {
 }
 
 func new() *cobra.Command {
-	var initGit bool
+	var (
+		initGit  bool
+		database string
+	)
 
 	cmd := &cobra.Command{
 		Use:   "new",
@@ -49,7 +52,13 @@ func new() *cobra.Command {
 				log.Fatal(err.Error())
 			}
 
-			err = generator.Generate(args[0], initGit, cwd)
+			// Validate database type
+			dbEnum := generator.Database(database)
+			if !dbEnum.IsValid() {
+				log.Fatalf("Invalid database type: %s. Must be one of: %v", database, generator.AllDatabases)
+			}
+
+			err = generator.Generate(args[0], initGit, cwd, dbEnum)
 			if err != nil {
 				log.Fatal(err.Error())
 			}
@@ -57,6 +66,7 @@ func new() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
+	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", generator.AllDatabases))
 
 	return cmd
 }

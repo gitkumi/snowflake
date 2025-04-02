@@ -1,0 +1,24 @@
+-- +goose Up
+-- +goose StatementBegin
+CREATE TABLE organizations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL CHECK(type IN ('personal', 'pro', 'enterprise')) DEFAULT 'personal',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TRIGGER update_organizations_updated_at
+AFTER UPDATE ON organizations
+WHEN old.updated_at <> CURRENT_TIMESTAMP
+BEGIN
+    UPDATE organizations
+    SET updated_at = CURRENT_TIMESTAMP
+    WHERE id = OLD.id;
+END;
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE organizations;
+-- +goose StatementEnd 

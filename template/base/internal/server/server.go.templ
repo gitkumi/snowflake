@@ -1,0 +1,178 @@
+package server
+
+import (
+	"context"
+	"database/sql"
+	"{{ .Name }}/internal/data"
+	"{{ .Name }}/internal/smtp"
+	"{{ .Name }}/internal/storage"
+	"{{ .Name }}/static"
+	"errors"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"strconv"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/pressly/goose/v3"
+)
+
+type Config struct {
+	Environment string
+	BaseURL     string
+	GinMode     string
+	DatabaseConnString string
+}
+
+type Server struct {
+	BaseURL string
+	Port    int
+	Router  *gin.Engine
+	DB      *sql.DB
+	Query   *data.Queries
+	Storage storage.Storage
+	Mailer  smtp.Mailer
+	wg      sync.WaitGroup
+}
+
+func Init(cfg *Config) (*Server, error) {
+	port, err := strconv.Atoi(os.Getenv("PORT"))
+	if err != nil {
+		return nil, err
+	}
+
+	db, err := createDB(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	mailer, err := createMailer(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	router := createRouter(cfg)
+	storage := createStorage(cfg)
+
+	s := &Server{
+		BaseURL: cfg.BaseURL,
+		Port:    port,
+		Router:  router,
+		DB:      db,
+		Query:   data.New(db),
+		Mailer:  mailer,
+		Storage: storage,
+	}
+
+	s.RegisterRoutes()
+
+	return s, nil
+}
+
+func (s *Server) Run() {
+	srv := &http.Server{
+		Addr:    ":" + strconv.Itoa(s.Port),
+		Handler: s.Router,
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		<-ctx.Done()
+
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			log.Println("Server shutdown", err)
+		}
+	}()
+
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Println("Listen and server error", err)
+	}
+
+	s.wg.Wait()
+}
+
+func createDB(cfg *Config) (*sql.DB, error) {
+	db, err := sql.Open("{{.Database.GooseDialect}}", cfg.DatabaseConnString)
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(25)
+	db.SetConnMaxLifetime(2 * time.Minute)
+
+	migrateDB, err := strconv.ParseBool(os.Getenv("MIGRATE_DATABASE"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if migrateDB {
+		goose.SetBaseFS(static.Migration)
+
+		if err := goose.SetDialect("{{.Database.GooseDialect}}"); err != nil {
+			return nil, err
+		}
+
+		if err := goose.Up(db, "sql/migrations"); err != nil {
+			return nil, err
+		}
+	}
+
+	return db, nil
+}
+
+func createMailer(cfg *Config) (smtp.Mailer, error) {
+	if cfg.Environment == "development" {
+		return &smtp.MockMailer{}, nil
+	}
+
+	smtpHost := os.Getenv("SMTP_HOST")
+	smtpUsername := os.Getenv("SMTP_USERNAME")
+	smtpPassword := os.Getenv("SMTP_PASSWORD")
+	smtpFrom := os.Getenv("SMTP_FROM")
+	smtpPort, err := strconv.Atoi(os.Getenv("SMTP_PORT"))
+	if err != nil {
+		return nil, err
+	}
+
+	return smtp.NewMailer(
+		smtpHost,
+		smtpPort,
+		smtpUsername,
+		smtpPassword,
+		smtpFrom,
+	)
+}
+
+func createRouter(cfg *Config) *gin.Engine {
+	gin.SetMode(cfg.GinMode)
+
+	router := gin.Default()
+	router.Use(cors.Default())
+
+	return router
+}
+
+func createStorage(cfg *Config) storage.Storage {
+	if cfg.Environment == "development" {
+		return &storage.MockStorage{}
+	}
+
+	return &storage.S3Storage{
+		AccessKey:   os.Getenv("S3_ACCESS_KEY"),
+		SecretKey:   os.Getenv("S3_SECRET_KEY"),
+		EndpointURL: os.Getenv("S3_ENDPOINT_URL"),
+		Region:      os.Getenv("S3_REGION"),
+		Bucket:      os.Getenv("S3_BUCKET"),
+	}
+}

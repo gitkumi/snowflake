@@ -14,15 +14,27 @@ import (
 )
 
 type Project struct {
-	Name string
+	Name     string
+	Database Database
 }
 
-func Generate(projectName string, initGit bool, outputDir string) error {
+func Generate(projectName string, initGit bool, outputDir string, db Database) error {
 	project := &Project{
-		Name: strings.ToLower(projectName),
+		Name:     strings.ToLower(projectName),
+		Database: db,
 	}
+
+	templateFuncs := template.FuncMap{
+		"DatabaseMigration": func(filename string) (string, error) {
+			return LoadDatabaseMigration(db, filename)
+		},
+		"DatabaseQuery": func(filename string) (string, error) {
+			return LoadDatabaseQuery(db, filename)
+		},
+	}
+
 	outputPath := filepath.Join(outputDir, projectName)
-	templateFiles := snowflaketemplate.ProjectFiles
+	templateFiles := snowflaketemplate.BaseFiles
 
 	fmt.Println("Generating files...")
 	err := fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
@@ -30,7 +42,7 @@ func Generate(projectName string, initGit bool, outputDir string) error {
 			return err
 		}
 
-		fileName := strings.TrimPrefix(path, "project")
+		fileName := strings.TrimPrefix(path, "base")
 		targetPath := filepath.Join(outputPath, fileName)
 
 		if d.IsDir() {
@@ -42,7 +54,7 @@ func Generate(projectName string, initGit bool, outputDir string) error {
 			return err
 		}
 
-		tmpl, err := template.New(fileName).Parse(string(content))
+		tmpl, err := template.New(fileName).Funcs(templateFuncs).Parse(string(content))
 		if err != nil {
 			return err
 		}

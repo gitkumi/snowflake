@@ -1,0 +1,29 @@
+-- name: ListMemberships :many
+SELECT * FROM memberships
+WHERE user_id = ?
+ORDER BY id;
+
+-- name: GetMembership :one
+SELECT * FROM memberships
+WHERE id = ? LIMIT 1;
+
+-- name: CreateMembership :execresult
+INSERT INTO memberships (
+  organization_id, user_id, role
+) VALUES (
+  ?, ?, ?
+);
+
+-- name: UpdateMembership :exec
+UPDATE memberships
+SET organization_id = ?,
+    user_id = ?,
+    role = ?
+WHERE id = ?;
+
+-- name: DeleteMembership :exec
+DELETE FROM memberships
+WHERE id = ?;
+
+
+

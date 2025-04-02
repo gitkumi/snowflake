@@ -1,0 +1,22 @@
+-- +goose Up
+-- +goose StatementBegin
+CREATE TABLE users (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  email VARCHAR(255) NOT NULL,
+  username VARCHAR(255) NOT NULL,
+  hashed_password VARCHAR(255),
+  first_name VARCHAR(255),
+  last_name VARCHAR(255),
+  confirmed_at TIMESTAMP NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_email (email),
+  UNIQUE KEY unique_username (username)
+);
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE users;
+-- +goose StatementEnd
+

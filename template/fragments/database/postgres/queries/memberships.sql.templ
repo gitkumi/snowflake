@@ -1,0 +1,29 @@
+-- name: ListMemberships :many
+SELECT * FROM memberships
+WHERE user_id = $1
+ORDER BY id;
+
+-- name: GetMembership :one
+SELECT * FROM memberships
+WHERE id = $1 LIMIT 1;
+
+-- name: CreateMembership :one
+INSERT INTO memberships (
+  organization_id, user_id, role
+) VALUES (
+  $1, $2, $3
+)
+RETURNING *;
+
+-- name: UpdateMembership :one
+UPDATE memberships
+SET organization_id = $1,
+    user_id = $2,
+    role = $3
+WHERE id = $4
+RETURNING *;
+
+-- name: DeleteMembership :exec
+DELETE FROM memberships
+WHERE id = $1;
+

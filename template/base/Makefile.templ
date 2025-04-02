@@ -1,0 +1,53 @@
+export GOOSE_DBSTRING?={{.Database.GooseDBString .Name}}
+export GOOSE_DRIVER:={{.Database.GooseDriver}}
+export GOOSE_MIGRATION_DIR:=./static/sql/migrations
+
+.PHONY: audit
+audit: 
+	go mod tidy -diff
+	go mod verify
+	test -z "$(shell gofmt -l .)" 
+	go vet ./...
+	go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-U1000 ./...
+	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+
+.PHONY: tidy
+tidy:
+	go mod tidy -v
+	go fmt ./...
+
+.PHONY: run
+run:
+	go run cmd/api/*.go
+
+.PHONY: test
+test:
+	go test ./...
+
+.PHONY: dev
+dev:
+	air
+
+.PHONY: build
+build:
+	sqlc generate
+	go build -o bin/main cmd/api/*.go
+
+.PHONY: db
+db:
+	goose status
+
+.PHONY: db.gen
+db.gen:
+	goose create $(filter-out $@,$(MAKECMDGOALS)) sql
+
+.PHONY: db.up
+db.up:
+	goose up
+
+.PHONY: db.down
+db.down:
+	goose down
+
+%:
+	@:
