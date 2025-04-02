@@ -73,3 +73,6 @@ Snowflake is built with these packages. Make sure to check their documentation.
 
 - dev dashboards (telemetry, admin, email dev, file storage dev)
 - consider migrating dev commands in go instead of makefile (e.g. db migrate stuff)
+- db: consider supporting gorm/std lib
+- router: consider adding choice/std db
+- serve html choice
