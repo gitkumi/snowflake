@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestGenerate(t *testing.T) {
+func TestGenerateSQLite3(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
 	if err != nil {
 		t.Fatal(err)
@@ -14,6 +14,42 @@ func TestGenerate(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	err = Generate("acme", false, tmpDir, SQLite3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+		t.Fatal("Project directory was not created")
+	}
+}
+
+func TestGeneratePostgres(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	err = Generate("acme", false, tmpDir, Postgres)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+		t.Fatal("Project directory was not created")
+	}
+}
+
+func TestGenerateMySQL(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	err = Generate("acme", false, tmpDir, MySQL)
 	if err != nil {
 		t.Fatal(err)
 	}

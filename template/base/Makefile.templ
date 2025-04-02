@@ -1,4 +1,4 @@
-export GOOSE_DBSTRING?={{.Database.GooseDBString}}
+export GOOSE_DBSTRING?={{.Database.GooseDBString .Name}}
 export GOOSE_DRIVER:={{.Database.GooseDriver}}
 export GOOSE_MIGRATION_DIR:=./static/sql/migrations
 

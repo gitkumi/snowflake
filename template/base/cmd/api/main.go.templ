@@ -19,7 +19,7 @@ func main() {
 	serv, err := server.Init(&server.Config{
 		Environment: os.Getenv("ENVIRONMENT"),
 		BaseURL:     os.Getenv("BASE_URL"),
-		DatabaseURL: os.Getenv("DATABASE_URL"),
+		DatabaseConnString: os.Getenv("DATABASE_CONN_STRING"),
 		GinMode:     os.Getenv("GIN_MODE"),
 	})
 

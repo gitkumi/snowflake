@@ -1,1 +1,33 @@
--- TODO: mysql
+-- name: GetOrganization :one
+SELECT * FROM organizations
+WHERE id = ? LIMIT 1;
+
+-- name: ListOrganizations :many
+SELECT * FROM organizations
+ORDER BY created_at;
+
+-- name: CountOrganizations :one
+SELECT COUNT(*) AS count FROM organizations;
+
+-- name: CreateOrganization :execresult
+INSERT INTO organizations (
+  name,
+  type,
+  created_at,
+  updated_at
+) VALUES (
+  ?, ?, ?, ?
+);
+
+-- name: UpdateOrganization :exec
+UPDATE organizations
+SET name = ?,
+    type = ?,
+    created_at = ?,
+    updated_at = ?
+WHERE id = ?;
+
+-- name: DeleteOrganization :exec
+DELETE FROM organizations
+WHERE id = ?;
+

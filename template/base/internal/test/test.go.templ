@@ -21,7 +21,7 @@ func Init() (*TestServer, error) {
 	serv, err := server.Init(&server.Config{
 		Environment: os.Getenv("ENVIRONMENT"),
 		BaseURL:     os.Getenv("BASE_URL"),
-		DatabaseURL: "file::memory:?cache=shared",
+		DatabaseConnString: "file::memory:?cache=shared",
 		GinMode:     "test",
 	})
 

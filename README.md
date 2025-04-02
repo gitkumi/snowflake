@@ -68,3 +68,5 @@ Snowflake is built with these packages. Make sure to check their documentation.
 ## TODO
 
 - mysql and postgres support
+- dev dashboards (telemetry, admin, email dev, file storage dev)
+- consider migrating dev commands in go instead of makefile (e.g. db migrate stuff)

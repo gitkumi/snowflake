@@ -31,7 +31,7 @@ func (s *Server) Register(c *gin.Context) {
 		return
 	}
 
-	res, err := s.Query.CreateUser(c, data)
+	user, err := s.Query.CreateUser(c, data)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -40,7 +40,7 @@ func (s *Server) Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"data": res,
+		"data": user,
 	})
 }
 
@@ -98,6 +98,7 @@ func (s *Server) Login(c *gin.Context) {
 	})
 }
 
+// TODO: Make it idempotic?
 func (s *Server) CreateMagicLink(c *gin.Context) {
 	var magicLink CreateMagicLinkInput
 	if err := c.BindJSON(&magicLink); err != nil {
@@ -123,8 +124,7 @@ func (s *Server) CreateMagicLink(c *gin.Context) {
 		return
 	}
 
-	// TODO: Make it idempotic?
-	token, err := s.Query.CreateAuthToken(c, data.CreateAuthTokenParams{
+	token, err := s.Query.CreateUserAuthToken(c, data.CreateUserAuthTokenParams{
 		ID:     nanoid,
 		UserID: user.ID,
 		Type:   "magic_link",
@@ -169,7 +169,7 @@ func (s *Server) CreateResetPassword(c *gin.Context) {
 		return
 	}
 
-	token, err := s.Query.CreateAuthToken(c, data.CreateAuthTokenParams{
+	token, err := s.Query.CreateUserAuthToken(c, data.CreateUserAuthTokenParams{
 		ID:     nanoid,
 		Type:   "reset_password",
 		UserID: user.ID,
@@ -215,7 +215,7 @@ func (s *Server) CreateConfirmEmail(c *gin.Context) {
 		})
 		return
 	}
-	token, err := s.Query.CreateAuthToken(c, data.CreateAuthTokenParams{
+	token, err := s.Query.CreateUserAuthToken(c, data.CreateUserAuthTokenParams{
 		ID:     nanoid,
 		UserID: user.ID,
 		Type:   "confirm_email",

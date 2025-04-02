@@ -10,7 +10,7 @@ WHERE user_auth_tokens.id = $1
   AND user_auth_tokens.type = $2
 LIMIT 1;
 
--- name: CreateAuthToken :one
+-- name: CreateUserAuthToken :one
 INSERT INTO user_auth_tokens (
   id,
   user_id,

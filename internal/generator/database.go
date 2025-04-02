@@ -34,6 +34,19 @@ func (d Database) IsValid() bool {
 	return false
 }
 
+func (d Database) ConnString(projectName string) string {
+	switch d {
+	case SQLite3:
+		return projectName + ".db"
+	case Postgres:
+		return fmt.Sprintf("user=postgres password=postgres dbname=%s host=localhost sslmode=disable", projectName)
+	case MySQL:
+		return ""
+	default:
+		return fmt.Sprintf("root:root@tcp(localhost:3306)/%s?parseTime=true", projectName)
+	}
+}
+
 func (d Database) Driver() string {
 	switch d {
 	case SQLite3:
@@ -55,6 +68,45 @@ func (d Database) SQLCEngine() string {
 		return "postgresql"
 	case MySQL:
 		return "mysql"
+	default:
+		return ""
+	}
+}
+
+func (d Database) GooseDriver() string {
+	switch d {
+	case SQLite3:
+		return "sqlite3"
+	case Postgres:
+		return "postgresql"
+	case MySQL:
+		return "mysql"
+	default:
+		return ""
+	}
+}
+
+func (d Database) GooseDialect() string {
+	switch d {
+	case SQLite3:
+		return "sqlite3"
+	case Postgres:
+		return "postgres"
+	case MySQL:
+		return "mysql"
+	default:
+		return ""
+	}
+}
+
+func (d Database) GooseDBString(projectName string) string {
+	switch d {
+	case SQLite3:
+		return projectName + ".db"
+	case Postgres:
+		return fmt.Sprintf("user=postgres password=postgres dbname=%s host=localhost sslmode=disable", projectName)
+	case MySQL:
+		return fmt.Sprintf("root:root@tcp(localhost:3306)/%s?parseTime=true", projectName)
 	default:
 		return ""
 	}

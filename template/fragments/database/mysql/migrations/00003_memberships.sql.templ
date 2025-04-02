@@ -1,9 +1,20 @@
 -- +goose Up
 -- +goose StatementBegin
-
+CREATE TABLE memberships (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  organization_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  role VARCHAR(50) NOT NULL CHECK(role IN ('owner', 'admin', 'member')) DEFAULT 'member',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY(organization_id) REFERENCES organizations(id),
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  UNIQUE KEY unique_org_user (organization_id, user_id)
+);
 -- +goose StatementEnd
 
 -- +goose Down
 -- +goose StatementBegin
+DROP TABLE memberships;
+-- +goose StatementEnd
 
--- +goose StatementEnd 

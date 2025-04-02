@@ -26,7 +26,7 @@ type Config struct {
 	Environment string
 	BaseURL     string
 	GinMode     string
-	DatabaseURL string
+	DatabaseConnString string
 }
 
 type Server struct {
@@ -102,7 +102,7 @@ func (s *Server) Run() {
 }
 
 func createDB(cfg *Config) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", cfg.DatabaseURL)
+	db, err := sql.Open("{{.Database.GooseDialect}}", cfg.DatabaseConnString)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func createDB(cfg *Config) (*sql.DB, error) {
 	db.SetMaxIdleConns(25)
 	db.SetConnMaxLifetime(2 * time.Minute)
 
-	migrateDB, err := strconv.ParseBool(os.Getenv("MIGRATE_DB"))
+	migrateDB, err := strconv.ParseBool(os.Getenv("MIGRATE_DATABASE"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -119,7 +119,7 @@ func createDB(cfg *Config) (*sql.DB, error) {
 	if migrateDB {
 		goose.SetBaseFS(static.Migration)
 
-		if err := goose.SetDialect("sqlite3"); err != nil {
+		if err := goose.SetDialect("{{.Database.GooseDialect}}"); err != nil {
 			return nil, err
 		}
 
