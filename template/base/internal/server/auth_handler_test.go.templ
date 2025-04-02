@@ -121,7 +121,7 @@ func TestCreateMagicLink(t *testing.T) {
 func TestConsumeMagicLink(t *testing.T) {
 	ts, _ := test.Init()
 
-	token := ts.CreateTokenFixture(data.CreateAuthTokenParams{
+	token := ts.CreateTokenFixture(data.CreateUserAuthTokenParams{
 		Type: "magic_link",
 	})
 
@@ -139,7 +139,7 @@ func TestConsumeMagicLink(t *testing.T) {
 func TestConsumeConfirmEmail(t *testing.T) {
 	ts, _ := test.Init()
 
-	token := ts.CreateTokenFixture(data.CreateAuthTokenParams{
+	token := ts.CreateTokenFixture(data.CreateUserAuthTokenParams{
 		Type: "confirm_email",
 	})
 
@@ -171,7 +171,7 @@ func TestConsumeResetPassword(t *testing.T) {
 
 	user := ts.CreateUserFixture(data.CreateUserParams{})
 
-	token := ts.CreateTokenFixture(data.CreateAuthTokenParams{
+	token := ts.CreateTokenFixture(data.CreateUserAuthTokenParams{
 		UserID: user.ID,
 		Type:   "reset_password",
 	})

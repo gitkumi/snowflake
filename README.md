@@ -29,8 +29,12 @@ go install github.com/gitkumi/snowflake@latest
 Here is how to generate an application.
 
 ```sh
-snowflake new acme
+snowflake new acme -d postgres
 ```
+
+## Flags
+
+- `-d`: Database type (`sqlite3`, `postgres`, or `mysql`)
 
 ## Stack
 
@@ -67,6 +71,5 @@ Snowflake is built with these packages. Make sure to check their documentation.
 
 ## TODO
 
-- mysql and postgres support
 - dev dashboards (telemetry, admin, email dev, file storage dev)
 - consider migrating dev commands in go instead of makefile (e.g. db migrate stuff)

@@ -118,7 +118,7 @@ func (t TestServer) CreateMembershipFixture(custom data.CreateMembershipParams) 
 	return org, user, res
 }
 
-func (t TestServer) CreateTokenFixture(custom data.CreateAuthTokenParams) data.UserAuthToken {
+func (t TestServer) CreateTokenFixture(custom data.CreateUserAuthTokenParams) data.UserAuthToken {
 	ctx := context.Background()
 
 	var user data.User
@@ -131,14 +131,14 @@ func (t TestServer) CreateTokenFixture(custom data.CreateAuthTokenParams) data.U
 
 	nanoid, _ := gonanoid.New()
 
-	defaultData := data.CreateAuthTokenParams{
+	defaultData := data.CreateUserAuthTokenParams{
 		ID:     nanoid,
 		UserID: user.ID,
 		Type:   "confirm_email",
 	}
 
 	merged := mergeParams(defaultData, custom)
-	res, err := t.Server.Query.CreateAuthToken(ctx, merged)
+	res, err := t.Server.Query.CreateUserAuthToken(ctx, merged)
 	if err != nil {
 		log.Fatal(err)
 	}
