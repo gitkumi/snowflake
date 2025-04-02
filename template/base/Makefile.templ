@@ -1,29 +1,6 @@
-# Dev environment
-export DATABASE_URL?=./{{ .Name }}.db
-export GOOSE_DBSTRING?=$(DATABASE_URL)
-export GOOSE_DRIVER:=sqlite3
+export GOOSE_DBSTRING?={{.Database.GooseDBString}}
+export GOOSE_DRIVER:={{.Database.GooseDriver}}
 export GOOSE_MIGRATION_DIR:=./static/sql/migrations
-
-# Production environment
-export ENVIRONMENT?=development
-export BASE_URL?=localhost:8080
-export PORT?=8080
-export GIN_MODE?=debug
-export MIGRATE_DB?=true
-
-# Mailer
-export SMTP_HOST?=
-export SMTP_PORT?=
-export SMTP_USERNAME?=
-export SMTP_PASSWORD?=
-export SMTP_FROM?=
-
-# Storage
-export S3_ACCESS_KEY?=
-export S3_SECRET_KEY?=
-export S3_ENDPOINT_URL?=
-export S3_REGION?=
-export S3_BUCKET?=
 
 .PHONY: audit
 audit: 

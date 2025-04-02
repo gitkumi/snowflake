@@ -6,10 +6,16 @@ import (
 
 	"{{ .Name }}/internal/server"
 
+	"github.com/joho/godotenv"
 	_ "{{.Database.Import}}"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	serv, err := server.Init(&server.Config{
 		Environment: os.Getenv("ENVIRONMENT"),
 		BaseURL:     os.Getenv("BASE_URL"),
