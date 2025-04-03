@@ -11,11 +11,11 @@ go test ./...
 1. Tag
 
 ```bash
-git tag v0.16.0
+git tag v0.17.0
 ```
 
 2. Publish
 
 ```bash
-GOPROXY=proxy.golang.org go list -m github.com/gitkumi/snowflake@v0.16.0
+GOPROXY=proxy.golang.org go list -m github.com/gitkumi/snowflake@v0.17.0
 ```
