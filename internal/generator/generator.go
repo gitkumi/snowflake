@@ -81,7 +81,21 @@ func Generate(projectName string, initGit bool, outputDir string, db Database) e
 		}
 	}
 
-	fmt.Println("Done!")
+	fmt.Println("")
+	fmt.Printf(`Snowflake project generated successfully.
+You can use "make" to install dependencies, run the dev server, and more:
+
+    $ cd %s
+
+If you don't have the required dev packages installed yet (air, sqlc, goose):
+
+    $ make deps.get
+
+Then start the dev server:
+
+    $ make dev
+`, project.Name)
+
 	return nil
 }
 
@@ -91,10 +105,10 @@ func runPostCommands(project *Project, outputPath string) error {
 		name    string
 		args    []string
 	}{
-		{"Running go mod init...", "go", []string{"mod", "init", project.Name}},
-		{"Running go mod tidy...", "go", []string{"mod", "tidy"}},
-		{"Running gofmt...", "gofmt", []string{"-w", "-s", "."}},
-		{"Running make build...", "make", []string{"build"}},
+		{"snowflake: go mod init", "go", []string{"mod", "init", project.Name}},
+		{"snowflake: go mod tidy", "go", []string{"mod", "tidy"}},
+		{"snowflake: gofmt", "gofmt", []string{"-w", "-s", "."}},
+		{"snowflake: make build", "make", []string{"build"}},
 	}
 
 	for _, cmdDef := range commands {
@@ -111,11 +125,12 @@ func runGitCommands(outputPath string) error {
 		name    string
 		args    []string
 	}{
-		{"Running git init...", "git", []string{"init"}},
-		{"Running git add...", "git", []string{"add", "-A"}},
-		{"Running git commit...", "git", []string{"commit", "-m", "Initialize Snowflake project"}},
+		{"", "git", []string{"init"}},
+		{"", "git", []string{"add", "-A"}},
+		{"", "git", []string{"commit", "-m", "Initialize Snowflake project"}},
 	}
 
+	fmt.Println("snowflake: initializing git")
 	for _, cmdDef := range commands {
 		if err := runCmd(outputPath, cmdDef.message, cmdDef.name, cmdDef.args...); err != nil {
 			return err
@@ -125,7 +140,9 @@ func runGitCommands(outputPath string) error {
 }
 
 func runCmd(workingDir, message, name string, args ...string) error {
-	fmt.Println(message)
+	if message != "" {
+		fmt.Println(message)
+	}
 	cmd := exec.Command(name, args...)
 	cmd.Dir = workingDir
 	cmd.Stdout = os.Stdout

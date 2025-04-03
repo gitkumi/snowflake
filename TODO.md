@@ -7,7 +7,8 @@
 
 ### Generator
 
-- HTML
+- TUI
+- Serve HTML
 - Optional DB
 - Optional Auth
 - Add DB Choice

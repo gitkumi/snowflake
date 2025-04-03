@@ -52,7 +52,6 @@ func new() *cobra.Command {
 				log.Fatal(err.Error())
 			}
 
-			// Validate database type
 			dbEnum := generator.Database(database)
 			if !dbEnum.IsValid() {
 				log.Fatalf("Invalid database type: %s. Must be one of: %v", database, generator.AllDatabases)

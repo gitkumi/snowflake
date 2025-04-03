@@ -33,6 +33,12 @@ build:
 	sqlc generate
 	go build -o bin/main cmd/api/*.go
 
+.PHONY: deps.get
+deps.get:
+	go install github.com/air-verse/air@latest &&
+	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && 
+	go install github.com/pressly/goose/v3/cmd/goose@latest
+
 .PHONY: db
 db:
 	goose status
