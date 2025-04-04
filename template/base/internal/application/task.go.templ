@@ -1,8 +1,8 @@
-package server
+package application
 
 import "log"
 
-func (s *Server) Task(fn func() error) {
+func (s *Application) Task(fn func() error) {
 	s.wg.Add(1)
 
 	go func() {

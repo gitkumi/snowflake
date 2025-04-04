@@ -1,16 +1,15 @@
-package server_test
+package handler_test
 
 import (
+	"{{ .Name }}/internal/repo"
+	"{{ .Name }}/test"
 	"bytes"
-	"{{ .Name }}/internal/data"
-	"{{ .Name }}/internal/server"
-	"{{ .Name }}/internal/test"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	gonanoid "github.com/matoous/go-nanoid/v2"
+	"github.com/matoous/go-nanoid/v2"
 )
 
 func TestRegister(t *testing.T) {
@@ -28,14 +27,14 @@ func TestRegister(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/api/auth/register", bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
 
-	ts.Server.Router.ServeHTTP(rr, req)
+	ts.Application.Router.ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusCreated {
 		t.Fatalf("Expected %d got %d. %s. %s", http.StatusCreated, rr.Code, nanoid, rr.Body.String())
 	}
 
 	var response struct {
-		Data server.UserResponse `json:"data"`
+		Data map[string]any `json:"data"`
 	}
 	if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
 		t.Fatalf("Unable to parse response: %v", err)
@@ -45,7 +44,7 @@ func TestRegister(t *testing.T) {
 func TestLogin(t *testing.T) {
 	ts, _ := test.Init()
 
-	user := ts.CreateUserFixture(data.CreateUserParams{})
+	user := ts.CreateUserFixture(repo.CreateUserParams{})
 
 	correctPassword, _ := json.Marshal(map[string]string{
 		"email":    user.Email,
@@ -81,17 +80,10 @@ func TestLogin(t *testing.T) {
 			req, _ := http.NewRequest("POST", "/api/auth/login", bytes.NewBuffer(tc.jsonValue))
 			req.Header.Set("Content-Type", "application/json")
 
-			ts.Server.Router.ServeHTTP(rr, req)
+			ts.Application.Router.ServeHTTP(rr, req)
 
 			if rr.Code != tc.expected {
 				t.Fatalf("Expected %d got %d", tc.expected, rr.Code)
-			}
-
-			var response struct {
-				Data server.UserResponse `json:"data"`
-			}
-			if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
-				t.Fatalf("Unable to parse response: %v", err)
 			}
 		})
 	}
@@ -100,18 +92,17 @@ func TestLogin(t *testing.T) {
 func TestCreateMagicLink(t *testing.T) {
 	ts, _ := test.Init()
 
-	user := ts.CreateUserFixture(data.CreateUserParams{})
+	user := ts.CreateUserFixture(repo.CreateUserParams{})
 
 	jsonValue, _ := json.Marshal(map[string]string{
 		"email": user.Email,
 	})
 
 	rr := httptest.NewRecorder()
-
 	req, _ := http.NewRequest("POST", "/api/auth/email-login", bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
 
-	ts.Server.Router.ServeHTTP(rr, req)
+	ts.Application.Router.ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusCreated {
 		t.Fatalf("Expected %d got %d", http.StatusCreated, rr.Code)
@@ -121,7 +112,7 @@ func TestCreateMagicLink(t *testing.T) {
 func TestConsumeMagicLink(t *testing.T) {
 	ts, _ := test.Init()
 
-	token := ts.CreateTokenFixture(data.CreateUserAuthTokenParams{
+	token := ts.CreateTokenFixture(repo.CreateUserAuthTokenParams{
 		Type: "magic_link",
 	})
 
@@ -129,7 +120,7 @@ func TestConsumeMagicLink(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/api/auth/email-login/"+token.ID, nil)
 	req.Header.Set("Content-Type", "application/json")
 
-	ts.Server.Router.ServeHTTP(rr, req)
+	ts.Application.Router.ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Fatalf("Expected %d got %d", http.StatusOK, rr.Code)
@@ -139,7 +130,7 @@ func TestConsumeMagicLink(t *testing.T) {
 func TestConsumeConfirmEmail(t *testing.T) {
 	ts, _ := test.Init()
 
-	token := ts.CreateTokenFixture(data.CreateUserAuthTokenParams{
+	token := ts.CreateTokenFixture(repo.CreateUserAuthTokenParams{
 		Type: "confirm_email",
 	})
 
@@ -147,21 +138,21 @@ func TestConsumeConfirmEmail(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/api/auth/confirm-email/"+token.ID, nil)
 	req.Header.Set("Content-Type", "application/json")
 
-	ts.Server.Router.ServeHTTP(rr, req)
+	ts.Application.Router.ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Fatalf("Expected %d got %d", http.StatusOK, rr.Code)
 	}
 
 	var response struct {
-		Data server.UserResponse `json:"data"`
+		Data map[string]any `json:"data"`
 	}
 
 	if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
 		t.Fatalf("Unable to parse response: %v", err)
 	}
 
-	if response.Data.ConfirmedAt == nil {
+	if response.Data["confirmed_at"] == nil {
 		t.Fatalf("User confirmed_at was not updated.")
 	}
 }
@@ -169,9 +160,9 @@ func TestConsumeConfirmEmail(t *testing.T) {
 func TestConsumeResetPassword(t *testing.T) {
 	ts, _ := test.Init()
 
-	user := ts.CreateUserFixture(data.CreateUserParams{})
+	user := ts.CreateUserFixture(repo.CreateUserParams{})
 
-	token := ts.CreateTokenFixture(data.CreateUserAuthTokenParams{
+	token := ts.CreateTokenFixture(repo.CreateUserAuthTokenParams{
 		UserID: user.ID,
 		Type:   "reset_password",
 	})
@@ -185,7 +176,7 @@ func TestConsumeResetPassword(t *testing.T) {
 	req, _ := http.NewRequest("POST", "/api/auth/reset-password/"+token.ID, bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
 
-	ts.Server.Router.ServeHTTP(rr, req)
+	ts.Application.Router.ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Fatalf("Expected %d got %d", http.StatusOK, rr.Code)
@@ -196,7 +187,7 @@ func TestConsumeResetPassword(t *testing.T) {
 	req, _ = http.NewRequest("POST", "/api/auth/login", bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
 
-	ts.Server.Router.ServeHTTP(rr, req)
+	ts.Application.Router.ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Fatalf("Expected %d got %d", http.StatusOK, rr.Code)

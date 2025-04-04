@@ -1,10 +1,10 @@
 package test
 
 import (
+	"{{ .Name }}/internal/password"
+	"{{ .Name }}/internal/repo"
 	"context"
 	"database/sql"
-	"{{ .Name }}/internal/data"
-	"{{ .Name }}/internal/password"
 	"log"
 	"reflect"
 
@@ -33,7 +33,7 @@ func mergeParams[T any](left, right T) T {
 	return left
 }
 
-func (t TestServer) CreateUserFixture(custom data.CreateUserParams) data.User {
+func (t TestApplication) CreateUserFixture(custom repo.CreateUserParams) repo.User {
 	ctx := context.Background()
 	fake := faker.New()
 
@@ -41,7 +41,7 @@ func (t TestServer) CreateUserFixture(custom data.CreateUserParams) data.User {
 
 	hashed, _ := password.HashPassword("notsecure")
 
-	defaultData := data.CreateUserParams{
+	defaultData := repo.CreateUserParams{
 		HashedPassword: sql.NullString{
 			String: hashed,
 			Valid:  true,
@@ -59,7 +59,7 @@ func (t TestServer) CreateUserFixture(custom data.CreateUserParams) data.User {
 	}
 
 	merged := mergeParams(defaultData, custom)
-	res, err := t.Server.Query.CreateUser(ctx, merged)
+	res, err := t.Query.CreateUser(ctx, merged)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -67,17 +67,17 @@ func (t TestServer) CreateUserFixture(custom data.CreateUserParams) data.User {
 	return res
 }
 
-func (t TestServer) CreateOrganizationFixture(custom data.CreateOrganizationParams) data.Organization {
+func (t TestApplication) CreateOrganizationFixture(custom repo.CreateOrganizationParams) repo.Organization {
 	ctx := context.Background()
 	fake := faker.New()
 
-	defaultData := data.CreateOrganizationParams{
+	defaultData := repo.CreateOrganizationParams{
 		Name: fake.Beer().Name(),
 		Type: "personal",
 	}
 
 	merged := mergeParams(defaultData, custom)
-	res, err := t.Server.Query.CreateOrganization(ctx, merged)
+	res, err := t.Query.CreateOrganization(ctx, merged)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -85,32 +85,32 @@ func (t TestServer) CreateOrganizationFixture(custom data.CreateOrganizationPara
 	return res
 }
 
-func (t TestServer) CreateMembershipFixture(custom data.CreateMembershipParams) (data.Organization, data.User, data.Membership) {
+func (t TestApplication) CreateMembershipFixture(custom repo.CreateMembershipParams) (repo.Organization, repo.User, repo.Membership) {
 	ctx := context.Background()
 
-	var user data.User
-	var org data.Organization
+	var user repo.User
+	var org repo.Organization
 
 	if custom.UserID == 0 {
-		user = t.CreateUserFixture(data.CreateUserParams{})
+		user = t.CreateUserFixture(repo.CreateUserParams{})
 	} else {
-		user, _ = t.Server.Query.GetUser(ctx, custom.UserID)
+		user, _ = t.Query.GetUser(ctx, custom.UserID)
 	}
 
 	if custom.OrganizationID == 0 {
-		org = t.CreateOrganizationFixture(data.CreateOrganizationParams{})
+		org = t.CreateOrganizationFixture(repo.CreateOrganizationParams{})
 	} else {
-		org, _ = t.Server.Query.GetOrganization(ctx, custom.OrganizationID)
+		org, _ = t.Query.GetOrganization(ctx, custom.OrganizationID)
 	}
 
-	defaultData := data.CreateMembershipParams{
+	defaultData := repo.CreateMembershipParams{
 		UserID:         user.ID,
 		OrganizationID: org.ID,
 		Role:           "owner",
 	}
 	merged := mergeParams(defaultData, custom)
 
-	res, err := t.Server.Query.CreateMembership(ctx, merged)
+	res, err := t.Query.CreateMembership(ctx, merged)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -118,27 +118,27 @@ func (t TestServer) CreateMembershipFixture(custom data.CreateMembershipParams) 
 	return org, user, res
 }
 
-func (t TestServer) CreateTokenFixture(custom data.CreateUserAuthTokenParams) data.UserAuthToken {
+func (t TestApplication) CreateTokenFixture(custom repo.CreateUserAuthTokenParams) repo.UserAuthToken {
 	ctx := context.Background()
 
-	var user data.User
+	var user repo.User
 
 	if custom.UserID == 0 {
-		user = t.CreateUserFixture(data.CreateUserParams{})
+		user = t.CreateUserFixture(repo.CreateUserParams{})
 	} else {
-		user, _ = t.Server.Query.GetUser(ctx, custom.UserID)
+		user, _ = t.Query.GetUser(ctx, custom.UserID)
 	}
 
 	nanoid, _ := gonanoid.New()
 
-	defaultData := data.CreateUserAuthTokenParams{
+	defaultData := repo.CreateUserAuthTokenParams{
 		ID:     nanoid,
 		UserID: user.ID,
 		Type:   "confirm_email",
 	}
 
 	merged := mergeParams(defaultData, custom)
-	res, err := t.Server.Query.CreateUserAuthToken(ctx, merged)
+	res, err := t.Query.CreateUserAuthToken(ctx, merged)
 	if err != nil {
 		log.Fatal(err)
 	}

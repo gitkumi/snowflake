@@ -1,0 +1,30 @@
+package handler
+
+import (
+	"{{ .Name }}/internal/application/service"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+type HealthHandler struct {
+	Service *service.HealthService
+}
+
+func NewHealthHandler(s *service.HealthService) *HealthHandler {
+	return &HealthHandler{Service: s}
+}
+
+func (h *HealthHandler) Health(c *gin.Context) {
+	err := h.Service.DB.Ping()
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"db": "error",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"db": "ok",
+	})
+}

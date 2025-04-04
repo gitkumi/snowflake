@@ -1,0 +1,19 @@
+package router
+
+import (
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+)
+
+type Config struct {
+	GinMode string
+}
+
+func New(cfg *Config) *gin.Engine {
+	gin.SetMode(cfg.GinMode)
+
+	router := gin.Default()
+	router.Use(cors.Default())
+
+	return router
+}

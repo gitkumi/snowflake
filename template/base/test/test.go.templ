@@ -1,20 +1,25 @@
-package main
+package test
 
 import (
-	"log"
-
 	"{{ .Name }}/internal/application"
 	"{{ .Name }}/internal/db"
 	"{{ .Name }}/internal/env"
+	"{{ .Name }}/internal/repo"
 	"{{ .Name }}/internal/router"
 	"{{ .Name }}/internal/smtp"
 	"{{ .Name }}/internal/storage"
+	"log"
 
 	_ "{{.Database.Import}}"
 )
 
-func main() {
-	env, err := env.Get(".env")
+type TestApplication struct {
+	Application *application.Application
+	Query       *repo.Queries
+}
+
+func Init() (*TestApplication, error) {
+	env, err := env.Get(".env.test")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,21 +33,9 @@ func main() {
 		MigrateDatabase:    env.MigrateDatabase,
 	})
 
-	mailer, err := smtp.NewSMTPMailer(&smtp.SMTPMailerConfig{
-		Host:     env.SmtpHost,
-		Port:     env.SmtpPort,
-		Username: env.SmtpUsername,
-		Password: env.SmtpPassword,
-		From:     env.SmtpFrom,
-	})
+	mailer := smtp.NewMockMailer()
 
-	storage := storage.NewS3Storage(&storage.S3StorageConfig{
-		AccessKey:   env.S3AccessKey,
-		SecretKey:   env.S3SecretKey,
-		EndpointURL: env.S3EndpointURL,
-		Region:      env.S3Region,
-		Bucket:      env.S3Bucket,
-	})
+	storage := storage.NewMockStorage()
 
 	app, err := application.New(&application.Config{
 		BaseURL: env.BaseURL,
@@ -56,5 +49,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app.Run()
+	query := repo.New(db)
+
+	return &TestApplication{
+		Application: app,
+		Query:       query,
+	}, nil
 }

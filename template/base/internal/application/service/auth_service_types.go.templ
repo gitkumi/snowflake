@@ -1,9 +1,9 @@
-package server
+package service
 
 import (
-	"database/sql"
-	"{{ .Name }}/internal/data"
 	"{{ .Name }}/internal/password"
+	"{{ .Name }}/internal/repo"
+	"database/sql"
 )
 
 type CreateMagicLinkInput struct {
@@ -36,25 +36,14 @@ type RegisterInput struct {
 	LastName  *string `json:"last_name"`
 }
 
-type UserResponse struct {
-	ID          int64   `json:"id"`
-	Email       string  `json:"email"`
-	Username    string  `json:"username"`
-	FirstName   *string `json:"first_name"`
-	LastName    *string `json:"last_name"`
-	ConfirmedAt *string `json:"confirmed_at"`
-	CreatedAt   string  `json:"created_at"`
-	UpdatedAt   string  `json:"updated_at"`
-}
-
-func (u RegisterInput) Data() (data.CreateUserParams, error) {
+func (u RegisterInput) Repo() (repo.CreateUserParams, error) {
 	hashed, err := password.HashPassword(u.Password)
 
 	if err != nil {
-		return data.CreateUserParams{}, err
+		return repo.CreateUserParams{}, err
 	}
 
-	user := data.CreateUserParams{
+	user := repo.CreateUserParams{
 		Email: u.Email,
 		HashedPassword: sql.NullString{
 			String: hashed,
@@ -78,29 +67,4 @@ func (u RegisterInput) Data() (data.CreateUserParams, error) {
 	}
 
 	return user, nil
-}
-
-func createUserResponse(u data.User) UserResponse {
-	user := UserResponse{
-		ID:        u.ID,
-		Email:     u.Email,
-		Username:  u.Username,
-		CreatedAt: u.CreatedAt.String(),
-		UpdatedAt: u.UpdatedAt.String(),
-	}
-
-	if u.FirstName.Valid {
-		user.FirstName = &u.FirstName.String
-	}
-
-	if u.LastName.Valid {
-		user.LastName = &u.LastName.String
-	}
-
-	if u.ConfirmedAt.Valid {
-		confirmedAt := u.ConfirmedAt.Time.String()
-		user.ConfirmedAt = &confirmedAt
-	}
-
-	return user
 }

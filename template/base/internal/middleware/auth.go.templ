@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"{{ .Name }}/internal/data"
 	"{{ .Name }}/internal/password"
+	"{{ .Name }}/internal/repo"
 	"net/http"
 	"strings"
 
@@ -10,7 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func Authentication(q *data.Queries) gin.HandlerFunc {
+func AuthMiddleware(q *repo.Queries) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
