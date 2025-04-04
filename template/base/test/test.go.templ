@@ -10,7 +10,7 @@ import (
 	"{{ .Name }}/internal/storage"
 	"log"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "{{.Database.Import}}"
 )
 
 type TestApplication struct {

@@ -2,30 +2,59 @@ package main
 
 import (
 	"log"
-	"os"
 
-	"{{ .Name }}/internal/server"
+	"{{ .Name }}/internal/application"
+	"{{ .Name }}/internal/db"
+	"{{ .Name }}/internal/env"
+	"{{ .Name }}/internal/router"
+	"{{ .Name }}/internal/smtp"
+	"{{ .Name }}/internal/storage"
 
-	"github.com/joho/godotenv"
 	_ "{{.Database.Import}}"
 )
 
 func main() {
-	err := godotenv.Load()
+	env, err := env.Get(".env")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	serv, err := server.Init(&server.Config{
-		Environment: os.Getenv("ENVIRONMENT"),
-		BaseURL:     os.Getenv("BASE_URL"),
-		DatabaseConnString: os.Getenv("DATABASE_CONN_STRING"),
-		GinMode:     os.Getenv("GIN_MODE"),
+	router := router.New(&router.Config{
+		GinMode: env.GinMode,
 	})
 
+	db, err := db.New(&db.Config{
+		DatabaseConnString: env.DatabaseConnString,
+		MigrateDatabase:    env.MigrateDatabase,
+	})
+
+	mailer, err := smtp.NewSMTPMailer(&smtp.SMTPMailerConfig{
+		Host:     env.SmtpHost,
+		Port:     env.SmtpPort,
+		Username: env.SmtpUsername,
+		Password: env.SmtpPassword,
+		From:     env.SmtpFrom,
+	})
+
+	storage := storage.NewS3Storage(&storage.S3StorageConfig{
+		AccessKey:   env.S3AccessKey,
+		SecretKey:   env.S3SecretKey,
+		EndpointURL: env.S3EndpointURL,
+		Region:      env.S3Region,
+		Bucket:      env.S3Bucket,
+	})
+
+	app, err := application.New(&application.Config{
+		BaseURL: env.BaseURL,
+		Port:    env.Port,
+		DB:      db,
+		Router:  router,
+		Storage: storage,
+		Mailer:  mailer,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	serv.Run()
+	app.Run()
 }

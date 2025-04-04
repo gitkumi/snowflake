@@ -20,24 +20,6 @@ type S3Storage struct {
 	Bucket      string
 }
 
-type S3StorageConfig struct {
-	AccessKey   string
-	SecretKey   string
-	EndpointURL string
-	Region      string
-	Bucket      string
-}
-
-func NewS3Storage(cfg *S3StorageConfig) *S3Storage {
-	return &S3Storage{
-		AccessKey:   cfg.AccessKey,
-		SecretKey:   cfg.SecretKey,
-		EndpointURL: cfg.EndpointURL,
-		Region:      cfg.Region,
-		Bucket:      cfg.Bucket,
-	}
-}
-
 func (s *S3Storage) createSession() (*s3.S3, error) {
 	sess, err := session.NewSession(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(s.AccessKey, s.SecretKey, ""),

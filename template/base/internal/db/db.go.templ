@@ -14,7 +14,7 @@ type Config struct {
 }
 
 func New(cfg *Config) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", cfg.DatabaseConnString)
+	db, err := sql.Open("{{.Database.Driver}}", cfg.DatabaseConnString)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func New(cfg *Config) (*sql.DB, error) {
 	if cfg.MigrateDatabase {
 		goose.SetBaseFS(static.Migration)
 
-		if err := goose.SetDialect("sqlite3"); err != nil {
+		if err := goose.SetDialect("{{.Database.GooseDialect}}"); err != nil {
 			return nil, err
 		}
 

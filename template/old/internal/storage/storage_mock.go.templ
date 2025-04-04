@@ -8,10 +8,6 @@ import (
 
 type MockStorage struct{}
 
-func NewMockStorage() *MockStorage {
-	return &MockStorage{}
-}
-
 func (m *MockStorage) Get(key string) (string, error) {
 	return "", nil
 }

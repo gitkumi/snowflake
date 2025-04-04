@@ -10,12 +10,7 @@ import (
 type MockMailer struct {
 }
 
-func NewMockMailer() *MockMailer {
-	return &MockMailer{}
-}
-
 func (f *MockMailer) Send(email Email) error {
-	// TOD: Make path match when ran on test environment
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err

@@ -13,23 +13,15 @@ type SMTPMailer struct {
 	from   string
 }
 
-type SMTPMailerConfig struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
-	From     string
-}
-
-func NewSMTPMailer(cfg *SMTPMailerConfig) (*SMTPMailer, error) {
-	client, err := mail.NewClient(cfg.Host, mail.WithTimeout(defaultTimeout), mail.WithSMTPAuth(mail.SMTPAuthLogin), mail.WithPort(cfg.Port), mail.WithUsername(cfg.Username), mail.WithPassword(cfg.Password))
+func NewMailer(host string, port int, username, password, from string) (*SMTPMailer, error) {
+	client, err := mail.NewClient(host, mail.WithTimeout(defaultTimeout), mail.WithSMTPAuth(mail.SMTPAuthLogin), mail.WithPort(port), mail.WithUsername(username), mail.WithPassword(password))
 	if err != nil {
 		return nil, err
 	}
 
 	mailer := &SMTPMailer{
 		client: client,
-		from:   cfg.From,
+		from:   from,
 	}
 
 	return mailer, nil
