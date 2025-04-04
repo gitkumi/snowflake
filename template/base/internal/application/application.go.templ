@@ -23,6 +23,7 @@ import (
 type Handlers struct {
 	auth   *handler.AuthHandler
 	health *handler.HealthHandler
+	html   *handler.HTMLHandler
 }
 
 type Application struct {
@@ -54,9 +55,12 @@ func New(cfg *Config) (*Application, error) {
 	healthService := service.NewHealthService(cfg.DB, cfg.Storage)
 	healthHandler := handler.NewHealthHandler(healthService)
 
+	htmlHandler := handler.NewHTMLHandler()
+
 	handlers := &Handlers{
 		auth:   authHandler,
 		health: healthHandler,
+		html:   htmlHandler,
 	}
 
 	s := &Application{
@@ -70,6 +74,7 @@ func New(cfg *Config) (*Application, error) {
 }
 
 func (s *Application) registerRoutes() {
+	router.GET("/", h.html.TopPage)
 	api := s.Router.Group("/api")
 	api.GET("/health", s.handlers.health.Health)
 	api.POST("/auth/register", s.handlers.auth.Register)
