@@ -1,0 +1,110 @@
+package application
+
+import (
+	"{{ .Name }}/internal/application/handler"
+	"{{ .Name }}/internal/application/service"
+	"{{ .Name }}/internal/repo"
+	"{{ .Name }}/internal/smtp"
+	"{{ .Name }}/internal/storage"
+	"context"
+	"database/sql"
+	"errors"
+	"log"
+	"net/http"
+	"os/signal"
+	"strconv"
+	"sync"
+	"syscall"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+type Handlers struct {
+	auth   *handler.AuthHandler
+	health *handler.HealthHandler
+}
+
+type Application struct {
+	port     int
+	wg       sync.WaitGroup
+	handlers *Handlers
+
+	Router  *gin.Engine
+	DB      *sql.DB
+	Mailer  smtp.Mailer
+	Storage storage.Storage
+}
+
+type Config struct {
+	BaseURL string
+	Port    int
+	Router  *gin.Engine
+	DB      *sql.DB
+	Mailer  smtp.Mailer
+	Storage storage.Storage
+}
+
+func New(cfg *Config) (*Application, error) {
+	query := repo.New(cfg.DB)
+
+	authService := service.NewAuthService(cfg.BaseURL, query, cfg.Mailer)
+	authHandler := handler.NewAuthHandler(authService)
+
+	healthService := service.NewHealthService(cfg.DB, cfg.Storage)
+	healthHandler := handler.NewHealthHandler(healthService)
+
+	handlers := &Handlers{
+		auth:   authHandler,
+		health: healthHandler,
+	}
+
+	s := &Application{
+		Router:   cfg.Router,
+		handlers: handlers,
+	}
+
+	s.registerRoutes()
+
+	return s, nil
+}
+
+func (s *Application) registerRoutes() {
+	api := s.Router.Group("/api")
+	api.GET("/health", s.handlers.health.Health)
+	api.POST("/auth/register", s.handlers.auth.Register)
+	api.POST("/auth/login", s.handlers.auth.Login)
+	api.POST("/auth/email-login", s.handlers.auth.CreateMagicLink)
+	api.POST("/auth/email-login/:token", s.handlers.auth.ConsumeMagicLink)
+	api.POST("/auth/confirm-email", s.handlers.auth.CreateConfirmEmail)
+	api.POST("/auth/confirm-email/:token", s.handlers.auth.ConsumeConfirmEmail)
+	api.POST("/auth/reset-password", s.handlers.auth.CreateResetPassword)
+	api.POST("/auth/reset-password/:token", s.handlers.auth.ConsumeResetPassword)
+}
+
+func (s *Application) Run() {
+	srv := &http.Server{
+		Addr:    ":" + strconv.Itoa(s.port),
+		Handler: s.Router,
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		<-ctx.Done()
+
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			log.Println("Server shutdown", err)
+		}
+	}()
+
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Println("Listen and server error", err)
+	}
+
+	s.wg.Wait()
+}

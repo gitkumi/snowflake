@@ -1,0 +1,70 @@
+package service
+
+import (
+	"{{ .Name }}/internal/password"
+	"{{ .Name }}/internal/repo"
+	"database/sql"
+)
+
+type CreateMagicLinkInput struct {
+	Email string `json:"email" binding:"required"`
+}
+
+type CreateConfirmEmailInput struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+type CreateResetPasswordInput struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+type ResetPasswordInput struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=6,max=72"`
+}
+
+type LoginInput struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type RegisterInput struct {
+	Email     string  `json:"email" binding:"required,email"`
+	Password  string  `json:"password" binding:"required,min=6,max=72"`
+	Username  string  `json:"username" binding:"required,min=3,max=21"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
+}
+
+func (u RegisterInput) Repo() (repo.CreateUserParams, error) {
+	hashed, err := password.HashPassword(u.Password)
+
+	if err != nil {
+		return repo.CreateUserParams{}, err
+	}
+
+	user := repo.CreateUserParams{
+		Email: u.Email,
+		HashedPassword: sql.NullString{
+			String: hashed,
+			Valid:  true,
+		},
+		Username: u.Username,
+	}
+
+	if u.FirstName != nil {
+		user.FirstName = sql.NullString{
+			String: *u.FirstName,
+			Valid:  true,
+		}
+	}
+
+	if u.LastName != nil {
+		user.LastName = sql.NullString{
+			String: *u.LastName,
+			Valid:  true,
+		}
+	}
+
+	return user, nil
+}

@@ -1,0 +1,16 @@
+package application
+
+import "log"
+
+func (s *Application) Task(fn func() error) {
+	s.wg.Add(1)
+
+	go func() {
+		defer s.wg.Done()
+
+		err := fn()
+		if err != nil {
+			log.Println("Task Error", err)
+		}
+	}()
+}

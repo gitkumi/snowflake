@@ -1,0 +1,197 @@
+package service
+
+import (
+	"{{ .Name }}/internal/password"
+	"{{ .Name }}/internal/repo"
+	"{{ .Name }}/internal/smtp"
+	"{{ .Name }}/internal/utils"
+	"context"
+	"database/sql"
+	"errors"
+	"path"
+	"time"
+
+	"github.com/matoous/go-nanoid/v2"
+)
+
+type AuthService struct {
+	BaseURL string
+	Query   *repo.Queries
+	Mailer  smtp.Mailer
+}
+
+func NewAuthService(baseURL string, q *repo.Queries, mailer smtp.Mailer) *AuthService {
+	return &AuthService{
+		BaseURL: baseURL,
+		Query:   q,
+		Mailer:  mailer,
+	}
+}
+
+func (s *AuthService) Register(ctx context.Context, input RegisterInput) (repo.User, error) {
+	data, err := input.Repo()
+	if err != nil {
+		return repo.User{}, err
+	}
+	return s.Query.CreateUser(ctx, data)
+}
+
+func (s *AuthService) Login(ctx context.Context, input LoginInput) (string, error) {
+	user, err := s.Query.GetUserByEmail(ctx, input.Email)
+	if err != nil || user == (repo.User{}) {
+		_, _ = password.VerifyPassword(input.Password, "notsecure")
+		return "", errors.New("invalid username or password")
+	}
+
+	match, err := password.VerifyPassword(input.Password, user.HashedPassword.String)
+	if err != nil || !match {
+		return "", errors.New("invalid username or password")
+	}
+
+	return utils.CreateJwt(user.Email)
+}
+
+func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
+	user, err := s.Query.GetUserByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+
+	nanoid, err := gonanoid.New()
+	if err != nil {
+		return err
+	}
+
+	token, err := s.Query.CreateUserAuthToken(ctx, repo.CreateUserAuthTokenParams{
+		ID:     nanoid,
+		UserID: user.ID,
+		Type:   "magic_link",
+	})
+	if err != nil {
+		return err
+	}
+
+	loginURL := path.Join(s.BaseURL, "auth", "email-login", token.ID)
+	s.Mailer.Send(smtp.Email{To: user.Email, Subject: "Login", Body: loginURL})
+	return nil
+}
+
+func (s *AuthService) CreateResetPassword(ctx context.Context, email string) error {
+	user, err := s.Query.GetUserByEmail(ctx, email)
+	if err != nil || user == (repo.User{}) {
+		return nil
+	}
+
+	nanoid, err := gonanoid.New()
+	if err != nil {
+		return err
+	}
+
+	_, err = s.Query.CreateUserAuthToken(ctx, repo.CreateUserAuthTokenParams{
+		ID:     nanoid,
+		Type:   "reset_password",
+		UserID: user.ID,
+	})
+	if err != nil {
+		return err
+	}
+
+	resetPasswordURL := path.Join(s.BaseURL, "auth", "reset-password", nanoid)
+	s.Mailer.Send(smtp.Email{To: user.Email, Subject: "Password Reset", Body: resetPasswordURL})
+	return nil
+}
+
+func (s *AuthService) CreateConfirmEmail(ctx context.Context, email string) error {
+	user, err := s.Query.GetUserByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+
+	nanoid, err := gonanoid.New()
+	if err != nil {
+		return err
+	}
+
+	_, err = s.Query.CreateUserAuthToken(ctx, repo.CreateUserAuthTokenParams{
+		ID:     nanoid,
+		UserID: user.ID,
+		Type:   "confirm_email",
+	})
+	if err != nil {
+		return err
+	}
+
+	confirmEmailURL := path.Join(s.BaseURL, "auth", "confirm-email", nanoid)
+	s.Mailer.Send(smtp.Email{To: user.Email, Subject: "Confirm Email", Body: confirmEmailURL})
+	return nil
+}
+
+func (s *AuthService) ConsumeMagicLink(ctx context.Context, tokenID string) (string, error) {
+	token, err := s.Query.GetUserAuthTokens(ctx, repo.GetUserAuthTokensParams{
+		ID:   tokenID,
+		Type: "magic_link",
+	})
+	if err != nil {
+		return "", err
+	}
+	return utils.CreateJwt(token.Email)
+}
+
+func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, input ResetPasswordInput) (repo.User, error) {
+	token, err := s.Query.GetUserAuthTokens(ctx, repo.GetUserAuthTokensParams{
+		ID:   tokenID,
+		Type: "reset_password",
+	})
+	if err != nil {
+		return repo.User{}, err
+	}
+
+	user, err := s.Query.GetUser(ctx, token.UserID)
+	if err != nil {
+		return repo.User{}, err
+	}
+
+	if input.Email != user.Email {
+		return repo.User{}, errors.New("invalid token")
+	}
+
+	hashed, err := password.HashPassword(input.Password)
+	if err != nil {
+		return repo.User{}, err
+	}
+
+	return s.Query.UpdateUser(ctx, repo.UpdateUserParams{
+		ID:             user.ID,
+		Email:          user.Email,
+		Username:       user.Username,
+		HashedPassword: sql.NullString{String: hashed, Valid: true},
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+		ConfirmedAt:    user.ConfirmedAt,
+	})
+}
+
+func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (repo.User, error) {
+	token, err := s.Query.GetUserAuthTokens(ctx, repo.GetUserAuthTokensParams{
+		ID:   tokenID,
+		Type: "confirm_email",
+	})
+	if err != nil {
+		return repo.User{}, err
+	}
+
+	user, err := s.Query.GetUser(ctx, token.UserID)
+	if err != nil {
+		return repo.User{}, err
+	}
+
+	return s.Query.UpdateUser(ctx, repo.UpdateUserParams{
+		ID:             user.ID,
+		Email:          user.Email,
+		Username:       user.Username,
+		HashedPassword: user.HashedPassword,
+		FirstName:      user.FirstName,
+		LastName:       user.LastName,
+		ConfirmedAt:    sql.NullTime{Time: time.Now(), Valid: true},
+	})
+}

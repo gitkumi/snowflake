@@ -1,0 +1,11 @@
+package smtp
+
+type Email struct {
+	To      string
+	Subject string
+	Body    string
+}
+
+type Mailer interface {
+	Send(email Email) error
+}

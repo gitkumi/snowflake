@@ -1,0 +1,18 @@
+package service
+
+import (
+	"{{ .Name }}/internal/storage"
+	"database/sql"
+)
+
+type HealthService struct {
+	DB      *sql.DB
+	Storage storage.Storage
+}
+
+func NewHealthService(db *sql.DB, storage storage.Storage) *HealthService {
+	return &HealthService{
+		DB:      db,
+		Storage: storage,
+	}
+}

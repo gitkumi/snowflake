@@ -1,0 +1,58 @@
+package test
+
+import (
+	"{{ .Name }}/internal/application"
+	"{{ .Name }}/internal/db"
+	"{{ .Name }}/internal/env"
+	"{{ .Name }}/internal/repo"
+	"{{ .Name }}/internal/router"
+	"{{ .Name }}/internal/smtp"
+	"{{ .Name }}/internal/storage"
+	"log"
+
+	_ "github.com/mattn/go-sqlite3"
+)
+
+type TestApplication struct {
+	Application *application.Application
+	Query       *repo.Queries
+}
+
+func Init() (*TestApplication, error) {
+	env, err := env.Get(".env.test")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	router := router.New(&router.Config{
+		GinMode: env.GinMode,
+	})
+
+	db, err := db.New(&db.Config{
+		DatabaseConnString: env.DatabaseConnString,
+		MigrateDatabase:    env.MigrateDatabase,
+	})
+
+	mailer := smtp.NewMockMailer()
+
+	storage := storage.NewMockStorage()
+
+	app, err := application.New(&application.Config{
+		BaseURL: env.BaseURL,
+		Port:    env.Port,
+		DB:      db,
+		Router:  router,
+		Storage: storage,
+		Mailer:  mailer,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	query := repo.New(db)
+
+	return &TestApplication{
+		Application: app,
+		Query:       query,
+	}, nil
+}
