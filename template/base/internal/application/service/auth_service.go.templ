@@ -33,7 +33,22 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (repo.U
 	if err != nil {
 		return repo.User{}, err
 	}
+	
+	{{if eq .Database.String "mysql"}}
+	result, err := s.Query.CreateUser(ctx, data)
+	if err != nil {
+		return repo.User{}, err
+	}
+	
+	id, err := result.LastInsertId()
+	if err != nil {
+		return repo.User{}, err
+	}
+	
+	return s.Query.GetUser(ctx, int64(id))
+	{{else}}
 	return s.Query.CreateUser(ctx, data)
+	{{end}}
 }
 
 func (s *AuthService) Login(ctx context.Context, input LoginInput) (string, error) {
@@ -62,11 +77,29 @@ func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
 		return err
 	}
 
+	{{if eq .Database.String "mysql"}}
+	tokenParams := repo.CreateUserAuthTokenParams{
+		ID:     nanoid,
+		UserID: user.ID,
+		Type:   "magic_link",
+	}
+	
+	_, err = s.Query.CreateUserAuthToken(ctx, tokenParams)
+	if err != nil {
+		return err
+	}
+	
+	token, err := s.Query.GetUserAuthTokens(ctx, repo.GetUserAuthTokensParams{
+		ID:   nanoid,
+		Type: "magic_link",
+	})
+	{{else}}
 	token, err := s.Query.CreateUserAuthToken(ctx, repo.CreateUserAuthTokenParams{
 		ID:     nanoid,
 		UserID: user.ID,
 		Type:   "magic_link",
 	})
+	{{end}}
 	if err != nil {
 		return err
 	}
@@ -87,11 +120,13 @@ func (s *AuthService) CreateResetPassword(ctx context.Context, email string) err
 		return err
 	}
 
-	_, err = s.Query.CreateUserAuthToken(ctx, repo.CreateUserAuthTokenParams{
+	tokenParams := repo.CreateUserAuthTokenParams{
 		ID:     nanoid,
 		Type:   "reset_password",
 		UserID: user.ID,
-	})
+	}
+
+	_, err = s.Query.CreateUserAuthToken(ctx, tokenParams)
 	if err != nil {
 		return err
 	}
@@ -112,11 +147,13 @@ func (s *AuthService) CreateConfirmEmail(ctx context.Context, email string) erro
 		return err
 	}
 
-	_, err = s.Query.CreateUserAuthToken(ctx, repo.CreateUserAuthTokenParams{
+	tokenParams := repo.CreateUserAuthTokenParams{
 		ID:     nanoid,
 		UserID: user.ID,
 		Type:   "confirm_email",
-	})
+	}
+
+	_, err = s.Query.CreateUserAuthToken(ctx, tokenParams)
 	if err != nil {
 		return err
 	}
@@ -160,7 +197,7 @@ func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, 
 		return repo.User{}, err
 	}
 
-	return s.Query.UpdateUser(ctx, repo.UpdateUserParams{
+	updateParams := repo.UpdateUserParams{
 		ID:             user.ID,
 		Email:          user.Email,
 		Username:       user.Username,
@@ -168,7 +205,18 @@ func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, 
 		FirstName:      user.FirstName,
 		LastName:       user.LastName,
 		ConfirmedAt:    user.ConfirmedAt,
-	})
+	}
+
+	{{if eq .Database.String "mysql"}}
+	err = s.Query.UpdateUser(ctx, updateParams)
+	if err != nil {
+		return repo.User{}, err
+	}
+	
+	return s.Query.GetUser(ctx, user.ID)
+	{{else}}
+	return s.Query.UpdateUser(ctx, updateParams)
+	{{end}}
 }
 
 func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (repo.User, error) {
@@ -185,7 +233,7 @@ func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (
 		return repo.User{}, err
 	}
 
-	return s.Query.UpdateUser(ctx, repo.UpdateUserParams{
+	updateParams := repo.UpdateUserParams{
 		ID:             user.ID,
 		Email:          user.Email,
 		Username:       user.Username,
@@ -193,5 +241,16 @@ func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (
 		FirstName:      user.FirstName,
 		LastName:       user.LastName,
 		ConfirmedAt:    sql.NullTime{Time: time.Now(), Valid: true},
-	})
+	}
+
+	{{if eq .Database.String "mysql"}}
+	err = s.Query.UpdateUser(ctx, updateParams)
+	if err != nil {
+		return repo.User{}, err
+	}
+	
+	return s.Query.GetUser(ctx, user.ID)
+	{{else}}
+	return s.Query.UpdateUser(ctx, updateParams)
+	{{end}}
 }
