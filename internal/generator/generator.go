@@ -82,19 +82,13 @@ func Generate(projectName string, initGit bool, outputDir string, db Database) e
 	}
 
 	fmt.Println("")
-	fmt.Printf(`Snowflake project generated successfully.
-You can use "make" to install dependencies, run the dev server, and more:
+	fmt.Printf(`✅ Snowflake project '%s' generated successfully! 🎉
 
-    $ cd %s
+Run your new project:
 
-If you don't have the required dev packages installed yet (air, sqlc, goose):
-
-    $ make deps.get
-
-Then start the dev server:
-
-    $ make dev
-`, project.Name)
+  $ cd %s
+  $ make dev
+`, project.Name, project.Name)
 
 	return nil
 }
