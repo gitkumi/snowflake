@@ -16,6 +16,7 @@ import (
 type Project struct {
 	Name     string
 	Database Database
+	AppType  AppType
 }
 
 func Generate(projectName string, initGit bool, outputDir string, db Database) error {

@@ -74,7 +74,7 @@ func New(cfg *Config) (*Application, error) {
 }
 
 func (s *Application) registerRoutes() {
-	router.GET("/", h.html.TopPage)
+	s.Router.GET("/", s.handlers.html.TopPage)
 	api := s.Router.Group("/api")
 	api.GET("/health", s.handlers.health.Health)
 	api.POST("/auth/register", s.handlers.auth.Register)
@@ -87,10 +87,10 @@ func (s *Application) registerRoutes() {
 	api.POST("/auth/reset-password/:token", s.handlers.auth.ConsumeResetPassword)
 }
 
-func (s *Application) Run() {
+func (app *Application) Run() {
 	srv := &http.Server{
-		Addr:    ":" + strconv.Itoa(s.port),
-		Handler: s.Router,
+		Addr:    ":" + strconv.Itoa(app.port),
+		Handler: app.Router,
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -111,5 +111,5 @@ func (s *Application) Run() {
 		log.Println("Listen and server error", err)
 	}
 
-	s.wg.Wait()
+	app.wg.Wait()
 }

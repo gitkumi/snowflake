@@ -40,6 +40,7 @@ func new() *cobra.Command {
 	var (
 		initGit  bool
 		database string
+		appType  string
 	)
 
 	cmd := &cobra.Command{
@@ -57,6 +58,11 @@ func new() *cobra.Command {
 				log.Fatalf("Invalid database type: %s. Must be one of: %v", database, generator.AllDatabases)
 			}
 
+			appType := generator.AppType(appType)
+			if !appType.IsValid() {
+				log.Fatalf("Invalid app type: %s. Must be one of: %v", database, generator.AllAppTypes)
+			}
+
 			err = generator.Generate(args[0], initGit, cwd, dbEnum)
 			if err != nil {
 				log.Fatal(err.Error())
@@ -64,6 +70,7 @@ func new() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().StringVarP(&appType, "appType", "t", "api", fmt.Sprintf("App type %v", generator.AllAppTypes))
 	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
 	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", generator.AllDatabases))
 
