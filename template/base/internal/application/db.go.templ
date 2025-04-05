@@ -14,7 +14,7 @@ type DBConfig struct {
 }
 
 func NewDB(cfg *DBConfig) (*sql.DB, error) {
-	db, err := sql.Open("{{ .Database.GooseDriver }}", cfg.DatabaseConnString)
+	db, err := sql.Open("{{ .Database.Driver }}", cfg.DatabaseConnString)
 	if err != nil {
 		return nil, err
 	}
