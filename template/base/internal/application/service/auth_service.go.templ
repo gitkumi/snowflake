@@ -34,7 +34,7 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (repo.U
 		return repo.User{}, err
 	}
 	
-	{{if eq .Database.String "mysql"}}
+	{{- if eq .Database.String "mysql"}}
 	result, err := s.Query.CreateUser(ctx, data)
 	if err != nil {
 		return repo.User{}, err
@@ -46,9 +46,9 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (repo.U
 	}
 	
 	return s.Query.GetUser(ctx, int64(id))
-	{{else}}
+	{{- else}}
 	return s.Query.CreateUser(ctx, data)
-	{{end}}
+	{{- end}}
 }
 
 func (s *AuthService) Login(ctx context.Context, input LoginInput) (string, error) {
@@ -77,7 +77,7 @@ func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
 		return err
 	}
 
-	{{if eq .Database.String "mysql"}}
+	{{- if eq .Database.String "mysql"}}
 	tokenParams := repo.CreateUserAuthTokenParams{
 		ID:     nanoid,
 		UserID: user.ID,
@@ -93,13 +93,13 @@ func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
 		ID:   nanoid,
 		Type: "magic_link",
 	})
-	{{else}}
+	{{- else}}
 	token, err := s.Query.CreateUserAuthToken(ctx, repo.CreateUserAuthTokenParams{
 		ID:     nanoid,
 		UserID: user.ID,
 		Type:   "magic_link",
 	})
-	{{end}}
+	{{- end}}
 	if err != nil {
 		return err
 	}
@@ -207,16 +207,16 @@ func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, 
 		ConfirmedAt:    user.ConfirmedAt,
 	}
 
-	{{if eq .Database.String "mysql"}}
+	{{- if eq .Database.String "mysql"}}
 	err = s.Query.UpdateUser(ctx, updateParams)
 	if err != nil {
 		return repo.User{}, err
 	}
 	
 	return s.Query.GetUser(ctx, user.ID)
-	{{else}}
+	{{- else}}
 	return s.Query.UpdateUser(ctx, updateParams)
-	{{end}}
+	{{- end}}
 }
 
 func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (repo.User, error) {
@@ -243,14 +243,14 @@ func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (
 		ConfirmedAt:    sql.NullTime{Time: time.Now(), Valid: true},
 	}
 
-	{{if eq .Database.String "mysql"}}
+	{{- if eq .Database.String "mysql"}}
 	err = s.Query.UpdateUser(ctx, updateParams)
 	if err != nil {
 		return repo.User{}, err
 	}
 	
 	return s.Query.GetUser(ctx, user.ID)
-	{{else}}
+	{{- else}}
 	return s.Query.UpdateUser(ctx, updateParams)
-	{{end}}
+	{{- end}}
 }

@@ -18,11 +18,11 @@ tidy:
 
 .PHONY: run
 run:
-	{{if eq .AppType "web"}}
+{{- if eq .AppType "web"}}
 	go run cmd/web/*.go
-	{{else}}
+{{- else}}
 	go run cmd/api/*.go
-	{{end}}
+{{- end}}
 
 .PHONY: test
 test:
@@ -35,12 +35,12 @@ dev:
 .PHONY: build
 build:
 	sqlc generate
-	{{if eq .AppType "web"}}
+{{- if eq .AppType "web"}}
 	templ generate
 	go build -o bin/main cmd/web/*.go
-	{{else}}
+{{- else}}
 	go build -o bin/main cmd/api/*.go
-	{{end}}
+{{- end}}
 
 .PHONY: db
 db:
