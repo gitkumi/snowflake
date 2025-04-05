@@ -54,41 +54,41 @@ func ProcessFileRenames(project *Project, outputPath string, renames *FileRename
 	if !ok {
 		return nil
 	}
-	
+
 	sourceDirs := make(map[string]bool)
-	
+
 	for oldPath, newPath := range renameMappings {
 		fullOldPath := filepath.Join(outputPath, oldPath)
 		fullNewPath := filepath.Join(outputPath, newPath)
-		
+
 		if _, err := os.Stat(fullOldPath); os.IsNotExist(err) {
 			continue
 		}
-		
+
 		targetDir := filepath.Dir(fullNewPath)
 		if err := os.MkdirAll(targetDir, 0777); err != nil {
 			return fmt.Errorf("failed to create directory %s: %v", targetDir, err)
 		}
-		
+
 		if err := os.Rename(fullOldPath, fullNewPath); err != nil {
 			data, err := os.ReadFile(fullOldPath)
 			if err != nil {
 				return fmt.Errorf("failed to read file %s: %v", fullOldPath, err)
 			}
-			
+
 			if err := os.WriteFile(fullNewPath, data, 0666); err != nil {
 				return fmt.Errorf("failed to write file %s: %v", fullNewPath, err)
 			}
-			
+
 			if err := os.Remove(fullOldPath); err != nil {
 				return fmt.Errorf("failed to remove file %s: %v", fullOldPath, err)
 			}
 		}
-		
+
 		sourceDir := filepath.Dir(fullOldPath)
 		sourceDirs[sourceDir] = true
 	}
-	
+
 	return cleanupSourceDirs(sourceDirs)
 }
 
@@ -97,19 +97,19 @@ func cleanupSourceDirs(dirs map[string]bool) error {
 	for dir := range dirs {
 		dirList = append(dirList, dir)
 	}
-	
+
 	// Sort by length in descending order to ensure child directories
 	// are processed before their parents
 	sort.Slice(dirList, func(i, j int) bool {
 		return len(dirList[i]) > len(dirList[j])
 	})
-	
+
 	for _, dir := range dirList {
 		if err := cleanupEmptyDir(dir); err != nil {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
