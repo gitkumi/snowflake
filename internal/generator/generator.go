@@ -19,24 +19,30 @@ type Project struct {
 	AppType  AppType
 }
 
-func Generate(projectName string, initGit bool, outputDir string, db Database, appType AppType) error {
+type GeneratorConfig struct {
+	Name      string
+	Database  Database
+	AppType   AppType
+	InitGit   bool
+	OutputDir string
+}
+
+type FileExclusions struct {
+	ByAppType map[AppType][]string
+}
+
+func Generate(cfg *GeneratorConfig) error {
 	project := &Project{
-		Name:     strings.ToLower(projectName),
-		Database: db,
-		AppType:  appType,
+		Name:     cfg.Name,
+		Database: cfg.Database,
+		AppType:  cfg.AppType,
 	}
 
-	templateFuncs := template.FuncMap{
-		"DatabaseMigration": func(filename string) (string, error) {
-			return LoadDatabaseMigration(db, filename)
-		},
-		"DatabaseQuery": func(filename string) (string, error) {
-			return LoadDatabaseQuery(db, filename)
-		},
-	}
-
-	outputPath := filepath.Join(outputDir, projectName)
+	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
 	templateFiles := snowflaketemplate.BaseFiles
+
+	templateFuncs := createTemplateFuncs(cfg)
+	exclusions := createFileExclusions()
 
 	fmt.Println("Generating files...")
 	err := fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
@@ -47,11 +53,8 @@ func Generate(projectName string, initGit bool, outputDir string, db Database, a
 		fileName := strings.TrimPrefix(path, "base")
 		targetPath := filepath.Join(outputPath, fileName)
 
-		// TODO: There should be a better way to do this.
-		if project.AppType != Web {
-			if strings.Contains(path, "/html/") || strings.HasSuffix(path, ".templ.templ") {
-				return nil
-			}
+		if shouldExcludeFile(path, project, exclusions) {
+			return nil
 		}
 
 		if d.IsDir() {
@@ -84,7 +87,7 @@ func Generate(projectName string, initGit bool, outputDir string, db Database, a
 		return err
 	}
 
-	if initGit {
+	if cfg.InitGit {
 		if err := runGitCommands(outputPath); err != nil {
 			return err
 		}
@@ -100,6 +103,40 @@ Run your new project:
 `, project.Name, project.Name)
 
 	return nil
+}
+
+func createTemplateFuncs(cfg *GeneratorConfig) template.FuncMap {
+	return template.FuncMap{
+		"DatabaseMigration": func(filename string) (string, error) {
+			return LoadDatabaseMigration(cfg.Database, filename)
+		},
+		"DatabaseQuery": func(filename string) (string, error) {
+			return LoadDatabaseQuery(cfg.Database, filename)
+		},
+	}
+}
+
+func createFileExclusions() *FileExclusions {
+	return &FileExclusions{
+		ByAppType: map[AppType][]string{
+			API: {
+				"/internal/html",
+				".templ.templ",
+			},
+		},
+	}
+}
+
+func shouldExcludeFile(path string, project *Project, exclusions *FileExclusions) bool {
+	if excludedPaths, ok := exclusions.ByAppType[project.AppType]; ok {
+		for _, excludedPath := range excludedPaths {
+			if strings.Contains(path, excludedPath) {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func runPostCommands(project *Project, outputPath string) error {

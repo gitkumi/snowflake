@@ -58,12 +58,20 @@ func new() *cobra.Command {
 				log.Fatalf("Invalid database type: %s. Must be one of: %v", database, generator.AllDatabases)
 			}
 
-			appType := generator.AppType(appType)
-			if !appType.IsValid() {
+			appTypeEnum := generator.AppType(appType)
+			if !appTypeEnum.IsValid() {
 				log.Fatalf("Invalid app type: %s. Must be one of: %v", appType, generator.AllAppTypes)
 			}
 
-			err = generator.Generate(args[0], initGit, cwd, dbEnum, appType)
+			cfg := &generator.GeneratorConfig{
+				Name:      args[0],
+				Database:  dbEnum,
+				AppType:   appTypeEnum,
+				InitGit:   initGit,
+				OutputDir: cwd,
+			}
+
+			err = generator.Generate(cfg)
 			if err != nil {
 				log.Fatal(err.Error())
 			}

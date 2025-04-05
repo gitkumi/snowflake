@@ -13,7 +13,15 @@ func TestGenerateSQLite3(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	err = Generate("acme", false, tmpDir, SQLite3, API)
+	cf := &GeneratorConfig{
+		Name:      "acme",
+		Database:  SQLite3,
+		AppType:   API,
+		InitGit:   false,
+		OutputDir: tmpDir,
+	}
+
+	err = Generate(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +39,15 @@ func TestGeneratePostgres(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	err = Generate("acme", false, tmpDir, Postgres, API)
+	cfg := &GeneratorConfig{
+		Name:      "acme",
+		Database:  Postgres,
+		AppType:   API,
+		InitGit:   false,
+		OutputDir: tmpDir,
+	}
+
+	err = Generate(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +65,15 @@ func TestGenerateMySQL(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	err = Generate("acme", false, tmpDir, MySQL, API)
+	cfg := &GeneratorConfig{
+		Name:      "acme",
+		Database:  MySQL,
+		AppType:   API,
+		InitGit:   false,
+		OutputDir: tmpDir,
+	}
+
+	err = Generate(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,3 +83,4 @@ func TestGenerateMySQL(t *testing.T) {
 		t.Fatal("Project directory was not created")
 	}
 }
+
