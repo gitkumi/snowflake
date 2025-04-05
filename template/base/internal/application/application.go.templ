@@ -9,6 +9,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os/signal"
@@ -29,6 +30,7 @@ type Handlers struct {
 }
 
 type Application struct {
+	baseURL  string
 	port     int
 	wg       sync.WaitGroup
 	handlers *Handlers
@@ -70,6 +72,7 @@ func New(cfg *Config) (*Application, error) {
 	}
 
 	s := &Application{
+		baseURL:  cfg.BaseURL,
 		Router:   cfg.Router,
 		handlers: handlers,
 		port:			cfg.Port,
@@ -100,6 +103,7 @@ func (app *Application) Run() {
 		}
 	}()
 
+	fmt.Printf("\nServer started at http://%s:%d", app.baseURL, app.port)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Println("Listen and server error", err)
 	}
