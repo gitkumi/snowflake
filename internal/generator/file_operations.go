@@ -9,7 +9,8 @@ import (
 )
 
 type FileExclusions struct {
-	ByAppType map[AppType][]string
+	ByAppType  map[AppType][]string
+	ByDatabase map[Database][]string
 }
 
 type FileRenames struct {
@@ -23,6 +24,11 @@ func CreateFileExclusions() *FileExclusions {
 				"/internal/html",
 				"/internal/application/handler/html_handler.go",
 				".templ.templ",
+			},
+		},
+		ByDatabase: map[Database][]string{
+			SQLite3: {
+				"dev.yml.templ",
 			},
 		},
 	}
@@ -39,6 +45,7 @@ func CreateFileRenames() *FileRenames {
 }
 
 func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions) bool {
+	// Check app type exclusions
 	if excludedPaths, ok := exclusions.ByAppType[project.AppType]; ok {
 		for _, excludedPath := range excludedPaths {
 			if strings.Contains(path, excludedPath) {
@@ -46,6 +53,16 @@ func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 			}
 		}
 	}
+
+	// Check database type exclusions
+	if excludedPaths, ok := exclusions.ByDatabase[project.Database]; ok {
+		for _, excludedPath := range excludedPaths {
+			if strings.Contains(path, excludedPath) {
+				return true
+			}
+		}
+	}
+
 	return false
 }
 

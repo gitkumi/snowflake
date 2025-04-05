@@ -39,11 +39,11 @@ func (d Database) ConnString(projectName string) string {
 	case SQLite3:
 		return projectName + ".db"
 	case Postgres:
-		return fmt.Sprintf("user=postgres password=postgres dbname=%s host=localhost sslmode=disable", projectName)
+		return fmt.Sprintf("user=postgres password=postgres dbname=%s host=localhost port=5432 sslmode=disable", projectName)
 	case MySQL:
-		return ""
+		return fmt.Sprintf("mysql:mysql@tcp(localhost:3306)/%s?parseTime=true", projectName)
 	default:
-		return fmt.Sprintf("root:root@tcp(localhost:3306)/%s?parseTime=true", projectName)
+		return ""
 	}
 }
 
@@ -104,7 +104,7 @@ func (d Database) GooseDBString(projectName string) string {
 	case SQLite3:
 		return projectName + ".db"
 	case Postgres:
-		return fmt.Sprintf("user=postgres password=postgres dbname=%s host=localhost sslmode=disable", projectName)
+		return fmt.Sprintf("user=postgres password=postgres dbname=%s host=localhost port=5432 sslmode=disable", projectName)
 	case MySQL:
 		return fmt.Sprintf("root:root@tcp(localhost:3306)/%s?parseTime=true", projectName)
 	default:

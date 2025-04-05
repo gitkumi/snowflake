@@ -1,0 +1,36 @@
+{{- if eq .Database.String "postgres" }}
+services:
+  db:
+    image: postgres:17
+    container_name: dev_postgres
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: {{ .Name }}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+{{- else if eq .Database.String "mysql" }}
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: dev_mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+      MYSQL_DATABASE: {{ .Name }}
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: mysql
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+{{- end }}

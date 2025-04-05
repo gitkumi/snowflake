@@ -60,13 +60,22 @@ func Generate(cfg *GeneratorConfig) error {
 	}
 
 	fmt.Println("")
-	fmt.Printf(`✅ Snowflake project '%s' generated successfully! 🎉
+	successMessage := fmt.Sprintf(`✅ Snowflake project '%s' generated successfully! 🎉
 
 Run your new project:
 
-  $ cd %s
-  $ make dev
-`, project.Name, project.Name)
+  $ cd %s`, project.Name, project.Name)
+
+	if project.Database == Postgres || project.Database == MySQL {
+		successMessage += `
+  $ make db.start  # Start the docker compose dev environment for the database
+  $ make dev`
+	} else {
+		successMessage += `
+  $ make dev`
+	}
+
+	fmt.Println(successMessage)
 
 	return nil
 }
