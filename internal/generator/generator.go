@@ -31,6 +31,10 @@ type FileExclusions struct {
 	ByAppType map[AppType][]string
 }
 
+type FileRenaming struct {
+	ByAppType map[AppType]map[string]string
+}
+
 func Generate(cfg *GeneratorConfig) error {
 	project := &Project{
 		Name:     cfg.Name,
@@ -43,6 +47,7 @@ func Generate(cfg *GeneratorConfig) error {
 
 	templateFuncs := createTemplateFuncs(cfg)
 	exclusions := createFileExclusions()
+	renaming := createFileRenaming()
 
 	fmt.Println("Generating files...")
 	err := fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
@@ -56,6 +61,8 @@ func Generate(cfg *GeneratorConfig) error {
 		if shouldExcludeFile(path, project, exclusions) {
 			return nil
 		}
+
+		targetPath = getTargetPath(path, targetPath, project, renaming)
 
 		if d.IsDir() {
 			return os.MkdirAll(targetPath, 0777)
@@ -127,6 +134,17 @@ func createFileExclusions() *FileExclusions {
 	}
 }
 
+func createFileRenaming() *FileRenaming {
+	return &FileRenaming{
+		ByAppType: map[AppType]map[string]string{
+			Web: {
+				"/cmd/api/": "/cmd/web/",
+				"/cmd/api/main.go": "/cmd/web/main.go",
+			},
+		},
+	}
+}
+
 func shouldExcludeFile(path string, project *Project, exclusions *FileExclusions) bool {
 	if excludedPaths, ok := exclusions.ByAppType[project.AppType]; ok {
 		for _, excludedPath := range excludedPaths {
@@ -137,6 +155,18 @@ func shouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 	}
 
 	return false
+}
+
+func getTargetPath(srcPath, originalTargetPath string, project *Project, renaming *FileRenaming) string {
+	if renamingRules, ok := renaming.ByAppType[project.AppType]; ok {
+		targetPath := originalTargetPath
+		for pattern, replacement := range renamingRules {
+			if strings.Contains(srcPath, pattern) {
+				return strings.Replace(targetPath, pattern, replacement, 1)
+			}
+		}
+	}
+	return originalTargetPath
 }
 
 func runPostCommands(project *Project, outputPath string) error {
