@@ -24,6 +24,18 @@ test:
 build:
 	go build -ldflags="-X 'github.com/gitkumi/snowflake/cmd/cli.version=$(shell git describe --tags --always)'" -o bin/main ./main.go
 
+.PHONY: build-all
+build-all:
+	@mkdir -p dist
+	@echo "Building for multiple platforms..."
+	@GOOS=linux GOARCH=amd64 go build -ldflags="-X 'github.com/gitkumi/snowflake/cmd/cli.version=$(shell git describe --tags --always)'" -o dist/snowflake_linux_amd64 ./main.go
+	@GOOS=linux GOARCH=arm64 go build -ldflags="-X 'github.com/gitkumi/snowflake/cmd/cli.version=$(shell git describe --tags --always)'" -o dist/snowflake_linux_arm64 ./main.go
+	@GOOS=darwin GOARCH=amd64 go build -ldflags="-X 'github.com/gitkumi/snowflake/cmd/cli.version=$(shell git describe --tags --always)'" -o dist/snowflake_darwin_amd64 ./main.go
+	@GOOS=darwin GOARCH=arm64 go build -ldflags="-X 'github.com/gitkumi/snowflake/cmd/cli.version=$(shell git describe --tags --always)'" -o dist/snowflake_darwin_arm64 ./main.go
+	@GOOS=windows GOARCH=amd64 go build -ldflags="-X 'github.com/gitkumi/snowflake/cmd/cli.version=$(shell git describe --tags --always)'" -o dist/snowflake_windows_amd64.exe ./main.go
+	@cd dist && sha256sum * > SHA256SUMS
+	@echo "Done! Binaries are in the dist/ directory"
+
 .PHONY: install
 install:
 	go install -ldflags="-X 'github.com/gitkumi/snowflake/cmd/cli.version=$(shell git describe --tags --always)'" ./...

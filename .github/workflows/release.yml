@@ -24,40 +24,18 @@ jobs:
           go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
           go install github.com/a-h/templ/cmd/templ@latest
 
+      - name: Run audit
+        run: make audit
+      
       - name: Run tests
-        run: go test -v ./...
+        run: make test
 
       - name: Get version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Build binaries
-        run: |
-          # Create dist directory
-          mkdir -p dist
-          
-          # Build for multiple platforms
-          PLATFORMS="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64"
-          for platform in $PLATFORMS; do
-            IFS='/' read -r -a parts <<< "$platform"
-            GOOS="${parts[0]}"
-            GOARCH="${parts[1]}"
-            
-            if [ "$GOOS" = "windows" ]; then
-              EXTENSION=".exe"
-            else
-              EXTENSION=""
-            fi
-            
-            OUTPUT="dist/snowflake_${GOOS}_${GOARCH}${EXTENSION}"
-            
-            echo "Building for $GOOS/$GOARCH..."
-            GOOS=$GOOS GOARCH=$GOARCH go build -ldflags="-X 'github.com/gitkumi/snowflake/cmd/cli.version=${{ steps.get_version.outputs.VERSION }}'" -o "$OUTPUT" ./main.go
-          done
-          
-          # Create SHA256 checksums
-          cd dist
-          sha256sum * > SHA256SUMS
+        run: make build-all
 
       - name: Create GitHub Release
         id: create_release
