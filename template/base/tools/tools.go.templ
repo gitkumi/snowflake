@@ -4,7 +4,9 @@ package tools
 
 // Dev tools. Having them here ensures they are installed when running `go mod tidy`.
 import (
+	{{- if eq .AppType "web"}}
 	_ "github.com/a-h/templ/cmd/templ"
+	{{- end}}
 	_ "github.com/air-verse/air"
 	_ "github.com/pressly/goose/v3/cmd/goose"
 	_ "github.com/sqlc-dev/sqlc/cmd/sqlc"
