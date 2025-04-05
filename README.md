@@ -46,9 +46,9 @@ Snowflake is built with these packages. Make sure to check their documentation.
 - [sqlc](https://github.com/sqlc-dev/sqlc)
 - [goose](https://github.com/pressly/goose)
 
-#### HTML Templating (Only for "web" app type)
+#### Templating
 
-- [templ](https://templ.guide)
+- [templ](https://templ.guide) (only for "web" app type)
 
 ## Commands
 
