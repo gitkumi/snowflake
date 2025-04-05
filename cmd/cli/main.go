@@ -10,6 +10,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Will be set at build time
+var (
+	version = "dev"
+)
+
 func Execute() {
 	var showVersion bool
 
@@ -18,7 +23,7 @@ func Execute() {
 		Short: "Snowflake is an opinionated Go REST API application generator.",
 		Run: func(cmd *cobra.Command, args []string) {
 			if showVersion {
-				fmt.Println("v0.19.0")
+				fmt.Println(version)
 				return
 			}
 

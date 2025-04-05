@@ -22,4 +22,19 @@ test:
 
 .PHONY: build
 build:
-	go build -o bin/main ./main.go
+	go build -ldflags="-X 'github.com/gitkumi/snowflake/cmd/cli.version=$(shell git describe --tags --always)'" -o bin/main ./main.go
+
+.PHONY: install
+install:
+	go install -ldflags="-X 'github.com/gitkumi/snowflake/cmd/cli.version=$(shell git describe --tags --always)'" ./...
+
+.PHONY: release
+release:
+	@read -p "Enter the new version (e.g., v0.20.0): " version; \
+	git tag $$version && \
+	git push origin $$version && \
+	echo "Pushed tag $$version. GitHub Actions will handle the release process."
+
+.PHONY: list-versions
+list-versions:
+	@git tag -l --sort=-v:refname | head -n 10
