@@ -1,6 +1,6 @@
 # Snowflake
 
-Yet another Go REST API application generator.
+Yet another Go application generator.
 
 Features:
 - Opinionated with the best practices.

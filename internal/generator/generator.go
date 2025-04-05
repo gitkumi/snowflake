@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"text/template"
 
 	snowflaketemplate "github.com/gitkumi/snowflake/template"
@@ -16,27 +16,73 @@ import (
 type Project struct {
 	Name     string
 	Database Database
+	AppType  AppType
 }
 
-func Generate(projectName string, initGit bool, outputDir string, db Database) error {
+type GeneratorConfig struct {
+	Name      string
+	Database  Database
+	AppType   AppType
+	InitGit   bool
+	OutputDir string
+}
+
+func Generate(cfg *GeneratorConfig) error {
 	project := &Project{
-		Name:     strings.ToLower(projectName),
-		Database: db,
+		Name:     cfg.Name,
+		Database: cfg.Database,
+		AppType:  cfg.AppType,
 	}
 
-	templateFuncs := template.FuncMap{
-		"DatabaseMigration": func(filename string) (string, error) {
-			return LoadDatabaseMigration(db, filename)
-		},
-		"DatabaseQuery": func(filename string) (string, error) {
-			return LoadDatabaseQuery(db, filename)
-		},
-	}
-
-	outputPath := filepath.Join(outputDir, projectName)
+	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
 	templateFiles := snowflaketemplate.BaseFiles
 
+	templateFuncs := CreateTemplateFuncs(cfg)
+	exclusions := CreateFileExclusions()
+	renames := CreateFileRenames()
+
+	if err := generateFromTemplates(project, outputPath, templateFiles, templateFuncs, exclusions); err != nil {
+		return err
+	}
+
+	if err := ProcessFileRenames(project, outputPath, renames); err != nil {
+		return err
+	}
+
+	if err := RunPostCommands(project, outputPath); err != nil {
+		return err
+	}
+
+	if cfg.InitGit {
+		if err := RunGitCommands(outputPath); err != nil {
+			return err
+		}
+	}
+
+	fmt.Println("")
+	fmt.Printf(`✅ Snowflake project '%s' generated successfully! 🎉
+
+Run your new project:
+
+  $ cd %s
+  $ make dev
+`, project.Name, project.Name)
+
+	return nil
+}
+
+func generateFromTemplates(project *Project, outputPath string, templateFiles fs.FS,
+	templateFuncs map[string]interface{}, exclusions *FileExclusions) error {
+
 	fmt.Println("Generating files...")
+
+	// Use a buffer pool to reduce allocations when processing templates
+	bufPool := sync.Pool{
+		New: func() interface{} {
+			return new(bytes.Buffer)
+		},
+	}
+
 	err := fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -45,11 +91,15 @@ func Generate(projectName string, initGit bool, outputDir string, db Database) e
 		fileName := strings.TrimPrefix(path, "base")
 		targetPath := filepath.Join(outputPath, fileName)
 
+		if ShouldExcludeFile(path, project, exclusions) {
+			return nil
+		}
+
 		if d.IsDir() {
 			return os.MkdirAll(targetPath, 0777)
 		}
 
-		content, err := templateFiles.ReadFile(path)
+		content, err := fs.ReadFile(templateFiles, path)
 		if err != nil {
 			return err
 		}
@@ -59,93 +109,24 @@ func Generate(projectName string, initGit bool, outputDir string, db Database) e
 			return err
 		}
 
-		var buf bytes.Buffer
-		if err := tmpl.Execute(&buf, project); err != nil {
+		// Get a buffer from pool and ensure it's reset
+		buf := bufPool.Get().(*bytes.Buffer)
+		buf.Reset()
+		defer bufPool.Put(buf)
+
+		if err := tmpl.Execute(buf, project); err != nil {
 			return err
 		}
 
 		newFilePath := strings.TrimSuffix(targetPath, ".templ")
-		return os.WriteFile(newFilePath, buf.Bytes(), 0777)
+
+		targetDir := filepath.Dir(newFilePath)
+		if err := os.MkdirAll(targetDir, 0777); err != nil {
+			return fmt.Errorf("failed to create directory %s: %v", targetDir, err)
+		}
+
+		return os.WriteFile(newFilePath, buf.Bytes(), 0666)
 	})
-	if err != nil {
-		return err
-	}
 
-	if err := runPostCommands(project, outputPath); err != nil {
-		return err
-	}
-
-	if initGit {
-		if err := runGitCommands(outputPath); err != nil {
-			return err
-		}
-	}
-
-	fmt.Println("")
-	fmt.Printf(`Snowflake project generated successfully.
-You can use "make" to install dependencies, run the dev server, and more:
-
-    $ cd %s
-
-If you don't have the required dev packages installed yet (air, sqlc, goose):
-
-    $ make deps.get
-
-Then start the dev server:
-
-    $ make dev
-`, project.Name)
-
-	return nil
-}
-
-func runPostCommands(project *Project, outputPath string) error {
-	commands := []struct {
-		message string
-		name    string
-		args    []string
-	}{
-		{"snowflake: go mod init", "go", []string{"mod", "init", project.Name}},
-		{"snowflake: go mod tidy", "go", []string{"mod", "tidy"}},
-		{"snowflake: gofmt", "gofmt", []string{"-w", "-s", "."}},
-		{"snowflake: make build", "make", []string{"build"}},
-	}
-
-	for _, cmdDef := range commands {
-		if err := runCmd(outputPath, cmdDef.message, cmdDef.name, cmdDef.args...); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func runGitCommands(outputPath string) error {
-	commands := []struct {
-		message string
-		name    string
-		args    []string
-	}{
-		{"", "git", []string{"init"}},
-		{"", "git", []string{"add", "-A"}},
-		{"", "git", []string{"commit", "-m", "Initialize Snowflake project"}},
-	}
-
-	fmt.Println("snowflake: initializing git")
-	for _, cmdDef := range commands {
-		if err := runCmd(outputPath, cmdDef.message, cmdDef.name, cmdDef.args...); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func runCmd(workingDir, message, name string, args ...string) error {
-	if message != "" {
-		fmt.Println(message)
-	}
-	cmd := exec.Command(name, args...)
-	cmd.Dir = workingDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return err
 }

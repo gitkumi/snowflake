@@ -2,13 +2,13 @@
 
 ### General
 
+- Improve HTML related features. (Add esbuild, assets, etc.)
 - Improve background jobs
 - Improve logging
 
 ### Generator
 
 - TUI
-- Serve HTML
 - Optional DB
 - Optional Auth
 - Add DB Choice

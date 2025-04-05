@@ -14,7 +14,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = generator.Generate("acme", true, path.Join(cwd, "template"), generator.SQLite3)
+	cfg := &generator.GeneratorConfig{
+		Name:      "acme",
+		Database:  generator.SQLite3,
+		AppType:   generator.API,
+		InitGit:   true,
+		OutputDir: path.Join(cwd, "template"),
+	}
+
+	err = generator.Generate(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -18,7 +18,11 @@ tidy:
 
 .PHONY: run
 run:
+{{- if eq .AppType "web"}}
+	go run cmd/web/*.go
+{{- else}}
 	go run cmd/api/*.go
+{{- end}}
 
 .PHONY: test
 test:
@@ -31,13 +35,12 @@ dev:
 .PHONY: build
 build:
 	sqlc generate
+{{- if eq .AppType "web"}}
+	templ generate
+	go build -o bin/main cmd/web/*.go
+{{- else}}
 	go build -o bin/main cmd/api/*.go
-
-.PHONY: deps.get
-deps.get:
-	go install github.com/air-verse/air@latest
-	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-	go install github.com/pressly/goose/v3/cmd/goose@latest
+{{- end}}
 
 .PHONY: db
 db:

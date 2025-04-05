@@ -4,9 +4,7 @@ import (
 	"log"
 
 	"{{ .Name }}/internal/application"
-	"{{ .Name }}/internal/db"
 	"{{ .Name }}/internal/env"
-	"{{ .Name }}/internal/router"
 	"{{ .Name }}/internal/smtp"
 	"{{ .Name }}/internal/storage"
 
@@ -14,16 +12,16 @@ import (
 )
 
 func main() {
-	env, err := env.Get(".env")
+	env, err := env.New(".env")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	router := router.New(&router.Config{
+	router := application.NewRouter(&application.RouterConfig{
 		GinMode: env.GinMode,
 	})
 
-	db, err := db.New(&db.Config{
+	db, err := application.NewDB(&application.DBConfig{
 		DatabaseConnString: env.DatabaseConnString,
 		MigrateDatabase:    env.MigrateDatabase,
 	})
