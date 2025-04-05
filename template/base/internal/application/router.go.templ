@@ -1,0 +1,35 @@
+package application
+
+import (
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+)
+
+type RouterConfig struct {
+	GinMode string
+}
+
+func NewRouter(cfg *RouterConfig) *gin.Engine {
+	gin.SetMode(cfg.GinMode)
+
+	router := gin.Default()
+	router.Use(cors.Default())
+
+	return router
+}
+
+func (app *Application) registerRoutes() {
+	app.Router.GET("/", app.handlers.html.TopPage)
+
+	api := app.Router.Group("/api")
+	api.GET("/health", app.handlers.health.Health)
+	api.POST("/auth/register", app.handlers.auth.Register)
+	api.POST("/auth/login", app.handlers.auth.Login)
+	api.POST("/auth/email-login", app.handlers.auth.CreateMagicLink)
+	api.POST("/auth/email-login/:token", app.handlers.auth.ConsumeMagicLink)
+	api.POST("/auth/confirm-email", app.handlers.auth.CreateConfirmEmail)
+	api.POST("/auth/confirm-email/:token", app.handlers.auth.ConsumeConfirmEmail)
+	api.POST("/auth/reset-password", app.handlers.auth.CreateResetPassword)
+	api.POST("/auth/reset-password/:token", app.handlers.auth.ConsumeResetPassword)
+}
+

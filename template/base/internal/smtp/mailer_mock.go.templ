@@ -1,6 +1,7 @@
 package smtp
 
 import (
+	"{{ .Name}}/internal/env"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,13 +16,12 @@ func NewMockMailer() *MockMailer {
 }
 
 func (f *MockMailer) Send(email Email) error {
-	// TOD: Make path match when ran on test environment
-	cwd, err := os.Getwd()
+	rootPath, err := env.FindFilePath("go.mod")
 	if err != nil {
 		return err
 	}
 
-	dirPath := filepath.Join(cwd, ".snowflake", "mailer")
+	dirPath := filepath.Join(rootPath, ".snowflake", "mailer")
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		return err
 	}

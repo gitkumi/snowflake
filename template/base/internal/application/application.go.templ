@@ -73,20 +73,6 @@ func New(cfg *Config) (*Application, error) {
 	return s, nil
 }
 
-func (s *Application) registerRoutes() {
-	s.Router.GET("/", s.handlers.html.TopPage)
-	api := s.Router.Group("/api")
-	api.GET("/health", s.handlers.health.Health)
-	api.POST("/auth/register", s.handlers.auth.Register)
-	api.POST("/auth/login", s.handlers.auth.Login)
-	api.POST("/auth/email-login", s.handlers.auth.CreateMagicLink)
-	api.POST("/auth/email-login/:token", s.handlers.auth.ConsumeMagicLink)
-	api.POST("/auth/confirm-email", s.handlers.auth.CreateConfirmEmail)
-	api.POST("/auth/confirm-email/:token", s.handlers.auth.ConsumeConfirmEmail)
-	api.POST("/auth/reset-password", s.handlers.auth.CreateResetPassword)
-	api.POST("/auth/reset-password/:token", s.handlers.auth.ConsumeResetPassword)
-}
-
 func (app *Application) Run() {
 	srv := &http.Server{
 		Addr:    ":" + strconv.Itoa(app.port),
