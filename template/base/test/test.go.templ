@@ -19,7 +19,7 @@ type TestApplication struct {
 func Init() (*TestApplication, error) {
 	env, err := env.New(".env.test")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("failed to create env", err)
 	}
 
 	router := application.NewRouter(&application.RouterConfig{
@@ -30,6 +30,9 @@ func Init() (*TestApplication, error) {
 		DatabaseConnString: env.DatabaseConnString,
 		MigrateDatabase:    env.MigrateDatabase,
 	})
+	if err != nil {
+		log.Fatal("failed to create db", err)
+	}
 
 	mailer := smtp.NewMockMailer()
 
@@ -44,7 +47,7 @@ func Init() (*TestApplication, error) {
 		Mailer:  mailer,
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("failed to create application", err)
 	}
 
 	query := repo.New(db)

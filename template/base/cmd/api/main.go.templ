@@ -14,7 +14,7 @@ import (
 func main() {
 	env, err := env.New(".env")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("failed to create env", err)
 	}
 
 	router := application.NewRouter(&application.RouterConfig{
@@ -25,6 +25,9 @@ func main() {
 		DatabaseConnString: env.DatabaseConnString,
 		MigrateDatabase:    env.MigrateDatabase,
 	})
+	if err != nil {
+		log.Fatal("failed to create db", err)
+	}
 
 	mailer, err := smtp.NewSMTPMailer(&smtp.SMTPMailerConfig{
 		Host:     env.SmtpHost,
@@ -33,6 +36,9 @@ func main() {
 		Password: env.SmtpPassword,
 		From:     env.SmtpFrom,
 	})
+	if err != nil {
+		log.Fatal("failed to create mailer", err)
+	}
 
 	storage := storage.NewS3Storage(&storage.S3StorageConfig{
 		AccessKey:   env.S3AccessKey,
@@ -51,7 +57,7 @@ func main() {
 		Mailer:  mailer,
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("failed to create application", err)
 	}
 
 	app.Run()
