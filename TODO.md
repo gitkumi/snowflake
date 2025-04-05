@@ -11,12 +11,6 @@
 - TUI
 - Optional DB
 - Optional Auth
-- Add DB Choice
-    - STD Library
-    - GORM
-- Add Router Choice 
-    - STD Library
-    - ?
 
 ### Goodies
 
