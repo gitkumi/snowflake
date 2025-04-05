@@ -25,6 +25,9 @@ snowflake new acme -d postgres
 ## Flags
 
 - `-d`: Database type (`sqlite3`, `postgres`, or `mysql`)
+- `-t`: App type (`api` or `web`)
+
+Check out the help commands for more.
 
 ## Stack
 
