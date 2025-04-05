@@ -2,6 +2,15 @@
 
 ## Getting Started
 
+{{- if ne .Database.String "sqlite3"}}
+0. Start the development database container:
+```sh
+make db.start
+```
+
+Note: `docker compose` is required.
+{{- end }}
+
 1. Start the development environment:
 
 ```sh

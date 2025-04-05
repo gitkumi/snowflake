@@ -58,5 +58,11 @@ db.up:
 db.down:
 	goose down
 
+{{- if ne .Database.String "sqlite3"}}
+.PHONY: db.start
+db.start:
+	docker compose -f dev.yml up -d
+{{- end }}
+
 %:
 	@:
