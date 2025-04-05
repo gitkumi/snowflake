@@ -1,8 +1,7 @@
 # {{ .Name }}
 
 ## Getting Started
-
-{{- if ne .Database.String "sqlite3"}}
+{{ if ne .Database.String "sqlite3"}}
 0. Start the development database container:
 ```sh
 make db.start

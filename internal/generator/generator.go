@@ -67,9 +67,9 @@ Run your new project:
   $ cd %s`, project.Name, project.Name)
 
 	if project.Database == Postgres || project.Database == MySQL {
-		successMessage += fmt.Sprintf(`
+		successMessage += `
   $ make db.start  # Start the docker compose dev environment for the database
-  $ make dev`)
+  $ make dev`
 	} else {
 		successMessage += `
   $ make dev`

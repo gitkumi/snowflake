@@ -9,8 +9,8 @@ import (
 )
 
 type FileExclusions struct {
-	ByAppType   map[AppType][]string
-	ByDatabase  map[Database][]string
+	ByAppType  map[AppType][]string
+	ByDatabase map[Database][]string
 }
 
 type FileRenames struct {
@@ -53,7 +53,7 @@ func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 			}
 		}
 	}
-	
+
 	// Check database type exclusions
 	if excludedPaths, ok := exclusions.ByDatabase[project.Database]; ok {
 		for _, excludedPath := range excludedPaths {
@@ -62,7 +62,7 @@ func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 			}
 		}
 	}
-	
+
 	return false
 }
 
