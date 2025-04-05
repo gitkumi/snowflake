@@ -60,10 +60,10 @@ func new() *cobra.Command {
 
 			appType := generator.AppType(appType)
 			if !appType.IsValid() {
-				log.Fatalf("Invalid app type: %s. Must be one of: %v", database, generator.AllAppTypes)
+				log.Fatalf("Invalid app type: %s. Must be one of: %v", appType, generator.AllAppTypes)
 			}
 
-			err = generator.Generate(args[0], initGit, cwd, dbEnum)
+			err = generator.Generate(args[0], initGit, cwd, dbEnum, appType)
 			if err != nil {
 				log.Fatal(err.Error())
 			}

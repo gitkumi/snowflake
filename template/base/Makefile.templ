@@ -31,7 +31,9 @@ dev:
 .PHONY: build
 build:
 	sqlc generate
+	{{if eq .AppType "web"}}
 	templ generate
+	{{end}}
 	go build -o bin/main cmd/api/*.go
 
 .PHONY: db

@@ -13,7 +13,7 @@ func TestGenerateSQLite3(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	err = Generate("acme", false, tmpDir, SQLite3)
+	err = Generate("acme", false, tmpDir, SQLite3, API)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestGeneratePostgres(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	err = Generate("acme", false, tmpDir, Postgres)
+	err = Generate("acme", false, tmpDir, Postgres, API)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestGenerateMySQL(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	err = Generate("acme", false, tmpDir, MySQL)
+	err = Generate("acme", false, tmpDir, MySQL, API)
 	if err != nil {
 		t.Fatal(err)
 	}

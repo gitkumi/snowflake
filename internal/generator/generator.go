@@ -19,10 +19,11 @@ type Project struct {
 	AppType  AppType
 }
 
-func Generate(projectName string, initGit bool, outputDir string, db Database) error {
+func Generate(projectName string, initGit bool, outputDir string, db Database, appType AppType) error {
 	project := &Project{
 		Name:     strings.ToLower(projectName),
 		Database: db,
+		AppType:  appType,
 	}
 
 	templateFuncs := template.FuncMap{
@@ -45,6 +46,13 @@ func Generate(projectName string, initGit bool, outputDir string, db Database) e
 
 		fileName := strings.TrimPrefix(path, "base")
 		targetPath := filepath.Join(outputPath, fileName)
+
+		// TODO: There should be a better way to do this.
+		if project.AppType != Web {
+			if strings.Contains(path, "/html/") || strings.HasSuffix(path, ".templ.templ") {
+				return nil
+			}
+		}
 
 		if d.IsDir() {
 			return os.MkdirAll(targetPath, 0777)
