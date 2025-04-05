@@ -21,6 +21,7 @@ func CreateFileExclusions() *FileExclusions {
 		ByAppType: map[AppType][]string{
 			API: {
 				"/internal/html",
+				"/internal/application/handler/html_handler.go",
 				".templ.templ",
 			},
 		},
