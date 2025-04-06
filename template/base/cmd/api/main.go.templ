@@ -30,9 +30,6 @@ func main() {
 	}
 	
 	mailer := smtp.NewMockMailer()
-	if err != nil {
-		log.Fatal("failed to create mailer", err)
-	}
 	// TODO: uncomment this after setting up your SMTP server
 	// mailer, err := smtp.NewSMTPMailer(&smtp.SMTPMailerConfig{
 	// 	Host:     env.SmtpHost,
