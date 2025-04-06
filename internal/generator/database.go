@@ -73,32 +73,6 @@ func (d Database) SQLCEngine() string {
 	}
 }
 
-func (d Database) GooseDriver() string {
-	switch d {
-	case SQLite3:
-		return "sqlite3"
-	case Postgres:
-		return "postgres"
-	case MySQL:
-		return "mysql"
-	default:
-		return ""
-	}
-}
-
-func (d Database) GooseDialect() string {
-	switch d {
-	case SQLite3:
-		return "sqlite3"
-	case Postgres:
-		return "postgres"
-	case MySQL:
-		return "mysql"
-	default:
-		return ""
-	}
-}
-
 func (d Database) GooseDBString(projectName string) string {
 	switch d {
 	case SQLite3:
