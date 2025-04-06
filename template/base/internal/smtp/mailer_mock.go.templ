@@ -21,7 +21,7 @@ func (f *MockMailer) Send(email Email) error {
 		return err
 	}
 
-	dirPath := filepath.Join(rootPath, ".snowflake", "mailer")
+	dirPath := filepath.Join(rootPath, "..", ".snowflake", "mailer")
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		return err
 	}

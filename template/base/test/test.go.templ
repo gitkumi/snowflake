@@ -6,6 +6,7 @@ import (
 	"{{ .Name }}/internal/repo"
 	"{{ .Name }}/internal/smtp"
 	"{{ .Name }}/internal/storage"
+	{{if eq .Database.String "sqlite3" }}"path/filepath"{{ end }}
 	"log"
 
 	_ "{{ .Database.Import }}"
@@ -17,6 +18,13 @@ type TestApplication struct {
 }
 
 func Init() (*TestApplication, error) {
+	{{- if eq .Database.String "sqlite3" }}
+	rootPath, err := env.FindFilePath("go.mod")
+	if err != nil {
+		log.Fatal("failed to create env", err)
+	}
+	{{- end }}
+
 	env, err := env.New(".env.test")
 	if err != nil {
 		log.Fatal("failed to create env", err)
@@ -27,7 +35,11 @@ func Init() (*TestApplication, error) {
 	})
 
 	db, err := application.NewDB(&application.DBConfig{
+		{{- if eq .Database.String "sqlite3" }}
+		DatabaseConnString: filepath.Join(rootPath, "..", env.DatabaseConnString),
+		{{- else }}
 		DatabaseConnString: env.DatabaseConnString,
+		{{- end }}
 		MigrateDatabase:    env.MigrateDatabase,
 	})
 	if err != nil {
