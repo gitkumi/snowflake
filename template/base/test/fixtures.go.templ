@@ -64,7 +64,21 @@ func (t TestApplication) CreateUserFixture(custom repo.CreateUserParams) repo.Us
 		log.Fatal(err)
 	}
 
+	{{- if eq .Database.String "mysql"}}
+		id, err := res.LastInsertId()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		user, err := t.Query.GetUser(ctx, id)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		return user
+	{{- else }}
 	return res
+	{{- end }}
 }
 
 func (t TestApplication) CreateOrganizationFixture(custom repo.CreateOrganizationParams) repo.Organization {
@@ -82,7 +96,21 @@ func (t TestApplication) CreateOrganizationFixture(custom repo.CreateOrganizatio
 		log.Fatal(err)
 	}
 
+	{{- if eq .Database.String "mysql"}}
+	id, err := res.LastInsertId()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	org, err := t.Query.GetOrganization(ctx, id)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return org
+	{{- else }}
 	return res
+	{{- end }}
 }
 
 func (t TestApplication) CreateMembershipFixture(custom repo.CreateMembershipParams) (repo.Organization, repo.User, repo.Membership) {
@@ -115,7 +143,21 @@ func (t TestApplication) CreateMembershipFixture(custom repo.CreateMembershipPar
 		log.Fatal(err)
 	}
 
+	{{- if eq .Database.String "mysql"}}
+	id, err := res.LastInsertId()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	mem, err := t.Query.GetMembership(ctx, id)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return org, user, mem
+	{{- else }}
 	return org, user, res
+	{{- end }}
 }
 
 func (t TestApplication) CreateTokenFixture(custom repo.CreateUserAuthTokenParams) repo.UserAuthToken {
@@ -138,10 +180,24 @@ func (t TestApplication) CreateTokenFixture(custom repo.CreateUserAuthTokenParam
 	}
 
 	merged := mergeParams(defaultData, custom)
+	{{- if eq .Database.String "mysql"}}
+	_, err := t.Query.CreateUserAuthToken(ctx, merged)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	token, err := t.Query.GetUserAuthToken(ctx, merged.ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return token
+	{{- else }}
 	res, err := t.Query.CreateUserAuthToken(ctx, merged)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	return res
+	{{- end }}
 }

@@ -1,4 +1,4 @@
-export GOOSE_DBSTRING?={{.Database.GooseDBString .Name}}
+export GOOSE_DBSTRING?={{.Database.ConnString .Name}}
 export GOOSE_DRIVER:={{.Database.Driver}}
 export GOOSE_MIGRATION_DIR:=./static/sql/migrations
 
@@ -60,15 +60,24 @@ db.down:
 
 {{- if ne .Database.String "sqlite3"}}
 
-.PHONY: db.create
-db.create:
+.PHONY: db.init
+db.init:
 	docker compose -f dev.yml up -d
 
 .PHONY: db.destroy
 db.destroy:
+	docker rm container dev_mysql -f
 	docker compose -f dev.yml down -v
-	docker volume rm acme_{{ .Database.String}}_data
-{{- end }}
 
+.PHONY: db.create
+db.create:
+	docker exec -i dev_mysql \
+		mysql -uroot -pmysql -e "CREATE DATABASE IF NOT EXISTS {{ .Name}};"
+
+.PHONY: db.drop
+db.drop:
+	docker exec -i dev_mysql \
+		mysql -uroot -pmysql -e "DROP DATABASE IF EXISTS {{ .Name}};"
+{{- end }}
 %:
 	@:

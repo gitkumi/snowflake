@@ -4,7 +4,7 @@ CREATE TABLE user_auth_tokens (
   id  TEXT PRIMARY KEY,
   user_id INTEGER NOT NULL,
   type TEXT NOT NULL CHECK(type IN ('magic_link', 'reset_password', 'confirm_email')),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 -- +goose StatementEnd

@@ -12,11 +12,9 @@ SELECT COUNT(*) AS count FROM organizations;
 -- name: CreateOrganization :one
 INSERT INTO organizations (
   name,
-  type,
-  created_at,
-  updated_at
+  type
 ) VALUES (
-  ?, ?, ?, ?
+  ?, ?
 )
 RETURNING *;
 

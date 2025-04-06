@@ -89,7 +89,7 @@ func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
 		return err
 	}
 	
-	token, err := s.Query.GetUserAuthTokens(ctx, repo.GetUserAuthTokensParams{
+	token, err := s.Query.GetUserAuthTokenWithEmail(ctx, repo.GetUserAuthTokenWithEmailParams{
 		ID:   nanoid,
 		Type: "magic_link",
 	})
@@ -164,7 +164,7 @@ func (s *AuthService) CreateConfirmEmail(ctx context.Context, email string) erro
 }
 
 func (s *AuthService) ConsumeMagicLink(ctx context.Context, tokenID string) (string, error) {
-	token, err := s.Query.GetUserAuthTokens(ctx, repo.GetUserAuthTokensParams{
+	token, err := s.Query.GetUserAuthTokenWithEmail(ctx, repo.GetUserAuthTokenWithEmailParams{
 		ID:   tokenID,
 		Type: "magic_link",
 	})
@@ -175,7 +175,7 @@ func (s *AuthService) ConsumeMagicLink(ctx context.Context, tokenID string) (str
 }
 
 func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, input ResetPasswordInput) (repo.User, error) {
-	token, err := s.Query.GetUserAuthTokens(ctx, repo.GetUserAuthTokensParams{
+	token, err := s.Query.GetUserAuthTokenWithEmail(ctx, repo.GetUserAuthTokenWithEmailParams{
 		ID:   tokenID,
 		Type: "reset_password",
 	})
@@ -220,7 +220,7 @@ func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, 
 }
 
 func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (repo.User, error) {
-	token, err := s.Query.GetUserAuthTokens(ctx, repo.GetUserAuthTokensParams{
+	token, err := s.Query.GetUserAuthTokenWithEmail(ctx, repo.GetUserAuthTokenWithEmailParams{
 		ID:   tokenID,
 		Type: "confirm_email",
 	})

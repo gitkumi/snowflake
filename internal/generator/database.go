@@ -73,19 +73,6 @@ func (d Database) SQLCEngine() string {
 	}
 }
 
-func (d Database) GooseDBString(projectName string) string {
-	switch d {
-	case SQLite3:
-		return projectName + ".db"
-	case Postgres:
-		return fmt.Sprintf("user=postgres password=postgres dbname=%s host=localhost port=5432 sslmode=disable", projectName)
-	case MySQL:
-		return fmt.Sprintf("root:root@tcp(localhost:3306)/%s?parseTime=true", projectName)
-	default:
-		return ""
-	}
-}
-
 func (d Database) Import() string {
 	switch d {
 	case SQLite3:

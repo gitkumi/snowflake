@@ -68,7 +68,7 @@ Run your new project:
 
 	if project.Database == Postgres || project.Database == MySQL {
 		successMessage += `
-  $ make db.start  # Start the docker compose dev environment for the database
+  $ make db.init  # Initialize the docker database dev environment
   $ make dev`
 	} else {
 		successMessage += `
