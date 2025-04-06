@@ -78,7 +78,7 @@ func (d Database) GooseDriver() string {
 	case SQLite3:
 		return "sqlite3"
 	case Postgres:
-		return "postgresql"
+		return "postgres"
 	case MySQL:
 		return "mysql"
 	default:

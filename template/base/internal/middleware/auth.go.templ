@@ -60,7 +60,7 @@ func AuthMiddleware(q *repo.Queries) gin.HandlerFunc {
 			return
 		}
 
-		memberships, err := q.ListMemberships(c, user.ID)
+		memberships, err := q.ListMembershipsByUser(c, user.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch memberships."})
 			return

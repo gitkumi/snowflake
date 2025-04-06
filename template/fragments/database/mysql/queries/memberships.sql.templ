@@ -1,4 +1,4 @@
--- name: ListMemberships :many
+-- name: ListMembershipsByUser :many
 SELECT * FROM memberships
 WHERE user_id = ?
 ORDER BY id;

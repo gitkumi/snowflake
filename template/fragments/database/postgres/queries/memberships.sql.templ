@@ -1,6 +1,6 @@
--- name: ListMemberships :many
+-- name: ListMembershipsByUser :many
 SELECT * FROM memberships
-WHERE user_id = $1
+WHERE user_id = $1::BIGINT
 ORDER BY id;
 
 -- name: GetMembership :one

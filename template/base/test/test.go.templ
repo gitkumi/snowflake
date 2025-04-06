@@ -8,7 +8,7 @@ import (
 	"{{ .Name }}/internal/storage"
 	"log"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "{{ .Database.Import }}
 )
 
 type TestApplication struct {
