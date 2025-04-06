@@ -17,3 +17,5 @@ git tag v0.X.0
 ```sh
 git push --tags
 ```
+
+Note: Make sure the commit you've tag is already up on GitHub.
