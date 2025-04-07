@@ -35,7 +35,7 @@ jobs:
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
       - name: Build binaries
-        run: make build-all
+        run: VERSION=${{ steps.get_version.outputs.VERSION }} make build-all
 
       - name: Publish to Go proxy
         run: GOPROXY=proxy.golang.org go list -m github.com/gitkumi/snowflake@${{ steps.get_version.outputs.VERSION }} 
