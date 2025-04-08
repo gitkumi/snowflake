@@ -37,7 +37,7 @@ func (d Database) IsValid() bool {
 func (d Database) ConnString(projectName string) string {
 	switch d {
 	case SQLite3:
-		return projectName + ".db"
+		return projectName + "_dev.db"
 	case Postgres:
 		return fmt.Sprintf("user=postgres password=postgres dbname=%s host=localhost port=5432 sslmode=disable", projectName)
 	case MySQL:
