@@ -27,8 +27,12 @@ func CreateFileExclusions() *FileExclusions {
 			"/internal/smtp/mailer_smtp.go",
 			"/internal/smtp/mailer_mock.go",
 		},
-		NoStorage: []string{},
-		NoAuth:    []string{},
+		NoStorage: []string{
+			"/internal/storage/storage.go",
+			"/internal/storage/storage_s3.go",
+			"/internal/storage/storage_mock.go",
+		},
+		NoAuth: []string{},
 		ByAppType: map[AppType][]string{
 			API: {
 				"/internal/html",

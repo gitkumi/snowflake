@@ -69,7 +69,6 @@ func Init() (*TestApplication, error) {
 		{{- if .Storage }}
 		Storage: storage,
 		{{- end }}
-
 	})
 	if err != nil {
 		log.Fatal("failed to create application", err)
