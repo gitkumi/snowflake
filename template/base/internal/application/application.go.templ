@@ -4,8 +4,12 @@ import (
 	"{{ .Name }}/internal/application/handler"
 	"{{ .Name }}/internal/application/service"
 	"{{ .Name }}/internal/repo"
+	{{- if .SMTP }}
 	"{{ .Name }}/internal/smtp"
+	{{- end }}
+	{{- if .Storage }}
 	"{{ .Name }}/internal/storage"
+	{{- end }}
 	"context"
 	"database/sql"
 	"errors"
@@ -37,8 +41,12 @@ type Application struct {
 
 	Router  *gin.Engine
 	DB      *sql.DB
+	{{- if .SMTP }}
 	Mailer  smtp.Mailer
+	{{- end }}
+	{{- if .Storage }}
 	Storage storage.Storage
+	{{- end }}
 }
 
 type Config struct {
@@ -46,8 +54,12 @@ type Config struct {
 	Port    int
 	Router  *gin.Engine
 	DB      *sql.DB
+	{{- if .SMTP }}
 	Mailer  smtp.Mailer
+	{{- end }}
+	{{- if .Storage }}
 	Storage storage.Storage
+	{{- end }}
 }
 
 func New(cfg *Config) (*Application, error) {

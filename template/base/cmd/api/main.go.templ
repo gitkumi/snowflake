@@ -5,8 +5,12 @@ import (
 
 	"{{ .Name }}/internal/application"
 	"{{ .Name }}/internal/env"
+	{{- if .SMTP }}
 	"{{ .Name }}/internal/smtp"
+	{{- end }}
+	{{- if .Storage }}
 	"{{ .Name }}/internal/storage"
+	{{- end }}
 
 	_ "{{.Database.Import}}"
 )
@@ -29,6 +33,7 @@ func main() {
 		log.Fatal("failed to create db", err)
 	}
 	
+	{{- if .SMTP }}
 	mailer := smtp.NewMockMailer()
 	// TODO: uncomment this after setting up your SMTP server
 	// mailer, err := smtp.NewSMTPMailer(&smtp.SMTPMailerConfig{
@@ -41,7 +46,9 @@ func main() {
 	// if err != nil {
 	// 	log.Fatal("failed to create mailer", err)
 	// }
+	{{- end }}
 
+	{{- if .Storage }}
 	storage := storage.NewS3Storage(&storage.S3StorageConfig{
 		AccessKey:   env.S3AccessKey,
 		SecretKey:   env.S3SecretKey,
@@ -49,14 +56,19 @@ func main() {
 		Region:      env.S3Region,
 		Bucket:      env.S3Bucket,
 	})
+	{{- end }}
 
 	app, err := application.New(&application.Config{
 		BaseURL: env.BaseURL,
 		Port:    env.Port,
 		DB:      db,
 		Router:  router,
-		Storage: storage,
+		{{- if .SMTP }}
 		Mailer:  mailer,
+		{{- end }}
+		{{- if .Storage }}
+		Storage: storage,
+		{{- end}}
 	})
 	if err != nil {
 		log.Fatal("failed to create application", err)

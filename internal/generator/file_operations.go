@@ -22,7 +22,11 @@ type FileRenames struct {
 
 func CreateFileExclusions() *FileExclusions {
 	return &FileExclusions{
-		NoSMTP:    []string{},
+		NoSMTP: []string{
+			"/internal/smtp/mailer.go",
+			"/internal/smtp/mailer_smtp.go",
+			"/internal/smtp/mailer_mock.go",
+		},
 		NoStorage: []string{},
 		NoAuth:    []string{},
 		ByAppType: map[AppType][]string{
