@@ -115,7 +115,7 @@ func new() *cobra.Command {
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
 	cmd.Flags().BoolVar(&initGit, "git", true, "Initialize git")
 	cmd.Flags().BoolVar(&smtp, "smtp", true, "Add smtp feature")
-	cmd.Flags().BoolVar(&storage, "storage", true, "Add storage feature")
+	cmd.Flags().BoolVar(&storage, "storage", true, "Add storage feature (S3)")
 	cmd.Flags().BoolVar(&auth, "auth", true, "Add authentication feature")
 
 	return cmd
