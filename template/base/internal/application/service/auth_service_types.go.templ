@@ -6,7 +6,6 @@ import (
 	"database/sql"
 )
 
-{{- if .SMTP }}
 type CreateMagicLinkInput struct {
 	Email string `json:"email" binding:"required"`
 }
@@ -14,7 +13,6 @@ type CreateMagicLinkInput struct {
 type CreateConfirmEmailInput struct {
 	Email string `json:"email" binding:"required,email"`
 }
-{{- end }}
 
 type CreateResetPasswordInput struct {
 	Email string `json:"email" binding:"required,email"`

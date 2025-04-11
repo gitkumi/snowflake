@@ -89,7 +89,6 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-{{- if .SMTP }}
 func TestCreateMagicLink(t *testing.T) {
 	ts, _ := test.Init()
 
@@ -109,7 +108,6 @@ func TestCreateMagicLink(t *testing.T) {
 		t.Fatalf("Expected %d got %d", http.StatusCreated, rr.Code)
 	}
 }
-{{- end }}
 
 func TestConsumeMagicLink(t *testing.T) {
 	ts, _ := test.Init()

@@ -3,16 +3,12 @@ package service
 import (
 	"{{ .Name }}/internal/password"
 	"{{ .Name }}/internal/repo"
-	{{- if .SMTP }}
 	"{{ .Name }}/internal/smtp"
-	{{- end }}
 	"{{ .Name }}/internal/utils"
 	"context"
 	"database/sql"
 	"errors"
-	{{- if .SMTP }}
 	"path"
-	{{- end }}
 	"time"
 
 	"github.com/matoous/go-nanoid/v2"
@@ -21,21 +17,14 @@ import (
 type AuthService struct {
 	BaseURL string
 	Query   *repo.Queries
-	{{- if .SMTP }}
 	Mailer  smtp.Mailer
-	{{- end }}
 }
-{{if .SMTP }}
 func NewAuthService(baseURL string, q *repo.Queries, mailer smtp.Mailer) *AuthService {
-{{- else }}
-func NewAuthService(baseURL string, q *repo.Queries) *AuthService {
 {{- end }}
 	return &AuthService{
 		BaseURL: baseURL,
 		Query:   q,
-		{{- if .SMTP }}
 		Mailer:  mailer,
-		{{- end }}
 	}
 }
 
@@ -78,7 +67,6 @@ func (s *AuthService) Login(ctx context.Context, input LoginInput) (string, erro
 }
 
 
-{{- if .SMTP }}
 func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
 	user, err := s.Query.GetUserByEmail(ctx, email)
 	if err != nil {
@@ -121,7 +109,6 @@ func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
 	s.Mailer.Send(smtp.Email{To: user.Email, Subject: "Login", Body: loginURL})
 	return nil
 }
-{{- end }}
 
 func (s *AuthService) CreateResetPassword(ctx context.Context, email string) error {
 	user, err := s.Query.GetUserByEmail(ctx, email)
@@ -145,11 +132,8 @@ func (s *AuthService) CreateResetPassword(ctx context.Context, email string) err
 		return err
 	}
 
-	{{- if .SMTP }}
 	resetPasswordURL := path.Join(s.BaseURL, "auth", "reset-password", nanoid)
 	s.Mailer.Send(smtp.Email{To: user.Email, Subject: "Password Reset", Body: resetPasswordURL})
-	{{- else }}
-	// s.Mailer.Send(smtp.Email{To: user.Email, Subject: "Password Reset", Body: resetPasswordURL})
 	{{- end }}
 	return nil
 }
@@ -176,16 +160,12 @@ func (s *AuthService) CreateConfirmEmail(ctx context.Context, email string) erro
 		return err
 	}
 
-	{{- if .SMTP }}
 	confirmEmailURL := path.Join(s.BaseURL, "auth", "confirm-email", nanoid)
 	s.Mailer.Send(smtp.Email{To: user.Email, Subject: "Confirm Email", Body: confirmEmailURL})
-	{{- else }}
-	// s.Mailer.Send(smtp.Email{To: user.Email, Subject: "Confirm Email", Body: confirmEmailURL})
 	{{- end }}
 	return nil
 }
 
-{{- if .SMTP }}
 func (s *AuthService) ConsumeMagicLink(ctx context.Context, tokenID string) (string, error) {
 	token, err := s.Query.GetUserAuthTokenWithEmail(ctx, repo.GetUserAuthTokenWithEmailParams{
 		ID:   tokenID,
@@ -196,7 +176,6 @@ func (s *AuthService) ConsumeMagicLink(ctx context.Context, tokenID string) (str
 	}
 	return utils.CreateJwt(token.Email)
 }
-{{- end }}
 
 func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, input ResetPasswordInput) (repo.User, error) {
 	token, err := s.Query.GetUserAuthTokenWithEmail(ctx, repo.GetUserAuthTokenWithEmailParams{
