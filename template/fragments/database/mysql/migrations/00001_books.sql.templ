@@ -2,7 +2,10 @@
 -- +goose StatementBegin
 CREATE TABLE books (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  author VARCHAR(255),
+  isbn VARCHAR(20),
+  genre VARCHAR(100),
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -12,4 +15,3 @@ CREATE TABLE books (
 -- +goose StatementBegin
 DROP TABLE books;
 -- +goose StatementEnd
-

@@ -2,7 +2,10 @@
 -- +goose StatementBegin
 CREATE TABLE books (
   id BIGSERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
+  title TEXT NOT NULL,
+  author TEXT,
+  isbn TEXT,
+  genre TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

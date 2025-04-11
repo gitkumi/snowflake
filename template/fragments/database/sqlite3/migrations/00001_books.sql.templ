@@ -2,14 +2,16 @@
 -- +goose StatementBegin
 CREATE TABLE books (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
+  title TEXT NOT NULL,
+  author TEXT,
+  isbn TEXT,
+  genre TEXT,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TRIGGER update_books_updated_at
 AFTER UPDATE ON books
-WHEN old.updated_at <> CURRENT_TIMESTAMP
 BEGIN
     UPDATE books
     SET updated_at = CURRENT_TIMESTAMP
@@ -20,4 +22,4 @@ END;
 -- +goose Down
 -- +goose StatementBegin
 DROP TABLE books;
--- +goose StatementEnd 
+-- +goose StatementEnd

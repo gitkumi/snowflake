@@ -1,0 +1,53 @@
+package service
+
+import (
+	"{{ .Name }}/internal/repo"
+	"context"
+	"database/sql"
+)
+
+type BookService struct {
+	Queries *repo.Queries
+}
+
+func NewBookService(q *repo.Queries) *BookService {
+	return &BookService{
+		Queries: q,
+	}
+}
+
+func (s *BookService) CreateBook(title string, author, isbn, genre sql.NullString) (repo.Book, error) {
+	params := repo.CreateBookParams{
+		Title:         title,
+		Author:        author,
+		Isbn:          isbn,
+		Genre:         genre,
+	}
+	
+	return s.Queries.CreateBook(context.Background(), params)
+}
+
+func (s *BookService) ListBooks() ([]repo.Book, error) {
+	return s.Queries.ListBooks(context.Background())
+}
+
+func (s *BookService) GetBook(id int64) (repo.Book, error) {
+	return s.Queries.GetBook(context.Background(), id)
+}
+
+
+func (s *BookService) UpdateBook(id int64, title string, author, isbn, genre sql.NullString) (repo.Book, error) {
+	params := repo.UpdateBookParams{
+		ID:            id,
+		Title:         title,
+		Author:        author,
+		Isbn:          isbn,
+		Genre:         genre,
+	}
+	
+	return s.Queries.UpdateBook(context.Background(), params)
+}
+
+func (s *BookService) DeleteBook(id int64) error {
+	return s.Queries.DeleteBook(context.Background(), id)
+}
