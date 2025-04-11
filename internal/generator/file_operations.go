@@ -32,7 +32,21 @@ func CreateFileExclusions() *FileExclusions {
 			"/internal/storage/storage_s3.go",
 			"/internal/storage/storage_mock.go",
 		},
-		NoAuth: []string{},
+		NoAuth: []string{
+			"/internal/application/handler/auth_handler_test.go",
+			"/internal/application/handler/auth_handler_types.go",
+			"/internal/application/handler/auth_handler.go",
+			"/internal/application/service/auth_service_types.go",
+			"/internal/application/service/auth_service.go",
+			"/internal/static/sql/migrations/00001_organizations.sql",
+			"/internal/static/sql/migrations/00002_users.sql",
+			"/internal/static/sql/migrations/00003_memberships.sql",
+			"/internal/static/sql/migrations/00004_user_auth_tokens.sql",
+			"/internal/static/sql/queries/memberships.sql",
+			"/internal/static/sql/queries/organizations.sql",
+			"/internal/static/sql/queries/user_auth_tokens.sql",
+			"/internal/static/sql/queries/users.sql",
+		},
 		ByAppType: map[AppType][]string{
 			API: {
 				"/internal/html",

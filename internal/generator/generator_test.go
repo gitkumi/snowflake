@@ -192,3 +192,32 @@ func TestGenerateNoStorage(t *testing.T) {
 		t.Fatal("Project directory was not created")
 	}
 }
+
+func TestGenerateNoAuth(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	cf := &GeneratorConfig{
+		Name:      "acme",
+		Database:  SQLite3,
+		AppType:   API,
+		InitGit:   false,
+		OutputDir: tmpDir,
+		SMTP:      true,
+		Storage:   true,
+		Auth:      false,
+	}
+
+	err = Generate(cf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+		t.Fatal("Project directory was not created")
+	}
+}
