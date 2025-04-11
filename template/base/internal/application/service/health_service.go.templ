@@ -9,19 +9,19 @@ import (
 
 type HealthService struct {
 	DB      *sql.DB
-	{{-if .Storage }}
+	{{- if .Storage }}
 	Storage storage.Storage
 	{{- end }}
 }
 
-{{-if .Storage }}
+{{- if .Storage }}
 func NewHealthService(db *sql.DB, storage storage.Storage) *HealthService {
 {{- else }}
 func NewHealthService(db *sql.DB) *HealthService {
 {{- end }}
 	return &HealthService{
 		DB:      db,
-		{{-if .Storage }}
+		{{- if .Storage }}
 		Storage: storage,
 		{{- end }}
 	}

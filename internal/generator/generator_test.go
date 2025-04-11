@@ -19,6 +19,8 @@ func TestGenerateSQLite3(t *testing.T) {
 		AppType:   API,
 		InitGit:   false,
 		OutputDir: tmpDir,
+		SMTP:      true,
+		Storage:   true,
 	}
 
 	err = Generate(cf)
@@ -45,6 +47,8 @@ func TestGeneratePostgres(t *testing.T) {
 		AppType:   API,
 		InitGit:   false,
 		OutputDir: tmpDir,
+		SMTP:      true,
+		Storage:   true,
 	}
 
 	err = Generate(cfg)
@@ -71,6 +75,8 @@ func TestGenerateMySQL(t *testing.T) {
 		AppType:   API,
 		InitGit:   false,
 		OutputDir: tmpDir,
+		SMTP:      true,
+		Storage:   true,
 	}
 
 	err = Generate(cfg)
@@ -123,5 +129,61 @@ func TestGenerateWebApp(t *testing.T) {
 
 	if _, err := os.Stat(htmlDirPath); os.IsNotExist(err) {
 		t.Fatal("HTML directory created for web app type")
+	}
+}
+
+func TestGenerateNoSMTP(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	cf := &GeneratorConfig{
+		Name:      "acme",
+		Database:  SQLite3,
+		AppType:   API,
+		InitGit:   false,
+		OutputDir: tmpDir,
+		SMTP:      false,
+		Storage:   true,
+	}
+
+	err = Generate(cf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+		t.Fatal("Project directory was not created")
+	}
+}
+
+func TestGenerateNoStorage(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	cf := &GeneratorConfig{
+		Name:      "acme",
+		Database:  SQLite3,
+		AppType:   API,
+		InitGit:   false,
+		OutputDir: tmpDir,
+		SMTP:      true,
+		Storage:   false,
+	}
+
+	err = Generate(cf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+		t.Fatal("Project directory was not created")
 	}
 }

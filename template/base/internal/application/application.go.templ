@@ -65,10 +65,18 @@ type Config struct {
 func New(cfg *Config) (*Application, error) {
 	query := repo.New(cfg.DB)
 
+	{{- if .SMTP }}
 	authService := service.NewAuthService(cfg.BaseURL, query, cfg.Mailer)
+	{{- else }}
+	authService := service.NewAuthService(cfg.BaseURL, query)
+	{{- end }}
 	authHandler := handler.NewAuthHandler(authService)
 
+	{{- if .Storage }}
 	healthService := service.NewHealthService(cfg.DB, cfg.Storage)
+	{{- else }}
+	healthService := service.NewHealthService(cfg.DB)
+	{{- end }}
 	healthHandler := handler.NewHealthHandler(healthService)
 
 	{{- if eq .AppType "web"}}

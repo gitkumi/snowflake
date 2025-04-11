@@ -27,10 +27,12 @@ func (app *Application) registerRoutes() {
 	api.GET("/health", app.handlers.health.Health)
 	api.POST("/auth/register", app.handlers.auth.Register)
 	api.POST("/auth/login", app.handlers.auth.Login)
+	{{- if .SMTP }}
 	api.POST("/auth/email-login", app.handlers.auth.CreateMagicLink)
 	api.POST("/auth/email-login/:token", app.handlers.auth.ConsumeMagicLink)
 	api.POST("/auth/confirm-email", app.handlers.auth.CreateConfirmEmail)
 	api.POST("/auth/confirm-email/:token", app.handlers.auth.ConsumeConfirmEmail)
+	{{- end }}
 	api.POST("/auth/reset-password", app.handlers.auth.CreateResetPassword)
 	api.POST("/auth/reset-password/:token", app.handlers.auth.ConsumeResetPassword)
 }
