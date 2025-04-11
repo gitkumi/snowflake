@@ -1,53 +1,73 @@
 package service
 
 import (
-	"{{ .Name }}/internal/repo"
+	"acme/internal/repo"
 	"context"
 	"database/sql"
 )
 
 type BookService struct {
-	Queries *repo.Queries
+	Query *repo.Queries
 }
 
 func NewBookService(q *repo.Queries) *BookService {
 	return &BookService{
-		Queries: q,
+		Query: q,
 	}
 }
 
-func (s *BookService) CreateBook(title string, author, isbn, genre sql.NullString) (repo.Book, error) {
+func (s *BookService) CreateBook(ctx context.Context, title string, author, isbn, genre sql.NullString) (repo.Book, error) {
 	params := repo.CreateBookParams{
-		Title:         title,
-		Author:        author,
-		Isbn:          isbn,
-		Genre:         genre,
+		Title:  title,
+		Author: author,
+		Isbn:   isbn,
+		Genre:  genre,
 	}
-	
-	return s.Queries.CreateBook(context.Background(), params)
+
+	{{- if eq .Database.String "mysql"}}
+	result, err := s.Query.CreateBook(ctx, params)
+	if err != nil {
+		return repo.Book{}, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return repo.Book{}, err
+	}
+
+	return s.Query.GetBook(ctx, id)
+	{{ else }}
+	return s.Query.CreateBook(ctx, params)
+	{{- end }}
 }
 
-func (s *BookService) ListBooks() ([]repo.Book, error) {
-	return s.Queries.ListBooks(context.Background())
+func (s *BookService) ListBooks(ctx context.Context) ([]repo.Book, error) {
+	return s.Query.ListBooks(ctx)
 }
 
-func (s *BookService) GetBook(id int64) (repo.Book, error) {
-	return s.Queries.GetBook(context.Background(), id)
+func (s *BookService) GetBook(ctx context.Context, id int64) (repo.Book, error) {
+	return s.Query.GetBook(ctx, id)
 }
 
-
-func (s *BookService) UpdateBook(id int64, title string, author, isbn, genre sql.NullString) (repo.Book, error) {
+func (s *BookService) UpdateBook(ctx context.Context, id int64, title string, author, isbn, genre sql.NullString) (repo.Book, error) {
 	params := repo.UpdateBookParams{
-		ID:            id,
-		Title:         title,
-		Author:        author,
-		Isbn:          isbn,
-		Genre:         genre,
+		ID:     id,
+		Title:  title,
+		Author: author,
+		Isbn:   isbn,
+		Genre:  genre,
 	}
-	
-	return s.Queries.UpdateBook(context.Background(), params)
+
+	{{- if eq .Database.String "mysql"}}
+	err := s.Query.UpdateBook(ctx, params)
+	if err != nil {
+		return repo.Book{}, err
+	}
+	{{- end }}
+
+	return s.Query.GetBook(ctx, id)
 }
 
-func (s *BookService) DeleteBook(id int64) error {
-	return s.Queries.DeleteBook(context.Background(), id)
+func (s *BookService) DeleteBook(ctx context.Context, id int64) error {
+	return s.Query.DeleteBook(ctx, id)
 }

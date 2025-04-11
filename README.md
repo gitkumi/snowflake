@@ -33,6 +33,8 @@ Here is the full command with the default flags.
 snowflake new acme -t api -d sqlite3 -o ./ --git=true --smtp=true --storage=true --auth=true
 ```
 
+Note: Auth feature requires SMTP.
+
 ## Stack
 
 Snowflake is built with these packages. Make sure to check their documentation.

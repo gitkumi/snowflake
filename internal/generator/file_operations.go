@@ -23,6 +23,7 @@ type FileRenames struct {
 func CreateFileExclusions() *FileExclusions {
 	return &FileExclusions{
 		NoSMTP: []string{
+			"/internal/smtp",
 			"/internal/smtp/mailer.go",
 			"/internal/smtp/mailer_smtp.go",
 			"/internal/smtp/mailer_mock.go",
@@ -33,19 +34,22 @@ func CreateFileExclusions() *FileExclusions {
 			"/internal/storage/storage_mock.go",
 		},
 		NoAuth: []string{
+			"/internal/password/password.go",
+			"/internal/middleware/auth.go",
+			"/internal/middleware/auth_test.go",
 			"/internal/application/handler/auth_handler_test.go",
 			"/internal/application/handler/auth_handler_types.go",
 			"/internal/application/handler/auth_handler.go",
 			"/internal/application/service/auth_service_types.go",
 			"/internal/application/service/auth_service.go",
-			"/internal/static/sql/migrations/00001_organizations.sql",
-			"/internal/static/sql/migrations/00002_users.sql",
-			"/internal/static/sql/migrations/00003_memberships.sql",
-			"/internal/static/sql/migrations/00004_user_auth_tokens.sql",
-			"/internal/static/sql/queries/memberships.sql",
-			"/internal/static/sql/queries/organizations.sql",
-			"/internal/static/sql/queries/user_auth_tokens.sql",
-			"/internal/static/sql/queries/users.sql",
+			"/static/sql/migrations/00002_organizations.sql",
+			"/static/sql/migrations/00003_users.sql",
+			"/static/sql/migrations/00004_memberships.sql",
+			"/static/sql/migrations/00005_user_auth_tokens.sql",
+			"/static/sql/queries/memberships.sql",
+			"/static/sql/queries/organizations.sql",
+			"/static/sql/queries/user_auth_tokens.sql",
+			"/static/sql/queries/users.sql",
 		},
 		ByAppType: map[AppType][]string{
 			API: {
@@ -101,6 +105,14 @@ func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 
 	if !project.Storage {
 		for _, excludedPath := range exclusions.NoStorage {
+			if strings.Contains(path, excludedPath) {
+				return true
+			}
+		}
+	}
+
+	if !project.Auth {
+		for _, excludedPath := range exclusions.NoAuth {
 			if strings.Contains(path, excludedPath) {
 				return true
 			}

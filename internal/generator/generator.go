@@ -41,7 +41,7 @@ func Generate(cfg *GeneratorConfig) error {
 		AppType:  cfg.AppType,
 		SMTP:     cfg.SMTP,
 		Storage:  cfg.Storage,
-		Auth:     cfg.Auth,
+		Auth:     cfg.Auth && cfg.SMTP,
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
