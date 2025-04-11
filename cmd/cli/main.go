@@ -20,7 +20,7 @@ func Execute() {
 
 	cmd := &cobra.Command{
 		Use:   "snowflake",
-		Short: "Snowflake is an opinionated Go REST API application generator.",
+		Short: "Snowflake is an opinionated Go web application generator.",
 		Run: func(cmd *cobra.Command, args []string) {
 			if showVersion {
 				fmt.Println(version)
@@ -110,10 +110,9 @@ func new() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&appType, "appType", "t", "api", fmt.Sprintf("App type %v", generator.AllAppTypes))
-	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
 	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", generator.AllDatabases))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
-	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
+	cmd.Flags().BoolVar(&initGit, "git", true, "Initialize git")
 	cmd.Flags().BoolVar(&smtp, "smtp", true, "Add smtp package")
 	cmd.Flags().BoolVar(&storage, "storage", true, "Add storage package")
 

@@ -9,10 +9,10 @@ import (
 )
 
 type FileExclusions struct {
-	ByAppType  map[AppType][]string
-	ByDatabase map[Database][]string
 	NoSMTP     []string
 	NoStorage  []string
+	ByAppType  map[AppType][]string
+	ByDatabase map[Database][]string
 }
 
 type FileRenames struct {
@@ -21,6 +21,8 @@ type FileRenames struct {
 
 func CreateFileExclusions() *FileExclusions {
 	return &FileExclusions{
+		NoSMTP:    []string{},
+		NoStorage: []string{},
 		ByAppType: map[AppType][]string{
 			API: {
 				"/internal/html",
@@ -33,8 +35,6 @@ func CreateFileExclusions() *FileExclusions {
 				"dev.yml.templ",
 			},
 		},
-		NoSMTP:    []string{},
-		NoStorage: []string{},
 	}
 }
 
