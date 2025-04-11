@@ -30,7 +30,7 @@ type Handlers struct {
 	health *handler.HealthHandler
 	{{- if eq .AppType "web"}}
 	html   *handler.HTMLHandler
-	{{- end}}
+	{{- end }}
 }
 
 type Application struct {
@@ -81,14 +81,14 @@ func New(cfg *Config) (*Application, error) {
 
 	{{- if eq .AppType "web"}}
 	htmlHandler := handler.NewHTMLHandler()
-	{{- end}}
+	{{- end }}
 
 	handlers := &Handlers{
 		auth:   authHandler,
 		health: healthHandler,
 		{{- if eq .AppType "web"}}
 		html:   htmlHandler,
-		{{- end}}
+		{{- end }}
 	}
 
 	s := &Application{

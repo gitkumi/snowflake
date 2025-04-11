@@ -18,7 +18,7 @@ COPY . .
 RUN go build -o bin/main ./cmd/web/*.go
 {{- else}}
 RUN go build -o bin/main ./cmd/api/*.go
-{{- end}}
+{{- end }}
 
 # --- Runtime stage ---
 FROM alpine:3.19 AS server
@@ -37,14 +37,14 @@ ARG SMTP_PORT
 ARG SMTP_USERNAME
 ARG SMTP_PASSWORD
 ARG SMTP_FROM
-{{- end}}
+{{- end }}
 {{- if .Storage }}
 ARG S3_ACCESS_KEY
 ARG S3_SECRET_KEY
 ARG S3_ENDPOINT_URL
 ARG S3_REGION
 ARG S3_BUCKET
-{{- end}}
+{{- end }}
 
 ENV ENVIRONMENT=production \
 	{{- if .SMTP }}

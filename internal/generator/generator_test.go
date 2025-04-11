@@ -21,6 +21,7 @@ func TestGenerateSQLite3(t *testing.T) {
 		OutputDir: tmpDir,
 		SMTP:      true,
 		Storage:   true,
+		Auth:      true,
 	}
 
 	err = Generate(cf)
@@ -49,6 +50,7 @@ func TestGeneratePostgres(t *testing.T) {
 		OutputDir: tmpDir,
 		SMTP:      true,
 		Storage:   true,
+		Auth:      true,
 	}
 
 	err = Generate(cfg)
@@ -77,6 +79,7 @@ func TestGenerateMySQL(t *testing.T) {
 		OutputDir: tmpDir,
 		SMTP:      true,
 		Storage:   true,
+		Auth:      true,
 	}
 
 	err = Generate(cfg)
@@ -147,6 +150,7 @@ func TestGenerateNoSMTP(t *testing.T) {
 		OutputDir: tmpDir,
 		SMTP:      false,
 		Storage:   true,
+		Auth:      true,
 	}
 
 	err = Generate(cf)
@@ -175,6 +179,7 @@ func TestGenerateNoStorage(t *testing.T) {
 		OutputDir: tmpDir,
 		SMTP:      true,
 		Storage:   false,
+		Auth:      true,
 	}
 
 	err = Generate(cf)

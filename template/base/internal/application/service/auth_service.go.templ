@@ -19,8 +19,8 @@ type AuthService struct {
 	Query   *repo.Queries
 	Mailer  smtp.Mailer
 }
+
 func NewAuthService(baseURL string, q *repo.Queries, mailer smtp.Mailer) *AuthService {
-{{- end }}
 	return &AuthService{
 		BaseURL: baseURL,
 		Query:   q,
@@ -48,7 +48,7 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (repo.U
 	return s.Query.GetUser(ctx, int64(id))
 	{{- else}}
 	return s.Query.CreateUser(ctx, data)
-	{{- end}}
+	{{- end }}
 }
 
 func (s *AuthService) Login(ctx context.Context, input LoginInput) (string, error) {
@@ -100,7 +100,7 @@ func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
 		UserID: user.ID,
 		Type:   "magic_link",
 	})
-	{{- end}}
+	{{- end }}
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,6 @@ func (s *AuthService) CreateResetPassword(ctx context.Context, email string) err
 
 	resetPasswordURL := path.Join(s.BaseURL, "auth", "reset-password", nanoid)
 	s.Mailer.Send(smtp.Email{To: user.Email, Subject: "Password Reset", Body: resetPasswordURL})
-	{{- end }}
 	return nil
 }
 
@@ -162,7 +161,6 @@ func (s *AuthService) CreateConfirmEmail(ctx context.Context, email string) erro
 
 	confirmEmailURL := path.Join(s.BaseURL, "auth", "confirm-email", nanoid)
 	s.Mailer.Send(smtp.Email{To: user.Email, Subject: "Confirm Email", Body: confirmEmailURL})
-	{{- end }}
 	return nil
 }
 
@@ -219,7 +217,7 @@ func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, 
 	return s.Query.GetUser(ctx, user.ID)
 	{{- else}}
 	return s.Query.UpdateUser(ctx, updateParams)
-	{{- end}}
+	{{- end }}
 }
 
 func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (repo.User, error) {
@@ -255,5 +253,5 @@ func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (
 	return s.Query.GetUser(ctx, user.ID)
 	{{- else}}
 	return s.Query.UpdateUser(ctx, updateParams)
-	{{- end}}
+	{{- end }}
 }

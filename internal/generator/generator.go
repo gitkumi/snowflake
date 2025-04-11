@@ -19,6 +19,7 @@ type Project struct {
 	AppType  AppType
 	SMTP     bool
 	Storage  bool
+	Auth     bool
 }
 
 type GeneratorConfig struct {
@@ -40,6 +41,7 @@ func Generate(cfg *GeneratorConfig) error {
 		AppType:  cfg.AppType,
 		SMTP:     cfg.SMTP,
 		Storage:  cfg.Storage,
+		Auth:     cfg.Auth,
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)

@@ -22,7 +22,7 @@ run:
 	go run cmd/web/*.go
 {{- else}}
 	go run cmd/api/*.go
-{{- end}}
+{{- end }}
 
 .PHONY: test
 test:
@@ -40,7 +40,7 @@ build:
 	go build -o bin/main cmd/web/*.go
 {{- else}}
 	go build -o bin/main cmd/api/*.go
-{{- end}}
+{{- end }}
 
 .PHONY: db
 db:
