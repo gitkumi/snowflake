@@ -30,7 +30,7 @@ snowflake new acme -d postgres
 Here is the full command with the default flags.
 
 ```sh
-snowflake new acma -t api -d sqlite3 -o ./ --git true --smtp true --storage true --auth true
+snowflake new acme -t api -d sqlite3 -o ./ --git=true --smtp=true --storage=true --auth=true
 ```
 
 ## Stack
