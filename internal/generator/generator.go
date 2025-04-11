@@ -27,6 +27,7 @@ type GeneratorConfig struct {
 	AppType  AppType
 	SMTP     bool
 	Storage  bool
+	Auth     bool
 
 	InitGit   bool
 	OutputDir string

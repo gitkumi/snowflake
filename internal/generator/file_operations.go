@@ -11,6 +11,7 @@ import (
 type FileExclusions struct {
 	NoSMTP     []string
 	NoStorage  []string
+	NoAuth     []string
 	ByAppType  map[AppType][]string
 	ByDatabase map[Database][]string
 }
@@ -23,6 +24,7 @@ func CreateFileExclusions() *FileExclusions {
 	return &FileExclusions{
 		NoSMTP:    []string{},
 		NoStorage: []string{},
+		NoAuth:    []string{},
 		ByAppType: map[AppType][]string{
 			API: {
 				"/internal/html",
