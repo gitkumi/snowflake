@@ -1,0 +1,28 @@
+-- +goose Up
+-- +goose StatementBegin
+CREATE TABLE books (
+  id BIGSERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE OR REPLACE FUNCTION update_books_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_books_updated_at
+    BEFORE UPDATE ON books
+    FOR EACH ROW
+    EXECUTE FUNCTION update_books_updated_at();
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE books;
+DROP FUNCTION IF EXISTS update_books_updated_at();
+-- +goose StatementEnd
