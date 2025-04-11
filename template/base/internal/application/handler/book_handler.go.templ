@@ -42,7 +42,7 @@ func (h *BookHandler) CreateBook(c *gin.Context) {
 	isbn := sql.NullString{String: input.ISBN, Valid: input.ISBN != ""}
 	genre := sql.NullString{String: input.Genre, Valid: input.Genre != ""}
 
-	book, err := h.Service.CreateBook(input.Title, author, isbn, genre)
+	book, err := h.Service.CreateBook(c, input.Title, author, isbn, genre)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -52,7 +52,7 @@ func (h *BookHandler) CreateBook(c *gin.Context) {
 }
 
 func (h *BookHandler) ListBooks(c *gin.Context) {
-	books, err := h.Service.ListBooks()
+	books, err := h.Service.ListBooks(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -68,7 +68,7 @@ func (h *BookHandler) GetBook(c *gin.Context) {
 		return
 	}
 
-	book, err := h.Service.GetBook(id)
+	book, err := h.Service.GetBook(c, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Book not found"})
@@ -98,7 +98,7 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 	isbn := sql.NullString{String: input.ISBN, Valid: input.ISBN != ""}
 	genre := sql.NullString{String: input.Genre, Valid: input.Genre != ""}
 
-	book, err := h.Service.UpdateBook(id, input.Title, author, isbn, genre)
+	book, err := h.Service.UpdateBook(c, id, input.Title, author, isbn, genre)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Book not found"})
@@ -118,11 +118,11 @@ func (h *BookHandler) DeleteBook(c *gin.Context) {
 		return
 	}
 
-	err = h.Service.DeleteBook(id)
+	err = h.Service.DeleteBook(c, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": "Book deleted successfully"})
+	c.Status(http.StatusOK)
 }

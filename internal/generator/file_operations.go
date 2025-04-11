@@ -33,6 +33,7 @@ func CreateFileExclusions() *FileExclusions {
 			"/internal/storage/storage_mock.go",
 		},
 		NoAuth: []string{
+			"/internal/password/password.go",
 			"/internal/application/handler/auth_handler_test.go",
 			"/internal/application/handler/auth_handler_types.go",
 			"/internal/application/handler/auth_handler.go",
@@ -101,6 +102,14 @@ func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 
 	if !project.Storage {
 		for _, excludedPath := range exclusions.NoStorage {
+			if strings.Contains(path, excludedPath) {
+				return true
+			}
+		}
+	}
+
+	if !project.Auth {
+		for _, excludedPath := range exclusions.NoAuth {
 			if strings.Contains(path, excludedPath) {
 				return true
 			}

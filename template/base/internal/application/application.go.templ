@@ -27,7 +27,9 @@ import (
 
 type Handlers struct {
 	book   *handler.BookHandler
+	{{- if and .SMTP .Auth }}
 	auth   *handler.AuthHandler
+	{{- end }}
 	health *handler.HealthHandler
 	{{- if eq .AppType "web"}}
 	html   *handler.HTMLHandler
