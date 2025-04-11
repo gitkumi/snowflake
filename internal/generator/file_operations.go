@@ -11,6 +11,8 @@ import (
 type FileExclusions struct {
 	ByAppType  map[AppType][]string
 	ByDatabase map[Database][]string
+	NoSMTP     []string
+	NoStorage  []string
 }
 
 type FileRenames struct {
@@ -31,6 +33,8 @@ func CreateFileExclusions() *FileExclusions {
 				"dev.yml.templ",
 			},
 		},
+		NoSMTP:    []string{},
+		NoStorage: []string{},
 	}
 }
 
@@ -57,6 +61,22 @@ func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 	// Check database type exclusions
 	if excludedPaths, ok := exclusions.ByDatabase[project.Database]; ok {
 		for _, excludedPath := range excludedPaths {
+			if strings.Contains(path, excludedPath) {
+				return true
+			}
+		}
+	}
+
+	if !project.SMTP {
+		for _, excludedPath := range exclusions.NoSMTP {
+			if strings.Contains(path, excludedPath) {
+				return true
+			}
+		}
+	}
+
+	if !project.Storage {
+		for _, excludedPath := range exclusions.NoStorage {
 			if strings.Contains(path, excludedPath) {
 				return true
 			}

@@ -48,6 +48,8 @@ func new() *cobra.Command {
 		database  string
 		appType   string
 		outputDir string
+		smtp      bool
+		storage   bool
 	)
 
 	cmd := &cobra.Command{
@@ -96,6 +98,8 @@ func new() *cobra.Command {
 				AppType:   appTypeEnum,
 				InitGit:   initGit,
 				OutputDir: outputDir,
+				SMTP:      smtp,
+				Storage:   storage,
 			}
 
 			err := generator.Generate(cfg)
@@ -109,6 +113,9 @@ func new() *cobra.Command {
 	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
 	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", generator.AllDatabases))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
+	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
+	cmd.Flags().BoolVar(&smtp, "smtp", true, "Add smtp package")
+	cmd.Flags().BoolVar(&storage, "storage", true, "Add storage package")
 
 	return cmd
 }

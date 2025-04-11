@@ -17,12 +17,17 @@ type Project struct {
 	Name     string
 	Database Database
 	AppType  AppType
+	SMTP     bool
+	Storage  bool
 }
 
 type GeneratorConfig struct {
-	Name      string
-	Database  Database
-	AppType   AppType
+	Name     string
+	Database Database
+	AppType  AppType
+	SMTP     bool
+	Storage  bool
+
 	InitGit   bool
 	OutputDir string
 }
@@ -32,6 +37,8 @@ func Generate(cfg *GeneratorConfig) error {
 		Name:     cfg.Name,
 		Database: cfg.Database,
 		AppType:  cfg.AppType,
+		SMTP:     cfg.SMTP,
+		Storage:  cfg.Storage,
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
