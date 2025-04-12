@@ -14,33 +14,34 @@ import (
 var version string
 
 func Execute() {
-	var showVersion bool
-
 	cmd := &cobra.Command{
 		Use:   "snowflake",
 		Short: "Snowflake is an opinionated Go web application generator.",
 		Run: func(cmd *cobra.Command, args []string) {
-			if showVersion {
-				fmt.Println(version)
-				return
-			}
-
 			cmd.Help()
 		},
 	}
 
-	cmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Show snowflake version")
-
 	cmd.Root().CompletionOptions.DisableDefaultCmd = true
-
-	cmd.AddCommand(new())
+	cmd.AddCommand(newProject())
+	cmd.AddCommand(showVersion())
 
 	if err := cmd.Execute(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func new() *cobra.Command {
+func showVersion() *cobra.Command {
+	return &cobra.Command{
+		Use:   "version",
+		Short: "Show current version",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(version)
+		},
+	}
+}
+
+func newProject() *cobra.Command {
 	var (
 		initGit   bool
 		database  string
