@@ -11,9 +11,7 @@ import (
 )
 
 // Will be set at build time
-var (
-	version = "dev"
-)
+var version string
 
 func Execute() {
 	var showVersion bool
