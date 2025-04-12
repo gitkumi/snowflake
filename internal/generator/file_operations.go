@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 )
 
 type FileExclusions struct {
@@ -29,12 +28,15 @@ func CreateFileExclusions() *FileExclusions {
 			"/internal/smtp/mailer_mock.go",
 		},
 		NoStorage: []string{
+			"/internal/storage",
 			"/internal/storage/storage.go",
 			"/internal/storage/storage_s3.go",
 			"/internal/storage/storage_mock.go",
 		},
 		NoAuth: []string{
+			"/internal/password",
 			"/internal/password/password.go",
+			"/internal/middleware",
 			"/internal/middleware/auth.go",
 			"/internal/middleware/auth_test.go",
 			"/internal/application/handler/auth_handler_test.go",
@@ -54,8 +56,8 @@ func CreateFileExclusions() *FileExclusions {
 		ByAppType: map[AppType][]string{
 			API: {
 				"/internal/html",
+				"/internal/html/hello.templ.templ",
 				"/internal/application/handler/html_handler.go",
-				".templ.templ",
 			},
 		},
 		ByDatabase: map[Database][]string{
@@ -80,7 +82,7 @@ func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 	// Check app type exclusions
 	if excludedPaths, ok := exclusions.ByAppType[project.AppType]; ok {
 		for _, excludedPath := range excludedPaths {
-			if strings.Contains(path, excludedPath) {
+			if path == excludedPath {
 				return true
 			}
 		}
@@ -89,7 +91,7 @@ func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 	// Check database type exclusions
 	if excludedPaths, ok := exclusions.ByDatabase[project.Database]; ok {
 		for _, excludedPath := range excludedPaths {
-			if strings.Contains(path, excludedPath) {
+			if path == excludedPath {
 				return true
 			}
 		}
@@ -97,7 +99,7 @@ func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 
 	if !project.SMTP {
 		for _, excludedPath := range exclusions.NoSMTP {
-			if strings.Contains(path, excludedPath) {
+			if path == excludedPath {
 				return true
 			}
 		}
@@ -105,7 +107,7 @@ func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 
 	if !project.Storage {
 		for _, excludedPath := range exclusions.NoStorage {
-			if strings.Contains(path, excludedPath) {
+			if path == excludedPath {
 				return true
 			}
 		}
@@ -113,7 +115,7 @@ func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 
 	if !project.Auth {
 		for _, excludedPath := range exclusions.NoAuth {
-			if strings.Contains(path, excludedPath) {
+			if path == excludedPath {
 				return true
 			}
 		}
