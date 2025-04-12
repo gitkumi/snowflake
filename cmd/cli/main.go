@@ -5,13 +5,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 
 	"github.com/gitkumi/snowflake/internal/generator"
 	"github.com/spf13/cobra"
 )
-
-// Will be set at build time
-var version string
 
 func Execute() {
 	cmd := &cobra.Command{
@@ -36,7 +34,13 @@ func showVersion() *cobra.Command {
 		Use:   "version",
 		Short: "Show current version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(version)
+			info, ok := debug.ReadBuildInfo()
+			if ok {
+				fmt.Println(info.Main.Version)
+				return
+			}
+
+			fmt.Println("dev")
 		},
 	}
 }
