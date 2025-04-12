@@ -21,7 +21,7 @@ SET title = $1,
     author = $2,
     isbn = $3,
     genre = $4
-WHERE id = $6
+WHERE id = $5
 RETURNING *;
 
 -- name: DeleteBook :exec

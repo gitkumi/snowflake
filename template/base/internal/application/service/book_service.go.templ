@@ -63,9 +63,11 @@ func (s *BookService) UpdateBook(ctx context.Context, id int64, title string, au
 	if err != nil {
 		return repo.Book{}, err
 	}
-	{{- end }}
 
 	return s.Query.GetBook(ctx, id)
+	{{- else }}
+	return s.Query.UpdateBook(ctx, params)
+	{{- end }}
 }
 
 func (s *BookService) DeleteBook(ctx context.Context, id int64) error {
