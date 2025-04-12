@@ -4,8 +4,12 @@ import (
 	"{{ .Name }}/internal/application"
 	"{{ .Name }}/internal/env"
 	"{{ .Name }}/internal/repo"
+	{{- if .SMTP }}
 	"{{ .Name }}/internal/smtp"
+	{{- end }}
+	{{- if .Storage }}
 	"{{ .Name }}/internal/storage"
+	{{- end }}
 	{{if eq .Database.String "sqlite3" }}"path/filepath"{{ end }}
 	"log"
 
@@ -46,17 +50,25 @@ func Init() (*TestApplication, error) {
 		log.Fatal("failed to create db", err)
 	}
 
+	{{- if .SMTP }}
 	mailer := smtp.NewMockMailer()
+	{{- end }}
 
+	{{- if .Storage }}
 	storage := storage.NewMockStorage()
+	{{- end }}
 
 	app, err := application.New(&application.Config{
 		BaseURL: env.BaseURL,
 		Port:    env.Port,
 		DB:      db,
 		Router:  router,
-		Storage: storage,
+		{{- if .SMTP }}
 		Mailer:  mailer,
+		{{- end }}
+		{{- if .Storage }}
+		Storage: storage,
+		{{- end }}
 	})
 	if err != nil {
 		log.Fatal("failed to create application", err)

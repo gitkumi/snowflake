@@ -18,7 +18,7 @@ run:
 
 .PHONY: test
 test:
-	go test ./...
+	gotestsum
 
 .PHONY: build
 build:

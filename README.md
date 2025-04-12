@@ -27,7 +27,13 @@ snowflake new acme -d postgres
 - `-d`: Database type (`sqlite3`, `postgres`, or `mysql`)
 - `-t`: App type (`api` or `web`)
 
-Check out the help commands for more.
+Here is the full command with the default flags.
+
+```sh
+snowflake new acme -t api -d sqlite3 -o ./ --git=true --smtp=true --storage=true --auth=true
+```
+
+Note: Auth feature requires SMTP.
 
 ## Stack
 

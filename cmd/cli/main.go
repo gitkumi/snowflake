@@ -20,7 +20,7 @@ func Execute() {
 
 	cmd := &cobra.Command{
 		Use:   "snowflake",
-		Short: "Snowflake is an opinionated Go REST API application generator.",
+		Short: "Snowflake is an opinionated Go web application generator.",
 		Run: func(cmd *cobra.Command, args []string) {
 			if showVersion {
 				fmt.Println(version)
@@ -48,6 +48,9 @@ func new() *cobra.Command {
 		database  string
 		appType   string
 		outputDir string
+		smtp      bool
+		storage   bool
+		auth      bool
 	)
 
 	cmd := &cobra.Command{
@@ -96,6 +99,8 @@ func new() *cobra.Command {
 				AppType:   appTypeEnum,
 				InitGit:   initGit,
 				OutputDir: outputDir,
+				SMTP:      smtp,
+				Storage:   storage,
 			}
 
 			err := generator.Generate(cfg)
@@ -106,9 +111,12 @@ func new() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&appType, "appType", "t", "api", fmt.Sprintf("App type %v", generator.AllAppTypes))
-	cmd.Flags().BoolVarP(&initGit, "git", "g", true, "Initialize git")
 	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", generator.AllDatabases))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
+	cmd.Flags().BoolVar(&initGit, "git", true, "Initialize git")
+	cmd.Flags().BoolVar(&smtp, "smtp", true, "Add smtp feature")
+	cmd.Flags().BoolVar(&storage, "storage", true, "Add storage feature (S3)")
+	cmd.Flags().BoolVar(&auth, "auth", true, "Add authentication feature")
 
 	return cmd
 }

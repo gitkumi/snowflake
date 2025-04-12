@@ -17,12 +17,19 @@ type Project struct {
 	Name     string
 	Database Database
 	AppType  AppType
+	SMTP     bool
+	Storage  bool
+	Auth     bool
 }
 
 type GeneratorConfig struct {
-	Name      string
-	Database  Database
-	AppType   AppType
+	Name     string
+	Database Database
+	AppType  AppType
+	SMTP     bool
+	Storage  bool
+	Auth     bool
+
 	InitGit   bool
 	OutputDir string
 }
@@ -32,6 +39,9 @@ func Generate(cfg *GeneratorConfig) error {
 		Name:     cfg.Name,
 		Database: cfg.Database,
 		AppType:  cfg.AppType,
+		SMTP:     cfg.SMTP,
+		Storage:  cfg.Storage,
+		Auth:     cfg.Auth && cfg.SMTP,
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
@@ -97,15 +107,15 @@ func generateFromTemplates(project *Project, outputPath string, templateFiles fs
 			return err
 		}
 
-		fileName := strings.TrimPrefix(path, "base")
-		targetPath := filepath.Join(outputPath, fileName)
-
-		if ShouldExcludeFile(path, project, exclusions) {
+		if d.IsDir() {
 			return nil
 		}
 
-		if d.IsDir() {
-			return os.MkdirAll(targetPath, 0777)
+		templateFileName := strings.TrimPrefix(path, "base")
+		targetPath := filepath.Join(outputPath, templateFileName)
+
+		if ShouldExcludeTemplateFile(templateFileName, project, exclusions) {
+			return nil
 		}
 
 		content, err := fs.ReadFile(templateFiles, path)
@@ -113,7 +123,7 @@ func generateFromTemplates(project *Project, outputPath string, templateFiles fs
 			return err
 		}
 
-		tmpl, err := template.New(fileName).Funcs(templateFuncs).Parse(string(content))
+		tmpl, err := template.New(templateFileName).Funcs(templateFuncs).Parse(string(content))
 		if err != nil {
 			return err
 		}
@@ -127,14 +137,13 @@ func generateFromTemplates(project *Project, outputPath string, templateFiles fs
 			return err
 		}
 
-		newFilePath := strings.TrimSuffix(targetPath, ".templ")
-
-		targetDir := filepath.Dir(newFilePath)
+		filePath := strings.TrimSuffix(targetPath, ".templ")
+		targetDir := filepath.Dir(filePath)
 		if err := os.MkdirAll(targetDir, 0777); err != nil {
 			return fmt.Errorf("failed to create directory %s: %v", targetDir, err)
 		}
 
-		return os.WriteFile(newFilePath, buf.Bytes(), 0666)
+		return os.WriteFile(filePath, buf.Bytes(), 0666)
 	})
 
 	return err

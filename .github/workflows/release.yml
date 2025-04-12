@@ -23,6 +23,7 @@ jobs:
         run: |
           go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
           go install github.com/a-h/templ/cmd/templ@latest
+          go install gotest.tools/gotestsum@latest
 
       - name: Run audit
         run: make audit

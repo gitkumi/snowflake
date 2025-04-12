@@ -6,9 +6,9 @@ package tools
 import (
 	{{- if eq .AppType "web"}}
 	_ "github.com/a-h/templ/cmd/templ"
-	{{- end}}
+	{{- end }}
 	_ "github.com/air-verse/air"
 	_ "github.com/pressly/goose/v3/cmd/goose"
 	_ "github.com/sqlc-dev/sqlc/cmd/sqlc"
-	_ "gotest.tools/gotestsum@latest"
+	_ "gotest.tools/gotestsum"
 )

@@ -4,8 +4,12 @@ import (
 	"{{ .Name }}/internal/application/handler"
 	"{{ .Name }}/internal/application/service"
 	"{{ .Name }}/internal/repo"
+	{{- if .SMTP }}
 	"{{ .Name }}/internal/smtp"
+	{{- end }}
+	{{- if .Storage }}
 	"{{ .Name }}/internal/storage"
+	{{- end }}
 	"context"
 	"database/sql"
 	"errors"
@@ -22,11 +26,14 @@ import (
 )
 
 type Handlers struct {
+	book   *handler.BookHandler
+	{{- if and .SMTP .Auth }}
 	auth   *handler.AuthHandler
+	{{- end }}
 	health *handler.HealthHandler
 	{{- if eq .AppType "web"}}
 	html   *handler.HTMLHandler
-	{{- end}}
+	{{- end }}
 }
 
 type Application struct {
@@ -37,8 +44,12 @@ type Application struct {
 
 	Router  *gin.Engine
 	DB      *sql.DB
+	{{- if .SMTP }}
 	Mailer  smtp.Mailer
+	{{- end }}
+	{{- if .Storage }}
 	Storage storage.Storage
+	{{- end }}
 }
 
 type Config struct {
@@ -46,29 +57,45 @@ type Config struct {
 	Port    int
 	Router  *gin.Engine
 	DB      *sql.DB
+	{{- if .SMTP }}
 	Mailer  smtp.Mailer
+	{{- end }}
+	{{- if .Storage }}
 	Storage storage.Storage
+	{{- end }}
 }
 
 func New(cfg *Config) (*Application, error) {
 	query := repo.New(cfg.DB)
 
+	bookService := service.NewBookService(query)
+	bookHandler := handler.NewBookHandler(bookService)
+
+	{{- if and .SMTP .Auth }}
 	authService := service.NewAuthService(cfg.BaseURL, query, cfg.Mailer)
 	authHandler := handler.NewAuthHandler(authService)
+	{{- end }}
 
+	{{- if .Storage }}
 	healthService := service.NewHealthService(cfg.DB, cfg.Storage)
+	{{- else }}
+	healthService := service.NewHealthService(cfg.DB)
+	{{- end }}
 	healthHandler := handler.NewHealthHandler(healthService)
 
 	{{- if eq .AppType "web"}}
 	htmlHandler := handler.NewHTMLHandler()
-	{{- end}}
+	{{- end }}
 
 	handlers := &Handlers{
+		book: bookHandler,
+		{{- if and .SMTP .Auth}}
 		auth:   authHandler,
+		{{- end }}
 		health: healthHandler,
 		{{- if eq .AppType "web"}}
 		html:   htmlHandler,
-		{{- end}}
+		{{- end }}
 	}
 
 	s := &Application{

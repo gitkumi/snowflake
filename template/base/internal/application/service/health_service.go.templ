@@ -1,18 +1,28 @@
 package service
 
 import (
+	{{- if .Storage }}
 	"{{ .Name }}/internal/storage"
+	{{- end }}
 	"database/sql"
 )
 
 type HealthService struct {
 	DB      *sql.DB
+	{{- if .Storage }}
 	Storage storage.Storage
+	{{- end }}
 }
 
+{{- if .Storage }}
 func NewHealthService(db *sql.DB, storage storage.Storage) *HealthService {
+{{- else }}
+func NewHealthService(db *sql.DB) *HealthService {
+{{- end }}
 	return &HealthService{
 		DB:      db,
+		{{- if .Storage }}
 		Storage: storage,
+		{{- end }}
 	}
 }

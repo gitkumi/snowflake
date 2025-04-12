@@ -9,6 +9,9 @@ import (
 )
 
 type FileExclusions struct {
+	NoSMTP     []string
+	NoStorage  []string
+	NoAuth     []string
 	ByAppType  map[AppType][]string
 	ByDatabase map[Database][]string
 }
@@ -19,11 +22,38 @@ type FileRenames struct {
 
 func CreateFileExclusions() *FileExclusions {
 	return &FileExclusions{
+		NoSMTP: []string{
+			"/internal/smtp/mailer.go",
+			"/internal/smtp/mailer_smtp.go",
+			"/internal/smtp/mailer_mock.go",
+		},
+		NoStorage: []string{
+			"/internal/storage/storage.go",
+			"/internal/storage/storage_s3.go",
+			"/internal/storage/storage_mock.go",
+		},
+		NoAuth: []string{
+			"/internal/password/password.go",
+			"/internal/middleware/auth.go",
+			"/internal/middleware/auth_test.go",
+			"/internal/application/handler/auth_handler_test.go",
+			"/internal/application/handler/auth_handler_types.go",
+			"/internal/application/handler/auth_handler.go",
+			"/internal/application/service/auth_service_types.go",
+			"/internal/application/service/auth_service.go",
+			"/static/sql/migrations/00002_organizations.sql",
+			"/static/sql/migrations/00003_users.sql",
+			"/static/sql/migrations/00004_memberships.sql",
+			"/static/sql/migrations/00005_user_auth_tokens.sql",
+			"/static/sql/queries/memberships.sql",
+			"/static/sql/queries/organizations.sql",
+			"/static/sql/queries/user_auth_tokens.sql",
+			"/static/sql/queries/users.sql",
+		},
 		ByAppType: map[AppType][]string{
 			API: {
-				"/internal/html",
+				"/internal/html/hello.templ.templ",
 				"/internal/application/handler/html_handler.go",
-				".templ.templ",
 			},
 		},
 		ByDatabase: map[Database][]string{
@@ -44,11 +74,13 @@ func CreateFileRenames() *FileRenames {
 	}
 }
 
-func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions) bool {
+func ShouldExcludeTemplateFile(templateFileName string, project *Project, exclusions *FileExclusions) bool {
+	fileName := strings.TrimSuffix(templateFileName, ".templ")
+
 	// Check app type exclusions
 	if excludedPaths, ok := exclusions.ByAppType[project.AppType]; ok {
 		for _, excludedPath := range excludedPaths {
-			if strings.Contains(path, excludedPath) {
+			if fileName == excludedPath {
 				return true
 			}
 		}
@@ -57,7 +89,31 @@ func ShouldExcludeFile(path string, project *Project, exclusions *FileExclusions
 	// Check database type exclusions
 	if excludedPaths, ok := exclusions.ByDatabase[project.Database]; ok {
 		for _, excludedPath := range excludedPaths {
-			if strings.Contains(path, excludedPath) {
+			if fileName == excludedPath {
+				return true
+			}
+		}
+	}
+
+	if !project.SMTP {
+		for _, excludedPath := range exclusions.NoSMTP {
+			if fileName == excludedPath {
+				return true
+			}
+		}
+	}
+
+	if !project.Storage {
+		for _, excludedPath := range exclusions.NoStorage {
+			if fileName == excludedPath {
+				return true
+			}
+		}
+	}
+
+	if !project.Auth {
+		for _, excludedPath := range exclusions.NoAuth {
+			if fileName == excludedPath {
 				return true
 			}
 		}

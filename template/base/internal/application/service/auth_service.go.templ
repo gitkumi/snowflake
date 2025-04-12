@@ -48,7 +48,7 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (repo.U
 	return s.Query.GetUser(ctx, int64(id))
 	{{- else}}
 	return s.Query.CreateUser(ctx, data)
-	{{- end}}
+	{{- end }}
 }
 
 func (s *AuthService) Login(ctx context.Context, input LoginInput) (string, error) {
@@ -65,6 +65,7 @@ func (s *AuthService) Login(ctx context.Context, input LoginInput) (string, erro
 
 	return utils.CreateJwt(user.Email)
 }
+
 
 func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
 	user, err := s.Query.GetUserByEmail(ctx, email)
@@ -99,7 +100,7 @@ func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
 		UserID: user.ID,
 		Type:   "magic_link",
 	})
-	{{- end}}
+	{{- end }}
 	if err != nil {
 		return err
 	}
@@ -216,7 +217,7 @@ func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, 
 	return s.Query.GetUser(ctx, user.ID)
 	{{- else}}
 	return s.Query.UpdateUser(ctx, updateParams)
-	{{- end}}
+	{{- end }}
 }
 
 func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (repo.User, error) {
@@ -252,5 +253,5 @@ func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (
 	return s.Query.GetUser(ctx, user.ID)
 	{{- else}}
 	return s.Query.UpdateUser(ctx, updateParams)
-	{{- end}}
+	{{- end }}
 }
