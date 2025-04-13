@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 	"text/template"
 )
@@ -172,61 +171,6 @@ func RenameFiles(project *Project, outputPath string, renames *FileRenames) erro
 
 		sourceDir := filepath.Dir(fullOldPath)
 		sourceDirs[sourceDir] = true
-	}
-
-	return cleanupSourceDirs(sourceDirs)
-}
-
-func cleanupSourceDirs(dirs map[string]bool) error {
-	var dirList []string
-	for dir := range dirs {
-		dirList = append(dirList, dir)
-	}
-
-	// Sort by length in descending order to ensure child directories
-	// are processed before their parents
-	sort.Slice(dirList, func(i, j int) bool {
-		return len(dirList[i]) > len(dirList[j])
-	})
-
-	for _, dir := range dirList {
-		if err := cleanupEmptyDir(dir); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func cleanupEmptyDir(dir string) error {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		return nil
-	}
-
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return fmt.Errorf("failed to read directory %s: %v", dir, err)
-	}
-
-	// Process subdirectories first
-	for _, entry := range entries {
-		if entry.IsDir() {
-			subdir := filepath.Join(dir, entry.Name())
-			if err := cleanupEmptyDir(subdir); err != nil {
-				return err
-			}
-		}
-	}
-
-	entries, err = os.ReadDir(dir)
-	if err != nil {
-		return fmt.Errorf("failed to read directory %s: %v", dir, err)
-	}
-
-	if len(entries) == 0 {
-		if err := os.Remove(dir); err != nil {
-			return fmt.Errorf("failed to remove empty directory %s: %v", dir, err)
-		}
 	}
 
 	return nil
