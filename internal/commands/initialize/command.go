@@ -43,7 +43,7 @@ func InitProject() *cobra.Command {
 		appType   string
 		outputDir string
 		noGit     bool
-		noSmtp    bool
+		noSMTP    bool
 		noStorage bool
 		noAuth    bool
 	)
@@ -94,7 +94,7 @@ func InitProject() *cobra.Command {
 				AppType:   appTypeEnum,
 				NoGit:     noGit,
 				OutputDir: outputDir,
-				NoSMTP:    noSmtp,
+				NoSMTP:    noSMTP,
 				NoStorage: noStorage,
 			}
 
@@ -109,7 +109,7 @@ func InitProject() *cobra.Command {
 	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", AllDatabases))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
 	cmd.Flags().BoolVar(&noGit, "no-git", false, "Remove git")
-	cmd.Flags().BoolVar(&noSmtp, "no-smtp", false, "Remove SMTP")
+	cmd.Flags().BoolVar(&noSMTP, "no-smtp", false, "Remove SMTP")
 	cmd.Flags().BoolVar(&noStorage, "no-storage", false, "Remove Storage (S3)")
 	cmd.Flags().BoolVar(&noAuth, "no-auth", false, "Remove Authentication (Authentication requires SMTP)")
 
