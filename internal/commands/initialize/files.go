@@ -3,6 +3,7 @@ package initialize
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -152,12 +153,12 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 }
 
 func renameFiles(project *Project, outputPath string, renames *FileRenames) error {
+	oldDirs := make(map[string]bool)
+
 	renameMappings, ok := renames.ByAppType[project.AppType]
 	if !ok {
 		return nil
 	}
-
-	sourceDirs := make(map[string]bool)
 
 	for oldPath, newPath := range renameMappings {
 		fullOldPath := filepath.Join(outputPath, oldPath)
@@ -173,23 +174,42 @@ func renameFiles(project *Project, outputPath string, renames *FileRenames) erro
 		}
 
 		if err := os.Rename(fullOldPath, fullNewPath); err != nil {
-			data, err := os.ReadFile(fullOldPath)
-			if err != nil {
-				return fmt.Errorf("failed to read file %s: %v", fullOldPath, err)
-			}
-
-			if err := os.WriteFile(fullNewPath, data, 0666); err != nil {
-				return fmt.Errorf("failed to write file %s: %v", fullNewPath, err)
-			}
-
-			if err := os.Remove(fullOldPath); err != nil {
-				return fmt.Errorf("failed to remove file %s: %v", fullOldPath, err)
-			}
+			return fmt.Errorf("failed to rename file %s: %v", fullOldPath, fullNewPath)
 		}
 
-		sourceDir := filepath.Dir(fullOldPath)
-		sourceDirs[sourceDir] = true
+		oldDir := path.Dir(fullOldPath)
+		oldDirs[oldDir] = true
 	}
 
+	return removeEmptyDirs(oldDirs)
+}
+
+func removeEmptyDirs(paths map[string]bool) error {
+	for dir := range paths {
+		isEmpty, err := isDirectoryEmpty(dir)
+		if err != nil {
+			return fmt.Errorf("failed to check if directory %s is empty: %v", dir, err)
+		}
+		if isEmpty {
+			if err := os.Remove(dir); err != nil {
+				return fmt.Errorf("failed to remove empty directory %s: %v", dir, err)
+			}
+		}
+	}
 	return nil
+}
+
+func isDirectoryEmpty(name string) (bool, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1)
+	if err != nil {
+		return true, nil
+	}
+
+	return false, nil
 }
