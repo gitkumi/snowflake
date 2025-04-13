@@ -3,7 +3,6 @@ package middleware_test
 import (
 	"{{ .Name }}/internal/middleware"
 	"{{ .Name }}/internal/repo"
-	"{{ .Name }}/internal/utils"
 	"{{ .Name }}/test"
 	"net/http"
 	"net/http/httptest"
@@ -17,7 +16,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 	_, user, _ := ts.CreateMembershipFixture(repo.CreateMembershipParams{})
 
-	token, _ := utils.CreateJwt(user.Email)
+	token, _ := password.CreateJwt(user.Email)
 
 	testCases := []struct {
 		name           string
@@ -68,7 +67,7 @@ func TestAuthMiddleware(t *testing.T) {
 func TestAuthenticationUserNotFound(t *testing.T) {
 	ts, _ := test.Init()
 
-	token, _ := utils.CreateJwt("nonexistent@example.com")
+	token, _ := password.CreateJwt("nonexistent@example.com")
 
 	r := gin.Default()
 	r.Use(middleware.AuthMiddleware(ts.Query))
@@ -92,7 +91,7 @@ func TestAuthenticationMembershipNotFound(t *testing.T) {
 
 	user := ts.CreateUserFixture(repo.CreateUserParams{})
 
-	token, _ := utils.CreateJwt(user.Email)
+	token, _ := password.CreateJwt(user.Email)
 
 	r := gin.Default()
 

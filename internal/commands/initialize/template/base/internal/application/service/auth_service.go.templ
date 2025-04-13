@@ -4,7 +4,6 @@ import (
 	"{{ .Name }}/internal/password"
 	"{{ .Name }}/internal/repo"
 	"{{ .Name }}/internal/smtp"
-	"{{ .Name }}/internal/utils"
 	"context"
 	"database/sql"
 	"errors"
@@ -63,7 +62,7 @@ func (s *AuthService) Login(ctx context.Context, input LoginInput) (string, erro
 		return "", errors.New("invalid username or password")
 	}
 
-	return utils.CreateJwt(user.Email)
+	return password.CreateJwt(user.Email)
 }
 
 
@@ -172,7 +171,7 @@ func (s *AuthService) ConsumeMagicLink(ctx context.Context, tokenID string) (str
 	if err != nil {
 		return "", err
 	}
-	return utils.CreateJwt(token.Email)
+	return password.CreateJwt(token.Email)
 }
 
 func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, input ResetPasswordInput) (repo.User, error) {
