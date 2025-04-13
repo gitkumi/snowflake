@@ -26,26 +26,26 @@ type Project struct {
 }
 
 type InitConfig struct {
-	Name     string
-	Database Database
-	AppType  AppType
-	SMTP     bool
-	Storage  bool
-	Auth     bool
-
-	InitGit   bool
+	Name      string
+	Database  Database
+	AppType   AppType
 	OutputDir string
+
+	NoSMTP    bool
+	NoStorage bool
+	NoAuth    bool
+	NoGit     bool
 }
 
 func InitProject() *cobra.Command {
 	var (
-		initGit   bool
 		database  string
 		appType   string
 		outputDir string
-		smtp      bool
-		storage   bool
-		auth      bool
+		noGit     bool
+		noSmtp    bool
+		noStorage bool
+		noAuth    bool
 	)
 
 	cmd := &cobra.Command{
@@ -92,10 +92,10 @@ func InitProject() *cobra.Command {
 				Name:      args[0],
 				Database:  dbEnum,
 				AppType:   appTypeEnum,
-				InitGit:   initGit,
+				NoGit:     noGit,
 				OutputDir: outputDir,
-				SMTP:      smtp,
-				Storage:   storage,
+				NoSMTP:    noSmtp,
+				NoStorage: noStorage,
 			}
 
 			err := initialize(cfg)
@@ -108,10 +108,10 @@ func InitProject() *cobra.Command {
 	cmd.Flags().StringVarP(&appType, "appType", "t", "api", fmt.Sprintf("App type %v", AllAppTypes))
 	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", AllDatabases))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
-	cmd.Flags().BoolVar(&initGit, "git", true, "Initialize git")
-	cmd.Flags().BoolVar(&smtp, "smtp", true, "Add smtp feature")
-	cmd.Flags().BoolVar(&storage, "storage", true, "Add storage feature (S3)")
-	cmd.Flags().BoolVar(&auth, "auth", true, "Add authentication feature")
+	cmd.Flags().BoolVar(&noGit, "no-git", false, "Do not initialize git")
+	cmd.Flags().BoolVar(&noSmtp, "no-smtp", false, "Remove SMTP")
+	cmd.Flags().BoolVar(&noStorage, "no-storage", false, "Remove Storage (S3)")
+	cmd.Flags().BoolVar(&noAuth, "no-auth", false, "Remove Authentication (Authentication requires SMTP)")
 
 	return cmd
 }
@@ -121,9 +121,9 @@ func initialize(cfg *InitConfig) error {
 		Name:     cfg.Name,
 		Database: cfg.Database,
 		AppType:  cfg.AppType,
-		SMTP:     cfg.SMTP,
-		Storage:  cfg.Storage,
-		Auth:     cfg.Auth && cfg.SMTP,
+		SMTP:     !cfg.NoSMTP,
+		Storage:  !cfg.NoStorage,
+		Auth:     !cfg.NoAuth && !cfg.NoSMTP,
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
@@ -145,7 +145,7 @@ func initialize(cfg *InitConfig) error {
 		return err
 	}
 
-	if cfg.InitGit {
+	if !cfg.NoGit {
 		if err := runGitCommands(outputPath); err != nil {
 			return err
 		}
