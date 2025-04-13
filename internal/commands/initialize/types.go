@@ -2,7 +2,7 @@ package initialize
 
 import (
 	"fmt"
-	snowflaketemplate "github.com/gitkumi/snowflake/template"
+	initializetemplate "github.com/gitkumi/snowflake/internal/commands/initialize/template"
 	"path/filepath"
 )
 
@@ -110,7 +110,7 @@ func (d Database) Import() string {
 
 func LoadDatabaseMigration(db Database, filename string) (string, error) {
 	fragmentPath := filepath.Join("fragments/database", string(db), "migrations", filename)
-	content, err := snowflaketemplate.DatabaseFragments.ReadFile(fragmentPath)
+	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read database fragment: %w", err)
 	}
@@ -119,7 +119,7 @@ func LoadDatabaseMigration(db Database, filename string) (string, error) {
 
 func LoadDatabaseQuery(db Database, filename string) (string, error) {
 	fragmentPath := filepath.Join("fragments/database", string(db), "queries", filename)
-	content, err := snowflaketemplate.DatabaseFragments.ReadFile(fragmentPath)
+	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to read database query fragment: %w", err)
 	}

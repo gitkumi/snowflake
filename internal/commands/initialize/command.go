@@ -13,7 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	snowflaketemplate "github.com/gitkumi/snowflake/template"
+	initializetemplate "github.com/gitkumi/snowflake/internal/commands/initialize/template"
 )
 
 type Project struct {
@@ -127,7 +127,7 @@ func Generate(cfg *GeneratorConfig) error {
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
-	templateFiles := snowflaketemplate.BaseFiles
+	templateFiles := initializetemplate.BaseFiles
 
 	templateFuncs := CreateTemplateFuncs(cfg)
 	exclusions := CreateFileExclusions()
