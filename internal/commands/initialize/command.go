@@ -108,7 +108,7 @@ func InitProject() *cobra.Command {
 	cmd.Flags().StringVarP(&appType, "appType", "t", "api", fmt.Sprintf("App type %v", AllAppTypes))
 	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", AllDatabases))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
-	cmd.Flags().BoolVar(&noGit, "no-git", false, "Do not initialize git")
+	cmd.Flags().BoolVar(&noGit, "no-git", false, "Remove git")
 	cmd.Flags().BoolVar(&noSmtp, "no-smtp", false, "Remove SMTP")
 	cmd.Flags().BoolVar(&noStorage, "no-storage", false, "Remove Storage (S3)")
 	cmd.Flags().BoolVar(&noAuth, "no-auth", false, "Remove Authentication (Authentication requires SMTP)")
