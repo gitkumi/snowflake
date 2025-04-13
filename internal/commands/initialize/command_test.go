@@ -13,7 +13,7 @@ func TestGenerateSQLite3(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &GeneratorConfig{
+	cf := &InitConfig{
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
@@ -42,7 +42,7 @@ func TestGeneratePostgres(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &GeneratorConfig{
+	cfg := &InitConfig{
 		Name:      "acme",
 		Database:  Postgres,
 		AppType:   API,
@@ -71,7 +71,7 @@ func TestGenerateMySQL(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &GeneratorConfig{
+	cfg := &InitConfig{
 		Name:      "acme",
 		Database:  MySQL,
 		AppType:   API,
@@ -100,7 +100,7 @@ func TestGenerateWebApp(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &GeneratorConfig{
+	cfg := &InitConfig{
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   Web,
@@ -142,7 +142,7 @@ func TestGenerateNoSMTP(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &GeneratorConfig{
+	cf := &InitConfig{
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
@@ -171,7 +171,7 @@ func TestGenerateNoStorage(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &GeneratorConfig{
+	cf := &InitConfig{
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
@@ -200,7 +200,7 @@ func TestGenerateNoAuth(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &GeneratorConfig{
+	cf := &InitConfig{
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,

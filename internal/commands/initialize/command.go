@@ -25,7 +25,7 @@ type Project struct {
 	Auth     bool
 }
 
-type GeneratorConfig struct {
+type InitConfig struct {
 	Name     string
 	Database Database
 	AppType  AppType
@@ -88,7 +88,7 @@ func InitProject() *cobra.Command {
 				log.Fatalf("Invalid app type: %s. Must be one of: %v", appType, AllAppTypes)
 			}
 
-			cfg := &GeneratorConfig{
+			cfg := &InitConfig{
 				Name:      args[0],
 				Database:  dbEnum,
 				AppType:   appTypeEnum,
@@ -116,7 +116,7 @@ func InitProject() *cobra.Command {
 	return cmd
 }
 
-func Generate(cfg *GeneratorConfig) error {
+func Generate(cfg *InitConfig) error {
 	project := &Project{
 		Name:     cfg.Name,
 		Database: cfg.Database,
@@ -133,11 +133,11 @@ func Generate(cfg *GeneratorConfig) error {
 	exclusions := CreateFileExclusions()
 	renames := CreateFileRenames()
 
-	if err := generateFromTemplates(project, outputPath, templateFiles, templateFuncs, exclusions); err != nil {
+	if err := CreateFiles(project, outputPath, templateFiles, templateFuncs, exclusions); err != nil {
 		return err
 	}
 
-	if err := ProcessFileRenames(project, outputPath, renames); err != nil {
+	if err := RenameFiles(project, outputPath, renames); err != nil {
 		return err
 	}
 
@@ -172,7 +172,7 @@ Run your new project:
 	return nil
 }
 
-func generateFromTemplates(project *Project, outputPath string, templateFiles fs.FS,
+func CreateFiles(project *Project, outputPath string, templateFiles fs.FS,
 	templateFuncs map[string]interface{}, exclusions *FileExclusions) error {
 
 	fmt.Println("Generating files...")

@@ -21,7 +21,7 @@ type FileRenames struct {
 	ByAppType map[AppType]map[string]string
 }
 
-func CreateTemplateFuncs(cfg *GeneratorConfig) template.FuncMap {
+func CreateTemplateFuncs(cfg *InitConfig) template.FuncMap {
 	return template.FuncMap{
 		"DatabaseMigration": func(filename string) (string, error) {
 			return LoadDatabaseMigration(cfg.Database, filename)
@@ -134,7 +134,7 @@ func ShouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 	return false
 }
 
-func ProcessFileRenames(project *Project, outputPath string, renames *FileRenames) error {
+func RenameFiles(project *Project, outputPath string, renames *FileRenames) error {
 	renameMappings, ok := renames.ByAppType[project.AppType]
 	if !ok {
 		return nil
