@@ -53,28 +53,28 @@ func InitProject() *cobra.Command {
 		Short: "Create a new project",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			// If no output directory is specified, use the current working directory
+			// Use current working directory if output dir is not provided
 			if outputDir == "" {
-				var err error
-				outputDir, err = os.Getwd()
+				cwd, err := os.Getwd()
 				if err != nil {
-					log.Fatal(err.Error())
+					log.Fatal(err)
 				}
-			} else {
-				// If the provided path is not absolute, make it absolute
-				if !filepath.IsAbs(outputDir) {
-					cwd, err := os.Getwd()
-					if err != nil {
-						log.Fatal(err.Error())
-					}
-					outputDir = filepath.Join(cwd, outputDir)
-				}
+				outputDir = cwd
+			}
 
-				// Ensure output directory exists
-				if _, err := os.Stat(outputDir); os.IsNotExist(err) {
-					if err := os.MkdirAll(outputDir, 0755); err != nil {
-						log.Fatalf("Failed to create output directory: %v", err)
-					}
+			// If the provided path is not absolute, make it absolute
+			if !filepath.IsAbs(outputDir) {
+				cwd, err := os.Getwd()
+				if err != nil {
+					log.Fatal(err)
+				}
+				outputDir = filepath.Join(cwd, outputDir)
+			}
+
+			// Ensure output directory exists
+			if _, err := os.Stat(outputDir); os.IsNotExist(err) {
+				if err := os.MkdirAll(outputDir, 0755); err != nil {
+					log.Fatalf("Failed to create output directory: %v", err)
 				}
 			}
 
