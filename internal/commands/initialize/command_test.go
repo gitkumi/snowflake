@@ -17,11 +17,11 @@ func TestGenerateSQLite3(t *testing.T) {
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
-		InitGit:   false,
 		OutputDir: tmpDir,
-		SMTP:      true,
-		Storage:   true,
-		Auth:      true,
+		NoGit:     true,
+		NoSMTP:    false,
+		NoStorage: false,
+		NoAuth:    false,
 	}
 
 	err = initialize(cf)
@@ -46,11 +46,11 @@ func TestGeneratePostgres(t *testing.T) {
 		Name:      "acme",
 		Database:  Postgres,
 		AppType:   API,
-		InitGit:   false,
 		OutputDir: tmpDir,
-		SMTP:      true,
-		Storage:   true,
-		Auth:      true,
+		NoGit:     true,
+		NoSMTP:    false,
+		NoStorage: false,
+		NoAuth:    false,
 	}
 
 	err = initialize(cfg)
@@ -75,11 +75,11 @@ func TestGenerateMySQL(t *testing.T) {
 		Name:      "acme",
 		Database:  MySQL,
 		AppType:   API,
-		InitGit:   false,
 		OutputDir: tmpDir,
-		SMTP:      true,
-		Storage:   true,
-		Auth:      true,
+		NoGit:     true,
+		NoSMTP:    false,
+		NoStorage: false,
+		NoAuth:    false,
 	}
 
 	err = initialize(cfg)
@@ -104,8 +104,8 @@ func TestGenerateWebApp(t *testing.T) {
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   Web,
-		InitGit:   false,
 		OutputDir: tmpDir,
+		NoGit:     true,
 	}
 
 	err = initialize(cfg)
@@ -146,11 +146,11 @@ func TestGenerateNoSMTP(t *testing.T) {
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
-		InitGit:   false,
 		OutputDir: tmpDir,
-		SMTP:      false,
-		Storage:   true,
-		Auth:      true,
+		NoGit:     true,
+		NoSMTP:    true,
+		NoStorage: false,
+		NoAuth:    false,
 	}
 
 	err = initialize(cf)
@@ -175,11 +175,11 @@ func TestGenerateNoStorage(t *testing.T) {
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
-		InitGit:   false,
 		OutputDir: tmpDir,
-		SMTP:      true,
-		Storage:   false,
-		Auth:      true,
+		NoGit:     true,
+		NoSMTP:    false,
+		NoStorage: true,
+		NoAuth:    false,
 	}
 
 	err = initialize(cf)
@@ -204,11 +204,11 @@ func TestGenerateNoAuth(t *testing.T) {
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
-		InitGit:   false,
 		OutputDir: tmpDir,
-		SMTP:      true,
-		Storage:   true,
-		Auth:      false,
+		NoGit:     true,
+		NoSMTP:    false,
+		NoStorage: false,
+		NoAuth:    true,
 	}
 
 	err = initialize(cf)
