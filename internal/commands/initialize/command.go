@@ -98,7 +98,7 @@ func InitProject() *cobra.Command {
 				NoStorage: noStorage,
 			}
 
-			err := initialize(cfg)
+			err := Initialize(cfg)
 			if err != nil {
 				log.Fatal(err.Error())
 			}
@@ -116,7 +116,7 @@ func InitProject() *cobra.Command {
 	return cmd
 }
 
-func initialize(cfg *InitConfig) error {
+func Initialize(cfg *InitConfig) error {
 	project := &Project{
 		Name:     cfg.Name,
 		Database: cfg.Database,

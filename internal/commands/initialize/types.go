@@ -7,13 +7,13 @@ import (
 type AppType string
 
 const (
-	Web AppType = "web"
 	API AppType = "api"
+	Web AppType = "web"
 )
 
 var AllAppTypes = []AppType{
-	Web,
 	API,
+	Web,
 }
 
 func (t AppType) IsValid() bool {
