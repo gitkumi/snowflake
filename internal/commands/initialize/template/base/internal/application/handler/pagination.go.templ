@@ -1,0 +1,39 @@
+package handler
+
+import (
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+)
+
+type Paginated[T any] struct {
+	CurrentPage int `json:"current_page"`
+	LastPage    int `json:"last_page"`
+	PerPage     int `json:"per_page"`
+	Data        []T `json:"data"`
+}
+
+type PaginationSettings struct {
+	Page    int
+	Offset  int
+	PerPage int
+}
+
+func getPaginationSettings(c *gin.Contenxt) *PaginationSettings {
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	perPage, err := strconv.Atoi(c.DefaultQuery("per_page", "100"))
+	if err != nil || perPage < 1 || perPage > 100 {
+		perPage = 100
+	}
+
+	offset := (page - 1) * perPage
+	return &PaginationSettings{
+		Page:    page,
+		PerPage: perPage,
+		Offset:  offset,
+	}
+}
