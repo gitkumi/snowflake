@@ -1,11 +1,14 @@
-package generator
+package initialize
 
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
-	"sort"
 	"strings"
+	"text/template"
+
+	initializetemplate "github.com/gitkumi/snowflake/internal/commands/initialize/template"
 )
 
 type FileExclusions struct {
@@ -20,7 +23,36 @@ type FileRenames struct {
 	ByAppType map[AppType]map[string]string
 }
 
-func CreateFileExclusions() *FileExclusions {
+func createTemplateFuncs(cfg *InitConfig) template.FuncMap {
+	return template.FuncMap{
+		"DatabaseMigration": func(filename string) (string, error) {
+			return loadDatabaseMigration(cfg.Database, filename)
+		},
+		"DatabaseQuery": func(filename string) (string, error) {
+			return loadDatabaseQuery(cfg.Database, filename)
+		},
+	}
+}
+
+func loadDatabaseMigration(db Database, filename string) (string, error) {
+	fragmentPath := filepath.Join("fragments/database", string(db), "migrations", filename)
+	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read database fragment: %w", err)
+	}
+	return string(content), nil
+}
+
+func loadDatabaseQuery(db Database, filename string) (string, error) {
+	fragmentPath := filepath.Join("fragments/database", string(db), "queries", filename)
+	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read database query fragment: %w", err)
+	}
+	return string(content), nil
+}
+
+func createFileExclusions() *FileExclusions {
 	return &FileExclusions{
 		NoSMTP: []string{
 			"/internal/smtp/mailer.go",
@@ -64,7 +96,7 @@ func CreateFileExclusions() *FileExclusions {
 	}
 }
 
-func CreateFileRenames() *FileRenames {
+func createFileRenames() *FileRenames {
 	return &FileRenames{
 		ByAppType: map[AppType]map[string]string{
 			Web: {
@@ -74,10 +106,9 @@ func CreateFileRenames() *FileRenames {
 	}
 }
 
-func ShouldExcludeTemplateFile(templateFileName string, project *Project, exclusions *FileExclusions) bool {
+func shouldExcludeTemplateFile(templateFileName string, project *Project, exclusions *FileExclusions) bool {
 	fileName := strings.TrimSuffix(templateFileName, ".templ")
 
-	// Check app type exclusions
 	if excludedPaths, ok := exclusions.ByAppType[project.AppType]; ok {
 		for _, excludedPath := range excludedPaths {
 			if fileName == excludedPath {
@@ -86,7 +117,6 @@ func ShouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 		}
 	}
 
-	// Check database type exclusions
 	if excludedPaths, ok := exclusions.ByDatabase[project.Database]; ok {
 		for _, excludedPath := range excludedPaths {
 			if fileName == excludedPath {
@@ -122,13 +152,13 @@ func ShouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 	return false
 }
 
-func ProcessFileRenames(project *Project, outputPath string, renames *FileRenames) error {
+func renameFiles(project *Project, outputPath string, renames *FileRenames) error {
+	oldDirs := make(map[string]bool)
+
 	renameMappings, ok := renames.ByAppType[project.AppType]
 	if !ok {
 		return nil
 	}
-
-	sourceDirs := make(map[string]bool)
 
 	for oldPath, newPath := range renameMappings {
 		fullOldPath := filepath.Join(outputPath, oldPath)
@@ -144,78 +174,42 @@ func ProcessFileRenames(project *Project, outputPath string, renames *FileRename
 		}
 
 		if err := os.Rename(fullOldPath, fullNewPath); err != nil {
-			data, err := os.ReadFile(fullOldPath)
-			if err != nil {
-				return fmt.Errorf("failed to read file %s: %v", fullOldPath, err)
-			}
-
-			if err := os.WriteFile(fullNewPath, data, 0666); err != nil {
-				return fmt.Errorf("failed to write file %s: %v", fullNewPath, err)
-			}
-
-			if err := os.Remove(fullOldPath); err != nil {
-				return fmt.Errorf("failed to remove file %s: %v", fullOldPath, err)
-			}
+			return fmt.Errorf("failed to rename file %s: %v", fullOldPath, fullNewPath)
 		}
 
-		sourceDir := filepath.Dir(fullOldPath)
-		sourceDirs[sourceDir] = true
+		oldDir := path.Dir(fullOldPath)
+		oldDirs[oldDir] = true
 	}
 
-	return cleanupSourceDirs(sourceDirs)
+	return removeEmptyDirs(oldDirs)
 }
 
-func cleanupSourceDirs(dirs map[string]bool) error {
-	var dirList []string
-	for dir := range dirs {
-		dirList = append(dirList, dir)
-	}
-
-	// Sort by length in descending order to ensure child directories
-	// are processed before their parents
-	sort.Slice(dirList, func(i, j int) bool {
-		return len(dirList[i]) > len(dirList[j])
-	})
-
-	for _, dir := range dirList {
-		if err := cleanupEmptyDir(dir); err != nil {
-			return err
+func removeEmptyDirs(paths map[string]bool) error {
+	for dir := range paths {
+		isEmpty, err := isDirectoryEmpty(dir)
+		if err != nil {
+			return fmt.Errorf("failed to check if directory %s is empty: %v", dir, err)
+		}
+		if isEmpty {
+			if err := os.Remove(dir); err != nil {
+				return fmt.Errorf("failed to remove empty directory %s: %v", dir, err)
+			}
 		}
 	}
-
 	return nil
 }
 
-func cleanupEmptyDir(dir string) error {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		return nil
-	}
-
-	entries, err := os.ReadDir(dir)
+func isDirectoryEmpty(name string) (bool, error) {
+	f, err := os.Open(name)
 	if err != nil {
-		return fmt.Errorf("failed to read directory %s: %v", dir, err)
+		return false, err
 	}
+	defer f.Close()
 
-	// Process subdirectories first
-	for _, entry := range entries {
-		if entry.IsDir() {
-			subdir := filepath.Join(dir, entry.Name())
-			if err := cleanupEmptyDir(subdir); err != nil {
-				return err
-			}
-		}
-	}
-
-	entries, err = os.ReadDir(dir)
+	_, err = f.Readdirnames(1)
 	if err != nil {
-		return fmt.Errorf("failed to read directory %s: %v", dir, err)
+		return true, nil
 	}
 
-	if len(entries) == 0 {
-		if err := os.Remove(dir); err != nil {
-			return fmt.Errorf("failed to remove empty directory %s: %v", dir, err)
-		}
-	}
-
-	return nil
+	return false, nil
 }

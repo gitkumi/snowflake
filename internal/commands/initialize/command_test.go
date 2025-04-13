@@ -1,4 +1,4 @@
-package generator
+package initialize
 
 import (
 	"os"
@@ -13,18 +13,18 @@ func TestGenerateSQLite3(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &GeneratorConfig{
+	cf := &InitConfig{
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
-		InitGit:   false,
 		OutputDir: tmpDir,
-		SMTP:      true,
-		Storage:   true,
-		Auth:      true,
+		NoGit:     true,
+		NoSMTP:    false,
+		NoStorage: false,
+		NoAuth:    false,
 	}
 
-	err = Generate(cf)
+	err = initialize(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,18 +42,18 @@ func TestGeneratePostgres(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &GeneratorConfig{
+	cfg := &InitConfig{
 		Name:      "acme",
 		Database:  Postgres,
 		AppType:   API,
-		InitGit:   false,
 		OutputDir: tmpDir,
-		SMTP:      true,
-		Storage:   true,
-		Auth:      true,
+		NoGit:     true,
+		NoSMTP:    false,
+		NoStorage: false,
+		NoAuth:    false,
 	}
 
-	err = Generate(cfg)
+	err = initialize(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,18 +71,18 @@ func TestGenerateMySQL(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &GeneratorConfig{
+	cfg := &InitConfig{
 		Name:      "acme",
 		Database:  MySQL,
 		AppType:   API,
-		InitGit:   false,
 		OutputDir: tmpDir,
-		SMTP:      true,
-		Storage:   true,
-		Auth:      true,
+		NoGit:     true,
+		NoSMTP:    false,
+		NoStorage: false,
+		NoAuth:    false,
 	}
 
-	err = Generate(cfg)
+	err = initialize(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,15 +100,15 @@ func TestGenerateWebApp(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &GeneratorConfig{
+	cfg := &InitConfig{
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   Web,
-		InitGit:   false,
 		OutputDir: tmpDir,
+		NoGit:     true,
 	}
 
-	err = Generate(cfg)
+	err = initialize(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,18 +142,18 @@ func TestGenerateNoSMTP(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &GeneratorConfig{
+	cf := &InitConfig{
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
-		InitGit:   false,
 		OutputDir: tmpDir,
-		SMTP:      false,
-		Storage:   true,
-		Auth:      true,
+		NoGit:     true,
+		NoSMTP:    true,
+		NoStorage: false,
+		NoAuth:    false,
 	}
 
-	err = Generate(cf)
+	err = initialize(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,18 +171,18 @@ func TestGenerateNoStorage(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &GeneratorConfig{
+	cf := &InitConfig{
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
-		InitGit:   false,
 		OutputDir: tmpDir,
-		SMTP:      true,
-		Storage:   false,
-		Auth:      true,
+		NoGit:     true,
+		NoSMTP:    false,
+		NoStorage: true,
+		NoAuth:    false,
 	}
 
-	err = Generate(cf)
+	err = initialize(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -200,18 +200,18 @@ func TestGenerateNoAuth(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &GeneratorConfig{
+	cf := &InitConfig{
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
-		InitGit:   false,
 		OutputDir: tmpDir,
-		SMTP:      true,
-		Storage:   true,
-		Auth:      false,
+		NoGit:     true,
+		NoSMTP:    false,
+		NoStorage: false,
+		NoAuth:    true,
 	}
 
-	err = Generate(cf)
+	err = initialize(cf)
 	if err != nil {
 		t.Fatal(err)
 	}

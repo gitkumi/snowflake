@@ -1,11 +1,29 @@
-package generator
+package initialize
 
 import (
 	"fmt"
-	"path/filepath"
-
-	snowflaketemplate "github.com/gitkumi/snowflake/template"
 )
+
+type AppType string
+
+const (
+	Web AppType = "web"
+	API AppType = "api"
+)
+
+var AllAppTypes = []AppType{
+	Web,
+	API,
+}
+
+func (t AppType) IsValid() bool {
+	for _, appType := range AllAppTypes {
+		if appType == t {
+			return true
+		}
+	}
+	return false
+}
 
 type Database string
 
@@ -86,22 +104,4 @@ func (d Database) Import() string {
 	default:
 		return ""
 	}
-}
-
-func LoadDatabaseMigration(db Database, filename string) (string, error) {
-	fragmentPath := filepath.Join("fragments/database", string(db), "migrations", filename)
-	content, err := snowflaketemplate.DatabaseFragments.ReadFile(fragmentPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read database fragment: %w", err)
-	}
-	return string(content), nil
-}
-
-func LoadDatabaseQuery(db Database, filename string) (string, error) {
-	fragmentPath := filepath.Join("fragments/database", string(db), "queries", filename)
-	content, err := snowflaketemplate.DatabaseFragments.ReadFile(fragmentPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read database query fragment: %w", err)
-	}
-	return string(content), nil
 }
