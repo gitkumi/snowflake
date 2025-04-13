@@ -19,7 +19,7 @@ type PaginationSettings struct {
 	PerPage int
 }
 
-func getPaginationSettings(c *gin.Contenxt) *PaginationSettings {
+func getPaginationSettings(c *gin.Context) *PaginationSettings {
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if err != nil || page < 1 {
 		page = 1
