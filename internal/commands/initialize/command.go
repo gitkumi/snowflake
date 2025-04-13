@@ -1,14 +1,17 @@
-package generator
+package initialize
 
 import (
 	"bytes"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"text/template"
+
+	"github.com/spf13/cobra"
 
 	snowflaketemplate "github.com/gitkumi/snowflake/template"
 )
@@ -32,6 +35,85 @@ type GeneratorConfig struct {
 
 	InitGit   bool
 	OutputDir string
+}
+
+func InitProject() *cobra.Command {
+	var (
+		initGit   bool
+		database  string
+		appType   string
+		outputDir string
+		smtp      bool
+		storage   bool
+		auth      bool
+	)
+
+	cmd := &cobra.Command{
+		Use:   "new",
+		Short: "Create a new project",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			// If no output directory is specified, use the current working directory
+			if outputDir == "" {
+				var err error
+				outputDir, err = os.Getwd()
+				if err != nil {
+					log.Fatal(err.Error())
+				}
+			} else {
+				// If the provided path is not absolute, make it absolute
+				if !filepath.IsAbs(outputDir) {
+					cwd, err := os.Getwd()
+					if err != nil {
+						log.Fatal(err.Error())
+					}
+					outputDir = filepath.Join(cwd, outputDir)
+				}
+
+				// Ensure output directory exists
+				if _, err := os.Stat(outputDir); os.IsNotExist(err) {
+					if err := os.MkdirAll(outputDir, 0755); err != nil {
+						log.Fatalf("Failed to create output directory: %v", err)
+					}
+				}
+			}
+
+			dbEnum := Database(database)
+			if !dbEnum.IsValid() {
+				log.Fatalf("Invalid database type: %s. Must be one of: %v", database, AllDatabases)
+			}
+
+			appTypeEnum := AppType(appType)
+			if !appTypeEnum.IsValid() {
+				log.Fatalf("Invalid app type: %s. Must be one of: %v", appType, AllAppTypes)
+			}
+
+			cfg := &GeneratorConfig{
+				Name:      args[0],
+				Database:  dbEnum,
+				AppType:   appTypeEnum,
+				InitGit:   initGit,
+				OutputDir: outputDir,
+				SMTP:      smtp,
+				Storage:   storage,
+			}
+
+			err := Generate(cfg)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+		},
+	}
+
+	cmd.Flags().StringVarP(&appType, "appType", "t", "api", fmt.Sprintf("App type %v", AllAppTypes))
+	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", AllDatabases))
+	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
+	cmd.Flags().BoolVar(&initGit, "git", true, "Initialize git")
+	cmd.Flags().BoolVar(&smtp, "smtp", true, "Add smtp feature")
+	cmd.Flags().BoolVar(&storage, "storage", true, "Add storage feature (S3)")
+	cmd.Flags().BoolVar(&auth, "auth", true, "Add authentication feature")
+
+	return cmd
 }
 
 func Generate(cfg *GeneratorConfig) error {

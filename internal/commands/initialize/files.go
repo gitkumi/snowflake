@@ -1,4 +1,4 @@
-package generator
+package initialize
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"text/template"
 )
 
 type FileExclusions struct {
@@ -18,6 +19,17 @@ type FileExclusions struct {
 
 type FileRenames struct {
 	ByAppType map[AppType]map[string]string
+}
+
+func CreateTemplateFuncs(cfg *GeneratorConfig) template.FuncMap {
+	return template.FuncMap{
+		"DatabaseMigration": func(filename string) (string, error) {
+			return LoadDatabaseMigration(cfg.Database, filename)
+		},
+		"DatabaseQuery": func(filename string) (string, error) {
+			return LoadDatabaseQuery(cfg.Database, filename)
+		},
+	}
 }
 
 func CreateFileExclusions() *FileExclusions {
