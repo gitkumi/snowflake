@@ -2,8 +2,6 @@ package initialize
 
 import (
 	"fmt"
-	initializetemplate "github.com/gitkumi/snowflake/internal/commands/initialize/template"
-	"path/filepath"
 )
 
 type AppType string
@@ -106,22 +104,4 @@ func (d Database) Import() string {
 	default:
 		return ""
 	}
-}
-
-func LoadDatabaseMigration(db Database, filename string) (string, error) {
-	fragmentPath := filepath.Join("fragments/database", string(db), "migrations", filename)
-	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read database fragment: %w", err)
-	}
-	return string(content), nil
-}
-
-func LoadDatabaseQuery(db Database, filename string) (string, error) {
-	fragmentPath := filepath.Join("fragments/database", string(db), "queries", filename)
-	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read database query fragment: %w", err)
-	}
-	return string(content), nil
 }

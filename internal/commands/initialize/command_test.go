@@ -24,7 +24,7 @@ func TestGenerateSQLite3(t *testing.T) {
 		Auth:      true,
 	}
 
-	err = Generate(cf)
+	err = initialize(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +53,7 @@ func TestGeneratePostgres(t *testing.T) {
 		Auth:      true,
 	}
 
-	err = Generate(cfg)
+	err = initialize(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func TestGenerateMySQL(t *testing.T) {
 		Auth:      true,
 	}
 
-	err = Generate(cfg)
+	err = initialize(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func TestGenerateWebApp(t *testing.T) {
 		OutputDir: tmpDir,
 	}
 
-	err = Generate(cfg)
+	err = initialize(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,7 +153,7 @@ func TestGenerateNoSMTP(t *testing.T) {
 		Auth:      true,
 	}
 
-	err = Generate(cf)
+	err = initialize(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -182,7 +182,7 @@ func TestGenerateNoStorage(t *testing.T) {
 		Auth:      true,
 	}
 
-	err = Generate(cf)
+	err = initialize(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -211,7 +211,7 @@ func TestGenerateNoAuth(t *testing.T) {
 		Auth:      false,
 	}
 
-	err = Generate(cf)
+	err = initialize(cf)
 	if err != nil {
 		t.Fatal(err)
 	}

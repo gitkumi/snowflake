@@ -12,7 +12,7 @@ type Command struct {
 	Args    []string
 }
 
-func RunPostCommands(project *Project, outputPath string) error {
+func runPostCommands(project *Project, outputPath string) error {
 	commands := []Command{
 		{"snowflake: go mod init", "go", []string{"mod", "init", project.Name}},
 		{"snowflake: go mod tidy", "go", []string{"mod", "tidy"}},
@@ -21,14 +21,14 @@ func RunPostCommands(project *Project, outputPath string) error {
 	}
 
 	for _, cmdDef := range commands {
-		if err := RunCommand(outputPath, cmdDef); err != nil {
+		if err := runCommand(outputPath, cmdDef); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func RunGitCommands(outputPath string) error {
+func runGitCommands(outputPath string) error {
 	commands := []Command{
 		{"", "git", []string{"init"}},
 		{"", "git", []string{"add", "-A"}},
@@ -37,14 +37,14 @@ func RunGitCommands(outputPath string) error {
 
 	fmt.Println("snowflake: initializing git")
 	for _, cmdDef := range commands {
-		if err := RunCommand(outputPath, cmdDef); err != nil {
+		if err := runCommand(outputPath, cmdDef); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func RunCommand(workingDir string, command Command) error {
+func runCommand(workingDir string, command Command) error {
 	if command.Message != "" {
 		fmt.Println(command.Message)
 	}

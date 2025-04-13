@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	initializetemplate "github.com/gitkumi/snowflake/internal/commands/initialize/template"
 )
 
 type FileExclusions struct {
@@ -20,18 +22,36 @@ type FileRenames struct {
 	ByAppType map[AppType]map[string]string
 }
 
-func CreateTemplateFuncs(cfg *InitConfig) template.FuncMap {
+func createTemplateFuncs(cfg *InitConfig) template.FuncMap {
 	return template.FuncMap{
 		"DatabaseMigration": func(filename string) (string, error) {
-			return LoadDatabaseMigration(cfg.Database, filename)
+			return loadDatabaseMigration(cfg.Database, filename)
 		},
 		"DatabaseQuery": func(filename string) (string, error) {
-			return LoadDatabaseQuery(cfg.Database, filename)
+			return loadDatabaseQuery(cfg.Database, filename)
 		},
 	}
 }
 
-func CreateFileExclusions() *FileExclusions {
+func loadDatabaseMigration(db Database, filename string) (string, error) {
+	fragmentPath := filepath.Join("fragments/database", string(db), "migrations", filename)
+	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read database fragment: %w", err)
+	}
+	return string(content), nil
+}
+
+func loadDatabaseQuery(db Database, filename string) (string, error) {
+	fragmentPath := filepath.Join("fragments/database", string(db), "queries", filename)
+	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read database query fragment: %w", err)
+	}
+	return string(content), nil
+}
+
+func createFileExclusions() *FileExclusions {
 	return &FileExclusions{
 		NoSMTP: []string{
 			"/internal/smtp/mailer.go",
@@ -75,7 +95,7 @@ func CreateFileExclusions() *FileExclusions {
 	}
 }
 
-func CreateFileRenames() *FileRenames {
+func createFileRenames() *FileRenames {
 	return &FileRenames{
 		ByAppType: map[AppType]map[string]string{
 			Web: {
@@ -85,10 +105,9 @@ func CreateFileRenames() *FileRenames {
 	}
 }
 
-func ShouldExcludeTemplateFile(templateFileName string, project *Project, exclusions *FileExclusions) bool {
+func shouldExcludeTemplateFile(templateFileName string, project *Project, exclusions *FileExclusions) bool {
 	fileName := strings.TrimSuffix(templateFileName, ".templ")
 
-	// Check app type exclusions
 	if excludedPaths, ok := exclusions.ByAppType[project.AppType]; ok {
 		for _, excludedPath := range excludedPaths {
 			if fileName == excludedPath {
@@ -97,7 +116,6 @@ func ShouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 		}
 	}
 
-	// Check database type exclusions
 	if excludedPaths, ok := exclusions.ByDatabase[project.Database]; ok {
 		for _, excludedPath := range excludedPaths {
 			if fileName == excludedPath {
@@ -133,7 +151,7 @@ func ShouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 	return false
 }
 
-func RenameFiles(project *Project, outputPath string, renames *FileRenames) error {
+func renameFiles(project *Project, outputPath string, renames *FileRenames) error {
 	renameMappings, ok := renames.ByAppType[project.AppType]
 	if !ok {
 		return nil

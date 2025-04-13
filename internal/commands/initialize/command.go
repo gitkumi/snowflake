@@ -98,7 +98,7 @@ func InitProject() *cobra.Command {
 				Storage:   storage,
 			}
 
-			err := Generate(cfg)
+			err := initialize(cfg)
 			if err != nil {
 				log.Fatal(err.Error())
 			}
@@ -116,7 +116,7 @@ func InitProject() *cobra.Command {
 	return cmd
 }
 
-func Generate(cfg *InitConfig) error {
+func initialize(cfg *InitConfig) error {
 	project := &Project{
 		Name:     cfg.Name,
 		Database: cfg.Database,
@@ -129,24 +129,24 @@ func Generate(cfg *InitConfig) error {
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
 	templateFiles := initializetemplate.BaseFiles
 
-	templateFuncs := CreateTemplateFuncs(cfg)
-	exclusions := CreateFileExclusions()
-	renames := CreateFileRenames()
+	templateFuncs := createTemplateFuncs(cfg)
+	exclusions := createFileExclusions()
+	renames := createFileRenames()
 
-	if err := CreateFiles(project, outputPath, templateFiles, templateFuncs, exclusions); err != nil {
+	if err := createFiles(project, outputPath, templateFiles, templateFuncs, exclusions); err != nil {
 		return err
 	}
 
-	if err := RenameFiles(project, outputPath, renames); err != nil {
+	if err := renameFiles(project, outputPath, renames); err != nil {
 		return err
 	}
 
-	if err := RunPostCommands(project, outputPath); err != nil {
+	if err := runPostCommands(project, outputPath); err != nil {
 		return err
 	}
 
 	if cfg.InitGit {
-		if err := RunGitCommands(outputPath); err != nil {
+		if err := runGitCommands(outputPath); err != nil {
 			return err
 		}
 	}
@@ -172,7 +172,7 @@ Run your new project:
 	return nil
 }
 
-func CreateFiles(project *Project, outputPath string, templateFiles fs.FS,
+func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 	templateFuncs map[string]interface{}, exclusions *FileExclusions) error {
 
 	fmt.Println("Generating files...")
@@ -196,7 +196,7 @@ func CreateFiles(project *Project, outputPath string, templateFiles fs.FS,
 		templateFileName := strings.TrimPrefix(path, "base")
 		targetPath := filepath.Join(outputPath, templateFileName)
 
-		if ShouldExcludeTemplateFile(templateFileName, project, exclusions) {
+		if shouldExcludeTemplateFile(templateFileName, project, exclusions) {
 			return nil
 		}
 
