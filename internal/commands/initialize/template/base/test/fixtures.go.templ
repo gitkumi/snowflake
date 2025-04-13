@@ -33,6 +33,37 @@ func mergeParams[T any](left, right T) T {
 	return left
 }
 
+func (t TestApplication) CreateBookFixture(custom repo.CreateBookParams) repo.Book {
+	ctx := context.Background()
+	fake := faker.New()
+
+	defaultData := repo.CreateBookParams{
+		Title: fake.Lorem().Sentence(1),
+	}
+
+	merged := mergeParams(defaultData, custom)
+	res, err := t.Query.CreateBook(ctx, merged)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	{{- if eq .Database.String "mysql"}}
+	id, err := res.LastInsertId()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	book, err := t.Query.GetBook(ctx, id)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return book
+	{{- else }}
+	return res
+	{{- end }}
+}
+
 {{- if .Auth }}
 func (t TestApplication) CreateUserFixture(custom repo.CreateUserParams) repo.User {
 	ctx := context.Background()

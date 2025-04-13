@@ -1,0 +1,219 @@
+package handler_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"{{ .Name }}/internal/application/handler"
+	"{{ .Name }}/internal/repo"
+	"{{ .Name }}/test"
+	"strconv"
+	"testing"
+)
+
+func TestCreateBook(t *testing.T) {
+	ts, _ := test.Init()
+
+	testCases := []struct {
+		name       string
+		input      handler.CreateBookInput
+		statusCode int
+	}{
+		{
+			name: "Valid Book",
+			input: handler.CreateBookInput{
+				Title:  "Test Book",
+				Author: "Test Author",
+				ISBN:   "1234567890",
+				Genre:  "Fiction",
+			},
+			statusCode: http.StatusCreated,
+		},
+		{
+			name: "Missing Title",
+			input: handler.CreateBookInput{
+				Author: "Test Author",
+				ISBN:   "1234567890",
+				Genre:  "Fiction",
+			},
+			statusCode: http.StatusBadRequest,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			jsonValue, _ := json.Marshal(tc.input)
+
+			rr := httptest.NewRecorder()
+			req, _ := http.NewRequest("POST", "/api/books", bytes.NewBuffer(jsonValue))
+			req.Header.Set("Content-Type", "application/json")
+
+			ts.Application.Router.ServeHTTP(rr, req)
+
+			if rr.Code != tc.statusCode {
+				t.Fatalf("Expected %d got %d", rr.Code, tc.statusCode)
+			}
+
+			var response struct {
+				Data map[string]any `json:"data"`
+			}
+			if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
+				t.Fatalf("Unable to parse response: %v", err)
+			}
+		})
+	}
+}
+
+func TestGetBook(t *testing.T) {
+	ts, _ := test.Init()
+
+	book := ts.CreateBookFixture(repo.CreateBookParams{})
+
+	testCases := []struct {
+		name         string
+		bookID       int64
+		expectedCode int
+	}{
+		{
+			name:         "Valid",
+			bookID:       book.ID,
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			req, _ := http.NewRequest("GET", "/api/books/"+strconv.FormatInt(book.ID, 10), nil)
+
+			ts.Application.Router.ServeHTTP(rr, req)
+
+			if tc.expectedCode != rr.Code {
+				t.Fatalf("Expected %d got %d", tc.expectedCode, rr.Code)
+			}
+		})
+	}
+}
+
+func TestUpdateBook(t *testing.T) {
+	ts, _ := test.Init()
+
+	book := ts.CreateBookFixture(repo.CreateBookParams{})
+
+	testCases := []struct {
+		name         string
+		bookID       int64
+		input        handler.UpdateBookInput
+		expectedCode int
+	}{
+		{
+			name:   "Valid Update",
+			bookID: book.ID,
+			input: handler.UpdateBookInput{
+				Title:  "Updated Book",
+				Author: "Updated Author",
+				ISBN:   "0987654321",
+				Genre:  "Non-Fiction",
+			},
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			jsonValue, _ := json.Marshal(tc.input)
+
+			rr := httptest.NewRecorder()
+			req, _ := http.NewRequest("PATCH", "/api/books/"+strconv.FormatInt(tc.bookID, 10), bytes.NewBuffer(jsonValue))
+			req.Header.Set("Content-Type", "application/json")
+
+			ts.Application.Router.ServeHTTP(rr, req)
+			if tc.expectedCode != rr.Code {
+				t.Fatalf("Expected %d got %d", tc.expectedCode, rr.Code)
+			}
+		})
+	}
+}
+
+func TestListBooks(t *testing.T) {
+	ts, _ := test.Init()
+
+	_ = ts.CreateBookFixture(repo.CreateBookParams{})
+	_ = ts.CreateBookFixture(repo.CreateBookParams{})
+
+	testCases := []struct {
+		name         string
+		expectedCode int
+	}{
+		{
+			name:         "List All Books",
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			req, _ := http.NewRequest("GET", "/api/books", nil)
+
+			ts.Application.Router.ServeHTTP(rr, req)
+
+			if tc.expectedCode != rr.Code {
+				t.Fatalf("Expected %d got %d", tc.expectedCode, rr.Code)
+			}
+
+			var response struct {
+				Data []map[string]any `json:"data"`
+			}
+			if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
+				t.Fatalf("Unable to parse response: %v", err)
+			}
+
+			if len(response.Data) < 2 {
+				t.Fatalf("Expected at least 2 books, got %d", len(response.Data))
+			}
+		})
+	}
+}
+
+func TestDeleteBook(t *testing.T) {
+	ts, _ := test.Init()
+
+	book := ts.CreateBookFixture(repo.CreateBookParams{})
+
+	testCases := []struct {
+		name         string
+		bookID       int64
+		expectedCode int
+	}{
+		{
+			name:         "Valid Delete",
+			bookID:       book.ID,
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			req, _ := http.NewRequest("DELETE", "/api/books/"+strconv.FormatInt(tc.bookID, 10), nil)
+
+			ts.Application.Router.ServeHTTP(rr, req)
+
+			if tc.expectedCode != rr.Code {
+				t.Fatalf("Expected %d got %d", tc.expectedCode, rr.Code)
+			}
+
+			if tc.expectedCode == http.StatusOK {
+				rr := httptest.NewRecorder()
+				req, _ := http.NewRequest("GET", "/api/books/"+strconv.FormatInt(tc.bookID, 10), nil)
+				ts.Application.Router.ServeHTTP(rr, req)
+
+				if rr.Code != http.StatusNotFound {
+					t.Fatalf("Expected %d got %d", http.StatusNotFound, rr.Code)
+				}
+			}
+		})
+	}
+}

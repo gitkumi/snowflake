@@ -66,6 +66,7 @@ func createFileExclusions() *FileExclusions {
 		},
 		NoAuth: []string{
 			"/internal/password/password.go",
+			"/internal/password/password_test.go",
 			"/internal/middleware/auth.go",
 			"/internal/middleware/auth_test.go",
 			"/internal/application/handler/auth_handler_test.go",
