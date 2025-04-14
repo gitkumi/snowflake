@@ -38,7 +38,9 @@ Snowflake is built with these packages. Make sure to check their documentation.
 
 - [Gin](https://gin-gonic.com/)
 
-#### Database (supports "sqlite3", "postgres", "mysql")
+#### Database
+
+Supports "sqlite3", "postgres", "mysql"
 
 - [sqlc](https://github.com/sqlc-dev/sqlc)
 - [goose](https://github.com/pressly/goose)
@@ -47,6 +49,8 @@ Snowflake is built with these packages. Make sure to check their documentation.
 
 - [gotestum](https://github.com/gotestyourself/gotestsum)
 
-#### Templating (only for "web" app type)
+#### Templating 
+
+Only for "web" app type
 
 - [templ](https://templ.guide) 
