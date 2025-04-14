@@ -211,8 +211,8 @@ func (m model) View() string {
 
 func Command() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tui",
-		Short: "Create a new project with the TUI",
+		Use:   "new",
+		Short: "Create a new project using the TUI",
 		Run: func(cmd *cobra.Command, args []string) {
 			m := initialModel()
 			finalModel, err := tea.NewProgram(m).Run()

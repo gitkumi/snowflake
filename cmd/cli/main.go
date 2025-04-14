@@ -32,7 +32,7 @@ func Execute() {
 func showVersion() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
-		Short: "Show current version",
+		Short: "Show the current version",
 		Run: func(cmd *cobra.Command, args []string) {
 			info, ok := debug.ReadBuildInfo()
 			if ok {

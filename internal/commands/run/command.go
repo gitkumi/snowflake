@@ -22,8 +22,8 @@ func Command() *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use:   "new",
-		Short: "Create a new project",
+		Use:   "run",
+		Short: "Create a new project using command-line flags",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if outputDir == "" {
