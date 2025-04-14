@@ -4,16 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"text/template"
 
-	"github.com/spf13/cobra"
-
-	initializetemplate "github.com/gitkumi/snowflake/internal/commands/initialize/template"
+	initializetemplate "github.com/gitkumi/snowflake/internal/initialize/template"
 )
 
 type Project struct {
@@ -25,7 +22,7 @@ type Project struct {
 	Auth     bool
 }
 
-type InitConfig struct {
+type Config struct {
 	Name      string
 	Database  Database
 	AppType   AppType
@@ -37,7 +34,7 @@ type InitConfig struct {
 	NoGit     bool
 }
 
-func Initialize(cfg *InitConfig) error {
+func Initialize(cfg *Config) error {
 	project := &Project{
 		Name:     cfg.Name,
 		Database: cfg.Database,

@@ -20,8 +20,8 @@ func Execute() {
 	}
 
 	cmd.Root().CompletionOptions.DisableDefaultCmd = true
-	cmd.AddCommand(run.InitProject())
-	cmd.AddCommand(tui.Start())
+	cmd.AddCommand(run.Command())
+	cmd.AddCommand(tui.Command())
 	cmd.AddCommand(showVersion())
 
 	if err := cmd.Execute(); err != nil {

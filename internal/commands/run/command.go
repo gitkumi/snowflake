@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func InitProject() *cobra.Command {
+func Command() *cobra.Command {
 	var (
 		database  string
 		appType   string
@@ -59,7 +59,7 @@ func InitProject() *cobra.Command {
 				log.Fatalf("Invalid app type: %s. Must be one of: %v", appType, initialize.AllAppTypes)
 			}
 
-			cfg := &initialize.InitConfig{
+			cfg := &initialize.Config{
 				Name:      args[0],
 				Database:  dbEnum,
 				AppType:   appTypeEnum,

@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/gitkumi/snowflake/internal/commands/initialize"
+	"github.com/gitkumi/snowflake/internal/initialize"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +33,7 @@ type model struct {
 	databases   []initialize.Database
 	features    []feature
 	cursor      int
-	config      *initialize.InitConfig
+	config      *initialize.Config
 	err         error
 	done        bool
 }
@@ -58,7 +58,7 @@ func initialModel() model {
 		appTypes:    initialize.AllAppTypes,
 		databases:   initialize.AllDatabases,
 		features:    features,
-		config:      &initialize.InitConfig{},
+		config:      &initialize.Config{},
 	}
 }
 
@@ -209,7 +209,7 @@ func (m model) View() string {
 	return s.String()
 }
 
-func Start() *cobra.Command {
+func Command() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tui",
 		Short: "Create a new project with the TUI",
