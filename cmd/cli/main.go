@@ -5,7 +5,7 @@ import (
 	"log"
 	"runtime/debug"
 
-	"github.com/gitkumi/snowflake/internal/commands/initialize"
+	"github.com/gitkumi/snowflake/internal/commands/run"
 	"github.com/gitkumi/snowflake/internal/commands/tui"
 	"github.com/spf13/cobra"
 )
@@ -20,7 +20,7 @@ func Execute() {
 	}
 
 	cmd.Root().CompletionOptions.DisableDefaultCmd = true
-	cmd.AddCommand(initialize.InitProject())
+	cmd.AddCommand(run.InitProject())
 	cmd.AddCommand(tui.Start())
 	cmd.AddCommand(showVersion())
 
