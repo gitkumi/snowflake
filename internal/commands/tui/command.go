@@ -97,10 +97,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			case stepFeatures:
 				m.step = stepConfirm
-				m.config.NoSMTP = !m.features[0].enabled
-				m.config.NoStorage = !m.features[1].enabled
-				m.config.NoAuth = !m.features[2].enabled
-				m.config.NoGit = !m.features[3].enabled
+				m.config.NoGit = !m.features[0].enabled
+				m.config.NoSMTP = !m.features[1].enabled
+				m.config.NoStorage = !m.features[2].enabled
+				m.config.NoAuth = !m.features[3].enabled
 				return m, nil
 
 			case stepConfirm:
@@ -197,10 +197,10 @@ func (m model) View() string {
 		s.WriteString(fmt.Sprintf("App Type: %s\n", m.config.AppType))
 		s.WriteString(fmt.Sprintf("Database: %s\n", m.config.Database))
 		s.WriteString("\nFeatures:\n")
+		s.WriteString(fmt.Sprintf("- Git: %v\n", !m.config.NoGit))
 		s.WriteString(fmt.Sprintf("- SMTP: %v\n", !m.config.NoSMTP))
 		s.WriteString(fmt.Sprintf("- Storage: %v\n", !m.config.NoStorage))
 		s.WriteString(fmt.Sprintf("- Auth: %v\n", !m.config.NoAuth))
-		s.WriteString(fmt.Sprintf("- Git: %v\n", !m.config.NoGit))
 		s.WriteString("\nPress enter to confirm and generate project")
 	}
 
