@@ -8,7 +8,7 @@ import (
 	"strings"
 	"text/template"
 
-	initializetemplate "github.com/gitkumi/snowflake/internal/commands/initialize/template"
+	initializetemplate "github.com/gitkumi/snowflake/internal/initialize/template"
 )
 
 type FileExclusions struct {
@@ -23,7 +23,7 @@ type FileRenames struct {
 	ByAppType map[AppType]map[string]string
 }
 
-func createTemplateFuncs(cfg *InitConfig) template.FuncMap {
+func createTemplateFuncs(cfg *Config) template.FuncMap {
 	return template.FuncMap{
 		"DatabaseMigration": func(filename string) (string, error) {
 			return loadDatabaseMigration(cfg.Database, filename)

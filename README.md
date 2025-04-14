@@ -16,18 +16,15 @@ go install github.com/gitkumi/snowflake@latest
 
 ## Quick Start
 
-Here is how to generate an application.
+Here is how to create an application.
 
 ```sh
-snowflake new acme -d postgres
+# tui
+snowflake new
+
+# cli
+snowflake run acme -d postgres
 ```
-
-## Flags
-
-- `-d`: Database type (`sqlite3`, `postgres`, or `mysql`)
-- `-t`: App type (`api` or `web`)
-
-Check out `help` for more flags.
 
 ## Stack
 
@@ -41,7 +38,7 @@ Snowflake is built with these packages. Make sure to check their documentation.
 
 - [Gin](https://gin-gonic.com/)
 
-#### Database
+#### Database (supports "sqlite3", "postgres", "mysql")
 
 - [sqlc](https://github.com/sqlc-dev/sqlc)
 - [goose](https://github.com/pressly/goose)
@@ -50,6 +47,6 @@ Snowflake is built with these packages. Make sure to check their documentation.
 
 - [gotestum](https://github.com/gotestyourself/gotestsum)
 
-#### Templating
+#### Templating (only for "web" app type)
 
-- [templ](https://templ.guide) (only for "web" app type)
+- [templ](https://templ.guide) 

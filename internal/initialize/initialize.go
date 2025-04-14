@@ -4,16 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"text/template"
 
-	"github.com/spf13/cobra"
-
-	initializetemplate "github.com/gitkumi/snowflake/internal/commands/initialize/template"
+	initializetemplate "github.com/gitkumi/snowflake/internal/initialize/template"
 )
 
 type Project struct {
@@ -25,7 +22,7 @@ type Project struct {
 	Auth     bool
 }
 
-type InitConfig struct {
+type Config struct {
 	Name      string
 	Database  Database
 	AppType   AppType
@@ -37,86 +34,7 @@ type InitConfig struct {
 	NoGit     bool
 }
 
-func InitProject() *cobra.Command {
-	var (
-		database  string
-		appType   string
-		outputDir string
-		noGit     bool
-		noSMTP    bool
-		noStorage bool
-		noAuth    bool
-	)
-
-	cmd := &cobra.Command{
-		Use:   "new",
-		Short: "Create a new project",
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			// Use current working directory if output dir is not provided
-			if outputDir == "" {
-				cwd, err := os.Getwd()
-				if err != nil {
-					log.Fatal(err)
-				}
-				outputDir = cwd
-			}
-
-			// If the provided path is not absolute, make it absolute
-			if !filepath.IsAbs(outputDir) {
-				cwd, err := os.Getwd()
-				if err != nil {
-					log.Fatal(err)
-				}
-				outputDir = filepath.Join(cwd, outputDir)
-			}
-
-			// Ensure output directory exists
-			if _, err := os.Stat(outputDir); os.IsNotExist(err) {
-				if err := os.MkdirAll(outputDir, 0755); err != nil {
-					log.Fatalf("Failed to create output directory: %v", err)
-				}
-			}
-
-			dbEnum := Database(database)
-			if !dbEnum.IsValid() {
-				log.Fatalf("Invalid database type: %s. Must be one of: %v", database, AllDatabases)
-			}
-
-			appTypeEnum := AppType(appType)
-			if !appTypeEnum.IsValid() {
-				log.Fatalf("Invalid app type: %s. Must be one of: %v", appType, AllAppTypes)
-			}
-
-			cfg := &InitConfig{
-				Name:      args[0],
-				Database:  dbEnum,
-				AppType:   appTypeEnum,
-				NoGit:     noGit,
-				OutputDir: outputDir,
-				NoSMTP:    noSMTP,
-				NoStorage: noStorage,
-			}
-
-			err := Initialize(cfg)
-			if err != nil {
-				log.Fatal(err.Error())
-			}
-		},
-	}
-
-	cmd.Flags().StringVarP(&appType, "appType", "t", "api", fmt.Sprintf("App type %v", AllAppTypes))
-	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", AllDatabases))
-	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
-	cmd.Flags().BoolVar(&noGit, "no-git", false, "Remove git")
-	cmd.Flags().BoolVar(&noSMTP, "no-smtp", false, "Remove SMTP")
-	cmd.Flags().BoolVar(&noStorage, "no-storage", false, "Remove Storage (S3)")
-	cmd.Flags().BoolVar(&noAuth, "no-auth", false, "Remove Authentication (Authentication requires SMTP)")
-
-	return cmd
-}
-
-func Initialize(cfg *InitConfig) error {
+func Initialize(cfg *Config) error {
 	project := &Project{
 		Name:     cfg.Name,
 		Database: cfg.Database,
