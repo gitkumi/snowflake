@@ -26,8 +26,12 @@ type CreateBookInput struct {
 	Genre         string           `json:"genre"`
 }
 
+var customMessages = map[string]string{
+	"Title.required": "Title is required.",
+}
+
 type UpdateBookInput struct {
-	Title         string `json:"title" binding:"required"`
+	Title         string `json:"title"`
 	Author        string `json:"author"`
 	ISBN          string `json:"isbn"`
 	Genre         string `json:"genre"`
@@ -80,6 +84,12 @@ func (h *BookHandler) ListBook(c *gin.Context) {
 func (h *BookHandler) CreateBook(c *gin.Context) {
 	var input CreateBookInput
 	if err := c.ShouldBindJSON(&input); err != nil {
+		errs := extractValidationErrors(err, customMessages)
+		if len(errs) > 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"errors": errs})
+			return
+		}
+
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
