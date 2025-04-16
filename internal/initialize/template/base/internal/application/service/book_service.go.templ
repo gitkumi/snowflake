@@ -16,6 +16,14 @@ func NewBookService(q *repo.Queries) *BookService {
 	}
 }
 
+func (s *BookService) ListBook(ctx context.Context, params repo.ListBookParams) ([]repo.Book, error) {
+	return s.Query.ListBook(ctx, params)
+}
+
+func (s *BookService) GetBook(ctx context.Context, id int64) (repo.Book, error) {
+	return s.Query.GetBook(ctx, id)
+}
+
 func (s *BookService) CreateBook(ctx context.Context, title string, author, isbn, genre sql.NullString) (repo.Book, error) {
 	params := repo.CreateBookParams{
 		Title:  title,
@@ -39,14 +47,6 @@ func (s *BookService) CreateBook(ctx context.Context, title string, author, isbn
 	{{ else }}
 	return s.Query.CreateBook(ctx, params)
 	{{- end }}
-}
-
-func (s *BookService) ListBooks(ctx context.Context) ([]repo.Book, error) {
-	return s.Query.ListBooks(ctx)
-}
-
-func (s *BookService) GetBook(ctx context.Context, id int64) (repo.Book, error) {
-	return s.Query.GetBook(ctx, id)
 }
 
 func (s *BookService) UpdateBook(ctx context.Context, id int64, title string, author, isbn, genre sql.NullString) (repo.Book, error) {
