@@ -85,13 +85,13 @@ func createFileExclusions() *FileExclusions {
 		},
 		ByAppType: map[AppType][]string{
 			API: {
-				"/internal/html/hello.templ.templ",
+				"/internal/html/hello.templ",
 				"/internal/application/handler/html_handler.go",
 			},
 		},
 		ByDatabase: map[Database][]string{
 			SQLite3: {
-				"dev.yml.templ",
+				"/dev.yml",
 			},
 		},
 	}

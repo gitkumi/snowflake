@@ -12,6 +12,57 @@ import (
 	"testing"
 )
 
+func TestListBook(t *testing.T) {
+	ts, _ := test.Init()
+
+	_ = ts.CreateBookFixture(repo.CreateBookParams{})
+	_ = ts.CreateBookFixture(repo.CreateBookParams{})
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/books", nil)
+	ts.Application.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected status %d, got %d", http.StatusOK, rr.Code)
+	}
+
+	var response struct {
+		Data []map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
+		t.Fatalf("Unable to parse response: %v", err)
+	}
+
+	if len(response.Data) < 2 {
+		t.Fatalf("Expected at least 2 books, got %d", len(response.Data))
+	}
+}
+
+func TestGetBook(t *testing.T) {
+	ts, _ := test.Init()
+	book := ts.CreateBookFixture(repo.CreateBookParams{})
+
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/books/"+strconv.FormatInt(book.ID, 10), nil)
+	ts.Application.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected status %d, got %d", http.StatusOK, rr.Code)
+	}
+
+	var response struct {
+		Data []map[string]any `json:"data"`
+	}
+	if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
+		t.Fatalf("Unable to parse response: %v", err)
+	}
+
+	bookData := response.Data[0]
+	if title, ok := bookData["title"].(string); !ok || title != book.Title {
+		t.Errorf("Expected title %q, got %v", book.Title, bookData["title"])
+	}
+}
+
 func TestCreateBook(t *testing.T) {
 	ts, _ := test.Init()
 
@@ -65,37 +116,6 @@ func TestCreateBook(t *testing.T) {
 	}
 }
 
-func TestGetBook(t *testing.T) {
-	ts, _ := test.Init()
-
-	book := ts.CreateBookFixture(repo.CreateBookParams{})
-
-	testCases := []struct {
-		name         string
-		bookID       int64
-		expectedCode int
-	}{
-		{
-			name:         "Valid",
-			bookID:       book.ID,
-			expectedCode: http.StatusOK,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			rr := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/api/books/"+strconv.FormatInt(book.ID, 10), nil)
-
-			ts.Application.Router.ServeHTTP(rr, req)
-
-			if tc.expectedCode != rr.Code {
-				t.Fatalf("Expected %d got %d", tc.expectedCode, rr.Code)
-			}
-		})
-	}
-}
-
 func TestUpdateBook(t *testing.T) {
 	ts, _ := test.Init()
 
@@ -131,47 +151,6 @@ func TestUpdateBook(t *testing.T) {
 			ts.Application.Router.ServeHTTP(rr, req)
 			if tc.expectedCode != rr.Code {
 				t.Fatalf("Expected %d got %d", tc.expectedCode, rr.Code)
-			}
-		})
-	}
-}
-
-func TestListBooks(t *testing.T) {
-	ts, _ := test.Init()
-
-	_ = ts.CreateBookFixture(repo.CreateBookParams{})
-	_ = ts.CreateBookFixture(repo.CreateBookParams{})
-
-	testCases := []struct {
-		name         string
-		expectedCode int
-	}{
-		{
-			name:         "List All Books",
-			expectedCode: http.StatusOK,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			rr := httptest.NewRecorder()
-			req, _ := http.NewRequest("GET", "/api/books", nil)
-
-			ts.Application.Router.ServeHTTP(rr, req)
-
-			if tc.expectedCode != rr.Code {
-				t.Fatalf("Expected %d got %d", tc.expectedCode, rr.Code)
-			}
-
-			var response struct {
-				Data []map[string]any `json:"data"`
-			}
-			if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
-				t.Fatalf("Unable to parse response: %v", err)
-			}
-
-			if len(response.Data) < 2 {
-				t.Fatalf("Expected at least 2 books, got %d", len(response.Data))
 			}
 		})
 	}
