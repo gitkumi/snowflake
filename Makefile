@@ -18,7 +18,7 @@ run:
 
 .PHONY: test
 test:
-	gotestsum
+	gotestsum -f testname
 
 .PHONY: build
 build:
