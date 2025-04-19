@@ -19,22 +19,30 @@ type HealthService struct {
 }
 
 {{- if .Storage }}
-  {{- if ne .Database.String "none" }}
+	{{- if ne .Database.String "none" }}
 func NewHealthService(db *sql.DB, storage storage.Storage) *HealthService {
 	return &HealthService{
 		DB:      db,
 		Storage: storage,
 	}
 }
-  {{- else }}
+	{{- else }}
 func NewHealthService(storage storage.Storage) *HealthService {
 	return &HealthService{
 		Storage: storage,
 	}
 }
-  {{- end }}
+	{{- end }}
 {{- else }}
+	{{- if ne .Database.String "none" }}
+func NewHealthService(db *sql.DB) *HealthService {
+	return &HealthService{
+		DB: db,
+	}
+}
+	{{- else }}
 func NewHealthService() *HealthService {
 	return &HealthService{}
 }
+	{{- end }}
 {{- end }}

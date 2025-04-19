@@ -1,10 +1,10 @@
 package application
 
 import (
-	{{- if ne .Database.String "none" }}
-	"database/sql"
 	"{{ .Name }}/internal/application/handler"
 	"{{ .Name }}/internal/application/service"
+	{{- if ne .Database.String "none" }}
+	"database/sql"
 	"{{ .Name }}/internal/repo"
 	{{- end }}
 	{{- if .SMTP }}
@@ -101,6 +101,10 @@ func New(cfg *Config) (*Application, error) {
 	{{- end }}
 
 	healthHandler := handler.NewHealthHandler(healthService)
+
+	{{- if eq .AppType "web"}}
+	htmlHandler := handler.NewHTMLHandler()
+	{{- end }}
 
 	handlers := &Handlers{
 		{{- if ne .Database.String "none" }}
