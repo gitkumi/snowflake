@@ -23,6 +23,7 @@ type Project struct {
 }
 
 type Config struct {
+	Quiet     bool
 	Name      string
 	Database  Database
 	AppType   AppType
@@ -34,7 +35,7 @@ type Config struct {
 	NoGit     bool
 }
 
-func Initialize(cfg *Config) error {
+func Run(cfg *Config) error {
 	project := &Project{
 		Name:     cfg.Name,
 		Database: cfg.Database,
@@ -51,7 +52,7 @@ func Initialize(cfg *Config) error {
 	exclusions := createFileExclusions()
 	renames := createFileRenames()
 
-	if err := createFiles(project, outputPath, templateFiles, templateFuncs, exclusions); err != nil {
+	if err := createFiles(project, outputPath, templateFiles, templateFuncs, exclusions, cfg.Quiet); err != nil {
 		return err
 	}
 
@@ -59,41 +60,45 @@ func Initialize(cfg *Config) error {
 		return err
 	}
 
-	if err := runPostCommands(project, outputPath); err != nil {
+	if err := runPostCommands(project, outputPath, cfg.Quiet); err != nil {
 		return err
 	}
 
 	if !cfg.NoGit {
-		if err := runGitCommands(outputPath); err != nil {
+		if err := runGitCommands(outputPath, cfg.Quiet); err != nil {
 			return err
 		}
 	}
 
-	fmt.Println("")
-	successMessage := fmt.Sprintf(`✅ Snowflake project '%s' generated successfully! 🎉
+	if !cfg.Quiet {
+		fmt.Println("")
+		successMessage := fmt.Sprintf(`✅ Snowflake project '%s' generated successfully! 🎉
 
 Run your new project:
 
   $ cd %s`, project.Name, project.Name)
 
-	if project.Database == Postgres || project.Database == MySQL {
-		successMessage += `
+		if project.Database == Postgres || project.Database == MySQL {
+			successMessage += `
   $ make db.init  # Initialize the docker database dev environment
   $ make dev`
-	} else {
-		successMessage += `
+		} else {
+			successMessage += `
   $ make dev`
-	}
+		}
 
-	fmt.Println(successMessage)
+		fmt.Println(successMessage)
+	}
 
 	return nil
 }
 
 func createFiles(project *Project, outputPath string, templateFiles fs.FS,
-	templateFuncs map[string]interface{}, exclusions *FileExclusions) error {
+	templateFuncs map[string]interface{}, exclusions *FileExclusions, quiet bool) error {
 
-	fmt.Println("Generating files...")
+	if !quiet {
+		fmt.Println("Generating files...")
+	}
 
 	// Use a buffer pool to reduce allocations when processing templates
 	bufPool := sync.Pool{

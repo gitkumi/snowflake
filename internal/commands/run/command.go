@@ -19,6 +19,7 @@ func Command() *cobra.Command {
 		noSMTP    bool
 		noStorage bool
 		noAuth    bool
+		quiet     bool
 	)
 
 	cmd := &cobra.Command{
@@ -60,6 +61,7 @@ func Command() *cobra.Command {
 			}
 
 			cfg := &initialize.Config{
+				Quiet:     quiet,
 				Name:      args[0],
 				Database:  dbEnum,
 				AppType:   appTypeEnum,
@@ -69,7 +71,7 @@ func Command() *cobra.Command {
 				NoStorage: noStorage,
 			}
 
-			err := initialize.Initialize(cfg)
+			err := initialize.Run(cfg)
 			if err != nil {
 				log.Fatal(err.Error())
 			}
@@ -79,6 +81,7 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVarP(&appType, "appType", "t", "api", fmt.Sprintf("App type %v", initialize.AllAppTypes))
 	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", initialize.AllDatabases))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
+	cmd.Flags().BoolVar(&quiet, "quiet", false, "Disable project generation messages")
 	cmd.Flags().BoolVar(&noGit, "no-git", false, "Remove git")
 	cmd.Flags().BoolVar(&noSMTP, "no-smtp", false, "Remove SMTP")
 	cmd.Flags().BoolVar(&noStorage, "no-storage", false, "Remove Storage (S3)")

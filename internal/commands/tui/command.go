@@ -226,7 +226,7 @@ func Command() *cobra.Command {
 				return
 			}
 
-			if err := initialize.Initialize(m.config); err != nil {
+			if err := initialize.Run(m.config); err != nil {
 				fmt.Printf("error creating project: %v\n", err)
 			}
 		},
