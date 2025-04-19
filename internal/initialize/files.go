@@ -35,6 +35,10 @@ func createTemplateFuncs(cfg *Config) template.FuncMap {
 }
 
 func loadDatabaseMigration(db Database, filename string) (string, error) {
+	if db == None {
+		return "", nil
+	}
+
 	fragmentPath := filepath.Join("fragments/database", string(db), "migrations", filename)
 	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
 	if err != nil {
@@ -44,6 +48,10 @@ func loadDatabaseMigration(db Database, filename string) (string, error) {
 }
 
 func loadDatabaseQuery(db Database, filename string) (string, error) {
+	if db == None {
+		return "", nil
+	}
+
 	fragmentPath := filepath.Join("fragments/database", string(db), "queries", filename)
 	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
 	if err != nil {
@@ -74,6 +82,7 @@ func createFileExclusions() *FileExclusions {
 			"/internal/application/handler/auth_handler.go",
 			"/internal/application/service/auth_service_types.go",
 			"/internal/application/service/auth_service.go",
+			"/static/sql/migrations/00001_books.sql",
 			"/static/sql/migrations/00002_organizations.sql",
 			"/static/sql/migrations/00003_users.sql",
 			"/static/sql/migrations/00004_memberships.sql",
@@ -96,6 +105,18 @@ func createFileExclusions() *FileExclusions {
 			None: {
 				"/sqlc.yaml",
 				"/dev.yaml",
+				"/internal/initialize/template/base/static/sql/migrations/00003_users.sql",
+				"/internal/initialize/template/base/static/sql/migrations/00001_books.sql",
+				"/internal/initialize/template/base/static/sql/migrations/00004_memberships.sql",
+				"/internal/initialize/template/base/static/sql/migrations/00002_organizations.sql",
+				"/internal/initialize/template/base/static/sql/migrations/00005_user_auth_tokens.sql",
+				"/internal/initialize/template/base/static/sql/queries/organizations.sql",
+				"/internal/initialize/template/base/static/sql/queries/memberships.sql",
+				"/internal/initialize/template/base/static/sql/queries/users.sql",
+				"/internal/initialize/template/base/static/sql/queries/books.sql",
+				"/internal/initialize/template/base/static/sql/queries/user_auth_tokens.sql",
+				"/internal/initialize/template/base/static/static.go",
+				"/internal/initialize/template/base/internal/application/db.go",
 			},
 		},
 	}
