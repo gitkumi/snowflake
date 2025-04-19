@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"log/slog"
+	"os"
 
 	"{{ .Name }}/internal/application"
 	"{{ .Name }}/internal/env"
@@ -12,25 +14,26 @@ import (
 	"{{ .Name }}/internal/storage"
 	{{- end }}
 
+	"github.com/lmittmann/tint"
 	{{- if ne .Database.String "none" }}
 	_ "{{.Database.Import}}"
 	{{- end }}
 )
 
 func main() {
-	env, err := env.New(".env")
+	vars, err := env.Read(".env")
 	if err != nil {
-		log.Fatal("failed to create env", err)
+		log.Fatal("failed to read environment variables", err)
 	}
 
 	router := application.NewRouter(&application.RouterConfig{
-		GinMode: env.GinMode,
+		GinMode: vars.GinMode,
 	})
 
 	{{- if ne .Database.String "none" }}
 	db, err := application.NewDB(&application.DBConfig{
-		DatabaseConnString: env.DatabaseConnString,
-		MigrateDatabase:    env.MigrateDatabase,
+		DatabaseConnString: vars.DatabaseConnString,
+		MigrateDatabase:    vars.MigrateDatabase,
 	})
 	if err != nil {
 		log.Fatal("failed to create DB", err)
@@ -41,11 +44,11 @@ func main() {
 	mailer := smtp.NewMockMailer()
 	// TODO: uncomment this after setting up your SMTP server
 	// mailer, err := smtp.NewSMTPMailer(&smtp.SMTPMailerConfig{
-	// 	Host:     env.SmtpHost,
-	// 	Port:     env.SmtpPort,
-	// 	Username: env.SmtpUsername,
-	// 	Password: env.SmtpPassword,
-	// 	From:     env.SmtpFrom,
+	// 	Host:     vars.SmtpHost,
+	// 	Port:     vars.SmtpPort,
+	// 	Username: vars.SmtpUsername,
+	// 	Password: vars.SmtpPassword,
+	// 	From:     vars.SmtpFrom,
 	// })
 	// if err != nil {
 	// 	log.Fatal("failed to create mailer", err)
@@ -54,17 +57,25 @@ func main() {
 
 	{{- if .Storage }}
 	storage := storage.NewS3Storage(&storage.S3StorageConfig{
-		AccessKey:   env.S3AccessKey,
-		SecretKey:   env.S3SecretKey,
-		EndpointURL: env.S3EndpointURL,
-		Region:      env.S3Region,
-		Bucket:      env.S3Bucket,
+		AccessKey:   vars.S3AccessKey,
+		SecretKey:   vars.S3SecretKey,
+		EndpointURL: vars.S3EndpointURL,
+		Region:      vars.S3Region,
+		Bucket:      vars.S3Bucket,
 	})
 	{{- end }}
 
+	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug}))
+
+	appEnv := env.Environment(vars.Environment)
+	if !appEnv.IsValid() {
+		log.Fatalf("invalid environment: '%s'", vars.Environment)
+	}
+
 	app, err := application.New(&application.Config{
-		BaseURL: env.BaseURL,
-		Port:    env.Port,
+		Environment: appEnv,
+		BaseURL: vars.BaseURL,
+		Port:    vars.Port,
 		{{- if ne .Database.String "none" }}
 		DB:      db,
 		{{- end }}
@@ -75,6 +86,7 @@ func main() {
 		{{- if .Storage }}
 		Storage: storage,
 		{{- end }}
+		Logger:      logger,
 	})
 	if err != nil {
 		log.Fatal("failed to create application", err)
