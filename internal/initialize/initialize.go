@@ -72,7 +72,7 @@ func Run(cfg *Config) error {
 
 	if !cfg.Quiet {
 		fmt.Println("")
-		successMessage := fmt.Sprintf(`✅ Snowflake project '%s' generated successfully! 🎉
+		successMessage := fmt.Sprintf(`✅ Snowflake project '%s' created! 🎉
 
 Run your new project:
 
