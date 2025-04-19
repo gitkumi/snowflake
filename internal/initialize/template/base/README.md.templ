@@ -1,7 +1,7 @@
 # {{ .Name }}
 
 ## Getting Started
-{{- if ne .Database.String "sqlite3"}}
+{{- if or (ne .Database.String "sqlite3") (ne .Database.String "none")}}
 
 0. Start the development database container:
 ```sh
@@ -29,10 +29,12 @@ make dev
 
 - [Gin](https://gin-gonic.com/)
 
+{{- if ne .Database.String "none" }}
 #### Database
 
 - [sqlc](https://github.com/sqlc-dev/sqlc)
 - [goose](https://github.com/pressly/goose)
+{{- end }}
 {{- if eq .AppType "web"}}
 
 #### Test Runner
@@ -52,6 +54,7 @@ make dev
 - `make run` - Run the build.
 - `make audit` - Audit the project.
 - `make tidy` - Tidy the modules and format.
+{{- if ne .Database.String "none" }}
 - `make db` - Check database status.
 - `make db.up` - Run database migration.
 - `make db.down` - Roll back database migration by 1.
@@ -59,3 +62,4 @@ make dev
 - `make db.destroy` - Destroy database.
 - `make db.reset` - Destroy and create database.
 - `make create <table_name>` - Create an empty migration file.
+{{- end }}

@@ -25,6 +25,7 @@ func (app *Application) registerRoutes() {
 
 	api := app.Router.Group("/api")
 	api.GET("/health", app.handlers.health.Health)
+	{{- if ne .Database.String "none" }}
 	api.GET("/books", app.handlers.book.ListBook)
 	api.GET("/books/:id", app.handlers.book.GetBook)
 	api.POST("/books", app.handlers.book.CreateBook)
@@ -40,5 +41,7 @@ func (app *Application) registerRoutes() {
 	api.POST("/auth/reset-password", app.handlers.auth.CreateResetPassword)
 	api.POST("/auth/reset-password/:token", app.handlers.auth.ConsumeResetPassword)
 	{{- end }}
+	{{- end }}
 }
+
 

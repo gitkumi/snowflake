@@ -1,6 +1,8 @@
+{{- if ne .Database.String "none" }}
 export GOOSE_DBSTRING?={{.Database.ConnString .Name}}
 export GOOSE_DRIVER:={{.Database.Driver}}
 export GOOSE_MIGRATION_DIR:=./static/sql/migrations
+{{- end }}
 
 .PHONY: audit
 audit: 
@@ -34,7 +36,9 @@ dev:
 
 .PHONY: build
 build:
+{{- if ne .Database.String "none" }}
 	sqlc generate
+{{- end }}
 {{- if eq .AppType "web"}}
 	templ generate
 	go build -o bin/main cmd/web/*.go
@@ -42,6 +46,7 @@ build:
 	go build -o bin/main cmd/api/*.go
 {{- end }}
 
+{{- if ne .Database.String "none" }}
 .PHONY: db
 db:
 	goose status
@@ -78,6 +83,7 @@ db.create:
 db.drop:
 	docker exec -i dev_mysql \
 		mysql -uroot -pmysql -e "DROP DATABASE IF EXISTS {{ .Name}};"
+{{- end }}
 {{- end }}
 %:
 	@:

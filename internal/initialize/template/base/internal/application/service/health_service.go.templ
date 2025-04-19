@@ -4,25 +4,37 @@ import (
 	{{- if .Storage }}
 	"{{ .Name }}/internal/storage"
 	{{- end }}
+	{{- if ne .Database.String "none" }}
 	"database/sql"
+	{{- end }}
 )
 
 type HealthService struct {
+	{{- if ne .Database.String "none" }}
 	DB      *sql.DB
+	{{- end }}
 	{{- if .Storage }}
 	Storage storage.Storage
 	{{- end }}
 }
 
 {{- if .Storage }}
+  {{- if ne .Database.String "none" }}
 func NewHealthService(db *sql.DB, storage storage.Storage) *HealthService {
-{{- else }}
-func NewHealthService(db *sql.DB) *HealthService {
-{{- end }}
 	return &HealthService{
 		DB:      db,
-		{{- if .Storage }}
 		Storage: storage,
-		{{- end }}
 	}
 }
+  {{- else }}
+func NewHealthService(storage storage.Storage) *HealthService {
+	return &HealthService{
+		Storage: storage,
+	}
+}
+  {{- end }}
+{{- else }}
+func NewHealthService() *HealthService {
+	return &HealthService{}
+}
+{{- end }}

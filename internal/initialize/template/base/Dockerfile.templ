@@ -29,7 +29,9 @@ RUN adduser -D -g '' appuser
 # Environment variables
 ARG BASE_URL
 ARG PORT
+{{- if ne .Database.String "none" }}
 ARG DATABASE_CONN_STRING
+{{- end }}
 
 {{- if .SMTP }}
 ARG SMTP_HOST
@@ -61,9 +63,11 @@ ENV ENVIRONMENT=production \
 	S3_REGION=${S3_REGION} \
 	S3_BUCKET=${S3_BUCKET} \
 	{{- end }}
+	{{- if ne .Database.String "none" }}
+	DATABASE_CONN_STRING=${DATABASE_CONN_STRING} \
+	{{- end }}
 	BASE_URL=${BASE_URL} \
 	PORT=${PORT} \
-	DATABASE_CONN_STRING=${DATABASE_CONN_STRING} \
 	GIN_MODE=release \
 	MIGRATE_DATABASE=true
 

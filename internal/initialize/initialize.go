@@ -42,7 +42,7 @@ func Run(cfg *Config) error {
 		AppType:  cfg.AppType,
 		SMTP:     !cfg.NoSMTP,
 		Storage:  !cfg.NoStorage,
-		Auth:     !cfg.NoAuth && !cfg.NoSMTP,
+		Auth:     !cfg.NoAuth && !cfg.NoSMTP && cfg.Database != None,
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
@@ -96,7 +96,7 @@ Run your new project:
 func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 	templateFuncs map[string]interface{}, exclusions *FileExclusions, quiet bool) error {
 
-	if !quiet {
+	if quiet {
 		fmt.Println("Generating files...")
 	}
 
