@@ -10,7 +10,7 @@ func (s *Application) Task(fn func() error) {
 
 		err := fn()
 		if err != nil {
-			log.Println("Task Error", err)
+			log.Println("task error: ", err)
 		}
 	}()
 }
