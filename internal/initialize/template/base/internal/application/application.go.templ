@@ -30,9 +30,9 @@ import (
 type Handlers struct {
 	{{- if ne .Database.String "none" }}
 	book   *handler.BookHandler
-	{{- if and .SMTP .Auth }}
+		{{- if and .SMTP .Auth }}
 	auth   *handler.AuthHandler
-	{{- end }}
+		{{- end }}
 	{{- end }}
 	health *handler.HealthHandler
 	{{- if eq .AppType "web"}}
