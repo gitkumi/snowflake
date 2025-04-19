@@ -91,7 +91,11 @@ func createFileExclusions() *FileExclusions {
 		},
 		ByDatabase: map[Database][]string{
 			SQLite3: {
-				"/dev.yml",
+				"/dev.yaml",
+			},
+			None: {
+				"/sqlc.yaml",
+				"/dev.yaml",
 			},
 		},
 	}

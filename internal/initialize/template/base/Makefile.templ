@@ -62,12 +62,12 @@ db.down:
 
 .PHONY: db.init
 db.init:
-	docker compose -f dev.yml up -d
+	docker compose -f dev.yaml up -d
 
 .PHONY: db.destroy
 db.destroy:
 	docker rm container dev_mysql -f
-	docker compose -f dev.yml down -v
+	docker compose -f dev.yaml down -v
 
 .PHONY: db.create
 db.create:
