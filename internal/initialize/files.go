@@ -35,6 +35,10 @@ func createTemplateFuncs(cfg *Config) template.FuncMap {
 }
 
 func loadDatabaseMigration(db Database, filename string) (string, error) {
+	if db == None {
+		return "", nil
+	}
+
 	fragmentPath := filepath.Join("fragments/database", string(db), "migrations", filename)
 	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
 	if err != nil {
@@ -44,6 +48,10 @@ func loadDatabaseMigration(db Database, filename string) (string, error) {
 }
 
 func loadDatabaseQuery(db Database, filename string) (string, error) {
+	if db == None {
+		return "", nil
+	}
+
 	fragmentPath := filepath.Join("fragments/database", string(db), "queries", filename)
 	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
 	if err != nil {
@@ -91,7 +99,32 @@ func createFileExclusions() *FileExclusions {
 		},
 		ByDatabase: map[Database][]string{
 			SQLite3: {
-				"/dev.yml",
+				"/dev.yaml",
+			},
+			None: {
+				"/sqlc.yaml",
+				"/dev.yaml",
+				"/static/sql/migrations/00001_books.sql",
+				"/static/sql/migrations/00002_organizations.sql",
+				"/static/sql/migrations/00003_users.sql",
+				"/static/sql/migrations/00004_memberships.sql",
+				"/static/sql/migrations/00005_user_auth_tokens.sql",
+				"/static/sql/queries/organizations.sql",
+				"/static/sql/queries/memberships.sql",
+				"/static/sql/queries/users.sql",
+				"/static/sql/queries/books.sql",
+				"/static/sql/queries/user_auth_tokens.sql",
+				"/static/static.go",
+				"/internal/application/db.go",
+				"/test/fixtures.go",
+				"/internal/application/handler/book_handler.go",
+				"/internal/application/handler/book_handler_test.go",
+				"/internal/application/handler/auth_handler.go",
+				"/internal/application/handler/auth_handler_test.go",
+				"/internal/application/handler/auth_handler_types.go",
+				"/internal/application/service/auth_service.go",
+				"/internal/application/service/auth_service_types.go",
+				"/internal/application/service/book_service.go",
 			},
 		},
 	}

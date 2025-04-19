@@ -31,14 +31,14 @@ const (
 	SQLite3  Database = "sqlite3"
 	Postgres Database = "postgres"
 	MySQL    Database = "mysql"
-	// None     Database = "none"
+	None     Database = "none"
 )
 
 var AllDatabases = []Database{
 	SQLite3,
 	Postgres,
 	MySQL,
-	// None,
+	None,
 }
 
 func (d Database) String() string {

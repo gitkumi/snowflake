@@ -3,7 +3,10 @@ package application
 import (
 	"{{ .Name }}/internal/application/handler"
 	"{{ .Name }}/internal/application/service"
+	{{- if ne .Database.String "none" }}
+	"database/sql"
 	"{{ .Name }}/internal/repo"
+	{{- end }}
 	{{- if .SMTP }}
 	"{{ .Name }}/internal/smtp"
 	{{- end }}
@@ -11,7 +14,6 @@ import (
 	"{{ .Name }}/internal/storage"
 	{{- end }}
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"log"
@@ -26,9 +28,11 @@ import (
 )
 
 type Handlers struct {
+	{{- if ne .Database.String "none" }}
 	book   *handler.BookHandler
-	{{- if and .SMTP .Auth }}
+		{{- if and .SMTP .Auth }}
 	auth   *handler.AuthHandler
+		{{- end }}
 	{{- end }}
 	health *handler.HealthHandler
 	{{- if eq .AppType "web"}}
@@ -43,7 +47,9 @@ type Application struct {
 	handlers *Handlers
 
 	Router  *gin.Engine
+	{{- if ne .Database.String "none" }}
 	DB      *sql.DB
+	{{- end }}
 	{{- if .SMTP }}
 	Mailer  smtp.Mailer
 	{{- end }}
@@ -56,7 +62,9 @@ type Config struct {
 	BaseURL string
 	Port    int
 	Router  *gin.Engine
+	{{- if ne .Database.String "none" }}
 	DB      *sql.DB
+	{{- end }}
 	{{- if .SMTP }}
 	Mailer  smtp.Mailer
 	{{- end }}
@@ -66,21 +74,32 @@ type Config struct {
 }
 
 func New(cfg *Config) (*Application, error) {
+	{{- if ne .Database.String "none" }}
 	query := repo.New(cfg.DB)
 
 	bookService := service.NewBookService(query)
 	bookHandler := handler.NewBookHandler(bookService)
 
-	{{- if and .SMTP .Auth }}
+		{{- if and .SMTP .Auth }}
 	authService := service.NewAuthService(cfg.BaseURL, query, cfg.Mailer)
 	authHandler := handler.NewAuthHandler(authService)
+		{{- end }}
 	{{- end }}
 
 	{{- if .Storage }}
+		{{- if ne .Database.String "none" }}
 	healthService := service.NewHealthService(cfg.DB, cfg.Storage)
+		{{- else }}
+	healthService := service.NewHealthService(cfg.Storage)
+		{{- end }}
 	{{- else }}
+		{{- if ne .Database.String "none" }}
 	healthService := service.NewHealthService(cfg.DB)
+		{{- else }}
+	healthService := service.NewHealthService()
+		{{- end }}
 	{{- end }}
+
 	healthHandler := handler.NewHealthHandler(healthService)
 
 	{{- if eq .AppType "web"}}
@@ -88,7 +107,9 @@ func New(cfg *Config) (*Application, error) {
 	{{- end }}
 
 	handlers := &Handlers{
+		{{- if ne .Database.String "none" }}
 		book: bookHandler,
+		{{- end }}
 		{{- if and .SMTP .Auth}}
 		auth:   authHandler,
 		{{- end }}

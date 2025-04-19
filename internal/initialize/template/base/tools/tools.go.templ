@@ -8,7 +8,9 @@ import (
 	_ "github.com/a-h/templ/cmd/templ"
 	{{- end }}
 	_ "github.com/air-verse/air"
+	{{- if ne .Database.String "none" }}
 	_ "github.com/pressly/goose/v3/cmd/goose"
 	_ "github.com/sqlc-dev/sqlc/cmd/sqlc"
+	{{- end }}
 	_ "gotest.tools/gotestsum"
 )

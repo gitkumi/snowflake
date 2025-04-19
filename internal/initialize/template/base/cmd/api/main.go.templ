@@ -12,7 +12,9 @@ import (
 	"{{ .Name }}/internal/storage"
 	{{- end }}
 
+	{{- if ne .Database.String "none" }}
 	_ "{{.Database.Import}}"
+	{{- end }}
 )
 
 func main() {
@@ -25,13 +27,15 @@ func main() {
 		GinMode: env.GinMode,
 	})
 
+	{{- if ne .Database.String "none" }}
 	db, err := application.NewDB(&application.DBConfig{
 		DatabaseConnString: env.DatabaseConnString,
 		MigrateDatabase:    env.MigrateDatabase,
 	})
 	if err != nil {
-		log.Fatal("failed to create db", err)
+		log.Fatal("failed to create DB", err)
 	}
+	{{- end }}
 	
 	{{- if .SMTP }}
 	mailer := smtp.NewMockMailer()
@@ -61,7 +65,9 @@ func main() {
 	app, err := application.New(&application.Config{
 		BaseURL: env.BaseURL,
 		Port:    env.Port,
+		{{- if ne .Database.String "none" }}
 		DB:      db,
+		{{- end }}
 		Router:  router,
 		{{- if .SMTP }}
 		Mailer:  mailer,

@@ -42,7 +42,7 @@ func Run(cfg *Config) error {
 		AppType:  cfg.AppType,
 		SMTP:     !cfg.NoSMTP,
 		Storage:  !cfg.NoStorage,
-		Auth:     !cfg.NoAuth && !cfg.NoSMTP,
+		Auth:     !cfg.NoAuth && !cfg.NoSMTP && cfg.Database != None,
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
