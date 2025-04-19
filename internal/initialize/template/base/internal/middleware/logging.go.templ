@@ -1,0 +1,45 @@
+package middleware
+
+import (
+	"log/slog"
+	"strings"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/tomasen/realip"
+)
+
+func LoggingMiddleware(logger *slog.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		c.Next()
+		duration := time.Since(start)
+
+		ip := realip.FromRequest(c.Request)
+		method := c.Request.Method
+		url := c.Request.URL.String()
+		proto := c.Request.Proto
+		status := c.Writer.Status()
+		size := c.Writer.Size()
+
+		userAttrs := slog.Group("user", "ip", ip)
+		requestAttrs := slog.Group("request", "method", method, "url", url, "proto", proto)
+		responseAttrs := slog.Group("response", "status", status, "size", size, "duration", duration.String())
+
+		if len(c.Errors) > 0 {
+			errorMessages := make([]string, len(c.Errors))
+			for i, e := range c.Errors {
+				errorMessages[i] = e.Error()
+			}
+			logger.Error("error",
+				userAttrs,
+				requestAttrs,
+				responseAttrs,
+				slog.String("errors", strings.Join(errorMessages, "; ")),
+			)
+		} else {
+			logger.Info("access", userAttrs, requestAttrs, responseAttrs)
+		}
+	}
+}
+

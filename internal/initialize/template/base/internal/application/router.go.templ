@@ -1,6 +1,8 @@
 package application
 
 import (
+	"{{ .Name }}/internal/env"
+	"{{ .Name }}/internal/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -19,10 +21,13 @@ func NewRouter(cfg *RouterConfig) *gin.Engine {
 }
 
 func (app *Application) registerRoutes() {
+	if app.Environment == env.Production {
+		app.Router.Use(middleware.LoggingMiddleware(app.Logger))
+	}
 	{{- if eq .AppType "web"}}
 	app.Router.GET("/", app.handlers.html.TopPage)
-	{{- end }}
 
+	{{- end }}
 	api := app.Router.Group("/api")
 	api.GET("/health", app.handlers.health.Health)
 	{{- if ne .Database.String "none" }}

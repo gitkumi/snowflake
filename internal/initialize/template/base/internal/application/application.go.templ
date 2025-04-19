@@ -3,6 +3,7 @@ package application
 import (
 	"{{ .Name }}/internal/application/handler"
 	"{{ .Name }}/internal/application/service"
+	"{{ .Name }}/internal/env"
 	{{- if ne .Database.String "none" }}
 	"database/sql"
 	"{{ .Name }}/internal/repo"
@@ -17,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os/signal"
 	"strconv"
@@ -41,11 +43,13 @@ type Handlers struct {
 }
 
 type Application struct {
+	Environment env.Environment
 	baseURL  string
 	port     int
 	wg       sync.WaitGroup
 	handlers *Handlers
 
+	Logger  *slog.Logger
 	Router  *gin.Engine
 	{{- if ne .Database.String "none" }}
 	DB      *sql.DB
@@ -71,6 +75,8 @@ type Config struct {
 	{{- if .Storage }}
 	Storage storage.Storage
 	{{- end }}
+	Logger      *slog.Logger
+	Environment env.Environment
 }
 
 func New(cfg *Config) (*Application, error) {
@@ -120,7 +126,9 @@ func New(cfg *Config) (*Application, error) {
 	}
 
 	s := &Application{
+		Environment: cfg.Environment,
 		baseURL:  cfg.BaseURL,
+		Logger:   cfg.Logger,
 		Router:   cfg.Router,
 		handlers: handlers,
 		port:			cfg.Port,
