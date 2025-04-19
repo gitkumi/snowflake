@@ -14,6 +14,7 @@ func TestGenerateSQLite3(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	cf := &Config{
+		Quiet:     true,
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
@@ -24,7 +25,7 @@ func TestGenerateSQLite3(t *testing.T) {
 		NoAuth:    false,
 	}
 
-	err = Initialize(cf)
+	err = Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,6 +44,7 @@ func TestGeneratePostgres(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	cfg := &Config{
+		Quiet:     true,
 		Name:      "acme",
 		Database:  Postgres,
 		AppType:   API,
@@ -53,7 +55,7 @@ func TestGeneratePostgres(t *testing.T) {
 		NoAuth:    false,
 	}
 
-	err = Initialize(cfg)
+	err = Run(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,6 +74,7 @@ func TestGenerateMySQL(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	cfg := &Config{
+		Quiet:     true,
 		Name:      "acme",
 		Database:  MySQL,
 		AppType:   API,
@@ -82,7 +85,7 @@ func TestGenerateMySQL(t *testing.T) {
 		NoAuth:    false,
 	}
 
-	err = Initialize(cfg)
+	err = Run(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,6 +104,7 @@ func TestGenerateWebApp(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	cfg := &Config{
+		Quiet:     true,
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   Web,
@@ -108,7 +112,7 @@ func TestGenerateWebApp(t *testing.T) {
 		NoGit:     true,
 	}
 
-	err = Initialize(cfg)
+	err = Run(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,6 +147,7 @@ func TestGenerateNoSMTP(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	cf := &Config{
+		Quiet:     true,
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
@@ -153,7 +158,7 @@ func TestGenerateNoSMTP(t *testing.T) {
 		NoAuth:    false,
 	}
 
-	err = Initialize(cf)
+	err = Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -172,6 +177,7 @@ func TestGenerateNoStorage(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	cf := &Config{
+		Quiet:     true,
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
@@ -182,7 +188,7 @@ func TestGenerateNoStorage(t *testing.T) {
 		NoAuth:    false,
 	}
 
-	err = Initialize(cf)
+	err = Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -201,6 +207,7 @@ func TestGenerateNoAuth(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	cf := &Config{
+		Quiet:     true,
 		Name:      "acme",
 		Database:  SQLite3,
 		AppType:   API,
@@ -211,7 +218,7 @@ func TestGenerateNoAuth(t *testing.T) {
 		NoAuth:    true,
 	}
 
-	err = Initialize(cf)
+	err = Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}

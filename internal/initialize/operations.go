@@ -12,7 +12,7 @@ type Command struct {
 	Args    []string
 }
 
-func runPostCommands(project *Project, outputPath string) error {
+func runPostCommands(project *Project, outputPath string, quiet bool) error {
 	commands := []Command{
 		{"snowflake: go mod init", "go", []string{"mod", "init", project.Name}},
 		{"snowflake: go mod tidy", "go", []string{"mod", "tidy"}},
@@ -21,31 +21,39 @@ func runPostCommands(project *Project, outputPath string) error {
 	}
 
 	for _, cmdDef := range commands {
-		if err := runCommand(outputPath, cmdDef); err != nil {
+		if err := runCommand(outputPath, cmdDef, quiet); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func runGitCommands(outputPath string) error {
+func runGitCommands(outputPath string, quiet bool) error {
 	commands := []Command{
 		{"", "git", []string{"init"}},
 		{"", "git", []string{"add", "-A"}},
 		{"", "git", []string{"commit", "-m", "Initialize Snowflake project"}},
 	}
 
-	fmt.Println("snowflake: initializing git")
+	if quiet {
+		for i, cmd := range commands {
+			commands[i].Args = append([]string{cmd.Args[0], "-q"}, cmd.Args[1:]...)
+		}
+	}
+
+	if !quiet {
+		fmt.Println("snowflake: initializing git")
+	}
 	for _, cmdDef := range commands {
-		if err := runCommand(outputPath, cmdDef); err != nil {
+		if err := runCommand(outputPath, cmdDef, quiet); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func runCommand(workingDir string, command Command) error {
-	if command.Message != "" {
+func runCommand(workingDir string, command Command, quiet bool) error {
+	if command.Message != "" && !quiet {
 		fmt.Println(command.Message)
 	}
 
