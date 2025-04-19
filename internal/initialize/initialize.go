@@ -96,7 +96,7 @@ Run your new project:
 func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 	templateFuncs map[string]interface{}, exclusions *FileExclusions, quiet bool) error {
 
-	if quiet {
+	if !quiet {
 		fmt.Println("Generating files...")
 	}
 
