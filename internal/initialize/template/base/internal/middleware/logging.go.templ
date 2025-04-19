@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,20 @@ func LoggingMiddleware(logger *slog.Logger) gin.HandlerFunc {
 		requestAttrs := slog.Group("request", "method", method, "url", url, "proto", proto)
 		responseAttrs := slog.Group("response", "status", status, "size", size, "duration", duration.String())
 
-		logger.Info("access", userAttrs, requestAttrs, responseAttrs)
+		if len(c.Errors) > 0 {
+			errorMessages := make([]string, len(c.Errors))
+			for i, e := range c.Errors {
+				errorMessages[i] = e.Error()
+			}
+			logger.Error("error",
+				userAttrs,
+				requestAttrs,
+				responseAttrs,
+				slog.String("errors", strings.Join(errorMessages, "; ")),
+			)
+		} else {
+			logger.Info("access", userAttrs, requestAttrs, responseAttrs)
+		}
 	}
 }
+
