@@ -16,8 +16,8 @@ func TestGenerateNoDB(t *testing.T) {
 	cf := &Config{
 		Quiet:     true,
 		Name:      "acme",
-		Database:  None,
-		AppType:   API,
+		Database:  DatabaseNone,
+		AppType:   AppTypeAPI,
 		OutputDir: tmpDir,
 		NoGit:     true,
 		NoSMTP:    false,
@@ -47,8 +47,8 @@ func TestGenerateSQLite3(t *testing.T) {
 	cf := &Config{
 		Quiet:     true,
 		Name:      "acme",
-		Database:  SQLite3,
-		AppType:   API,
+		Database:  DatabaseSQLite3,
+		AppType:   AppTypeAPI,
 		OutputDir: tmpDir,
 		NoGit:     true,
 		NoSMTP:    false,
@@ -78,8 +78,8 @@ func TestGeneratePostgres(t *testing.T) {
 	cfg := &Config{
 		Quiet:     true,
 		Name:      "acme",
-		Database:  Postgres,
-		AppType:   API,
+		Database:  DatabasePostgres,
+		AppType:   AppTypeAPI,
 		OutputDir: tmpDir,
 		NoGit:     true,
 		NoSMTP:    false,
@@ -109,8 +109,8 @@ func TestGenerateMySQL(t *testing.T) {
 	cfg := &Config{
 		Quiet:     true,
 		Name:      "acme",
-		Database:  MySQL,
-		AppType:   API,
+		Database:  DatabaseMySQL,
+		AppType:   AppTypeAPI,
 		OutputDir: tmpDir,
 		NoGit:     true,
 		NoSMTP:    false,
@@ -140,8 +140,8 @@ func TestGenerateWebApp(t *testing.T) {
 	cfg := &Config{
 		Quiet:     true,
 		Name:      "acme",
-		Database:  SQLite3,
-		AppType:   Web,
+		Database:  DatabaseSQLite3,
+		AppType:   AppTypeWeb,
 		OutputDir: tmpDir,
 		NoGit:     true,
 	}
@@ -183,8 +183,8 @@ func TestGenerateNoSMTP(t *testing.T) {
 	cf := &Config{
 		Quiet:     true,
 		Name:      "acme",
-		Database:  SQLite3,
-		AppType:   API,
+		Database:  DatabaseSQLite3,
+		AppType:   AppTypeAPI,
 		OutputDir: tmpDir,
 		NoGit:     true,
 		NoSMTP:    true,
@@ -214,8 +214,8 @@ func TestGenerateNoStorage(t *testing.T) {
 	cf := &Config{
 		Quiet:     true,
 		Name:      "acme",
-		Database:  SQLite3,
-		AppType:   API,
+		Database:  DatabaseSQLite3,
+		AppType:   AppTypeAPI,
 		OutputDir: tmpDir,
 		NoGit:     true,
 		NoSMTP:    false,
@@ -245,8 +245,8 @@ func TestGenerateNoAuth(t *testing.T) {
 	cf := &Config{
 		Quiet:     true,
 		Name:      "acme",
-		Database:  SQLite3,
-		AppType:   API,
+		Database:  DatabaseSQLite3,
+		AppType:   AppTypeAPI,
 		OutputDir: tmpDir,
 		NoGit:     true,
 		NoSMTP:    false,
@@ -276,8 +276,8 @@ func TestGenerateNoRedis(t *testing.T) {
 	cf := &Config{
 		Quiet:     true,
 		Name:      "acme",
-		Database:  SQLite3,
-		AppType:   API,
+		Database:  DatabaseSQLite3,
+		AppType:   AppTypeAPI,
 		OutputDir: tmpDir,
 		NoGit:     true,
 		NoSMTP:    false,

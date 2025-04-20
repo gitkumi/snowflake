@@ -12,15 +12,16 @@ import (
 
 func Command() *cobra.Command {
 	var (
-		database  string
-		appType   string
-		outputDir string
-		noGit     bool
-		noSMTP    bool
-		noStorage bool
-		noRedis   bool
-		noAuth    bool
-		quiet     bool
+		database      string
+		backgroundJob string
+		appType       string
+		outputDir     string
+		noGit         bool
+		noSMTP        bool
+		noStorage     bool
+		noRedis       bool
+		noAuth        bool
+		quiet         bool
 	)
 
 	cmd := &cobra.Command{
@@ -61,17 +62,23 @@ func Command() *cobra.Command {
 				log.Fatalf("Invalid app type: %s. Must be one of: %v", appType, initialize.AllAppTypes)
 			}
 
+			backgroundJobEnum := initialize.BackgroundJob(backgroundJob)
+			if !backgroundJobEnum.IsValid() {
+				log.Fatalf("Invalid app type: %s. Must be one of: %v", backgroundJob, initialize.AllBackgroundJobs)
+			}
+
 			cfg := &initialize.Config{
-				Quiet:     quiet,
-				Name:      args[0],
-				Database:  dbEnum,
-				AppType:   appTypeEnum,
-				NoGit:     noGit,
-				OutputDir: outputDir,
-				NoSMTP:    noSMTP,
-				NoStorage: noStorage,
-				NoRedis:   noRedis,
-				NoAuth:    noAuth,
+				Quiet:         quiet,
+				Name:          args[0],
+				Database:      dbEnum,
+				BackgroundJob: backgroundJobEnum,
+				AppType:       appTypeEnum,
+				NoGit:         noGit,
+				OutputDir:     outputDir,
+				NoSMTP:        noSMTP,
+				NoStorage:     noStorage,
+				NoRedis:       noRedis,
+				NoAuth:        noAuth,
 			}
 
 			err := initialize.Run(cfg)
@@ -81,8 +88,9 @@ func Command() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&appType, "appType", "t", "api", fmt.Sprintf("App type %v", initialize.AllAppTypes))
+	cmd.Flags().StringVarP(&appType, "app-type", "t", "api", fmt.Sprintf("App type %v", initialize.AllAppTypes))
 	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", initialize.AllDatabases))
+	cmd.Flags().StringVarP(&backgroundJob, "background-job", "b", "basic", fmt.Sprintf("Background Job type %v", initialize.AllBackgroundJobs))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "Disable project generation messages")
 	cmd.Flags().BoolVar(&noGit, "no-git", false, "Remove git")

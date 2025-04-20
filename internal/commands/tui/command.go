@@ -17,6 +17,7 @@ func Command() *cobra.Command {
 			projectName := ""
 			appType := initialize.AllAppTypes[0]
 			database := initialize.AllDatabases[0]
+			backgroundJob := initialize.AllBackgroundJobs[0]
 			selectedFeatures := []string{"Git", "SMTP", "Storage"}
 
 			form := huh.NewForm(
@@ -35,6 +36,11 @@ func Command() *cobra.Command {
 						Title("Select database").
 						Options(huh.NewOptions(initialize.AllDatabases...)...).
 						Value(&database),
+
+					huh.NewSelect[initialize.BackgroundJob]().
+						Title("Select background job").
+						Options(huh.NewOptions(initialize.AllBackgroundJobs[]...)...).
+						Value(&backgroundJob),
 
 					huh.NewMultiSelect[string]().
 						Title("Select features").
@@ -67,6 +73,7 @@ func Command() *cobra.Command {
 			cfg.Name = projectName
 			cfg.AppType = appType
 			cfg.Database = database
+			cfg.BackgroundJob = backgroundJob
 			cfg.NoGit = !featureEnabled("Git")
 			cfg.NoSMTP = !featureEnabled("SMTP")
 			cfg.NoStorage = !featureEnabled("Storage")

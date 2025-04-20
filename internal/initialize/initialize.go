@@ -14,21 +14,23 @@ import (
 )
 
 type Project struct {
-	Name     string
-	Database Database
-	AppType  AppType
-	SMTP     bool
-	Storage  bool
-	Auth     bool
-	Redis    bool
+	Name          string
+	Database      Database
+	BackgroundJob BackgroundJob
+	AppType       AppType
+	SMTP          bool
+	Storage       bool
+	Auth          bool
+	Redis         bool
 }
 
 type Config struct {
-	Quiet     bool
-	Name      string
-	Database  Database
-	AppType   AppType
-	OutputDir string
+	Quiet         bool
+	Name          string
+	Database      Database
+	AppType       AppType
+	BackgroundJob BackgroundJob
+	OutputDir     string
 
 	NoSMTP    bool
 	NoStorage bool
@@ -39,13 +41,14 @@ type Config struct {
 
 func Run(cfg *Config) error {
 	project := &Project{
-		Name:     cfg.Name,
-		Database: cfg.Database,
-		AppType:  cfg.AppType,
-		SMTP:     !cfg.NoSMTP,
-		Storage:  !cfg.NoStorage,
-		Redis:    !cfg.NoRedis,
-		Auth:     !cfg.NoAuth && !cfg.NoSMTP && cfg.Database != None,
+		Name:          cfg.Name,
+		Database:      cfg.Database,
+		BackgroundJob: cfg.BackgroundJob,
+		AppType:       cfg.AppType,
+		SMTP:          !cfg.NoSMTP,
+		Storage:       !cfg.NoStorage,
+		Redis:         !cfg.NoRedis,
+		Auth:          !cfg.NoAuth && !cfg.NoSMTP && cfg.Database != DatabaseNone,
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
@@ -81,7 +84,7 @@ Run your new project:
 
   $ cd %s`, project.Name, project.Name)
 
-		if project.Database == Postgres || project.Database == MySQL || project.Redis {
+		if project.Database == DatabasePostgres || project.Database == DatabaseMySQL || project.Redis {
 			successMessage += `
   $ make devenv # Initialize the docker dev environment
   $ make dev`

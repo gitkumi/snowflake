@@ -36,7 +36,7 @@ func createTemplateFuncs(cfg *Config) template.FuncMap {
 }
 
 func loadDatabaseMigration(db Database, filename string) (string, error) {
-	if db == None {
+	if db == DatabaseNone {
 		return "", nil
 	}
 
@@ -49,7 +49,7 @@ func loadDatabaseMigration(db Database, filename string) (string, error) {
 }
 
 func loadDatabaseQuery(db Database, filename string) (string, error) {
-	if db == None {
+	if db == DatabaseNone {
 		return "", nil
 	}
 
@@ -96,13 +96,13 @@ func createFileExclusions() *FileExclusions {
 			"/static/sql/queries/users.sql",
 		},
 		ByAppType: map[AppType][]string{
-			API: {
+			AppTypeAPI: {
 				"/internal/html/hello.templ",
 				"/internal/application/handler/html_handler.go",
 			},
 		},
 		ByDatabase: map[Database][]string{
-			None: {
+			DatabaseNone: {
 				"/sqlc.yaml",
 				"/dev.yaml",
 				"/static/sql/migrations/00001_books.sql",
@@ -134,7 +134,7 @@ func createFileExclusions() *FileExclusions {
 func createFileRenames() *FileRenames {
 	return &FileRenames{
 		ByAppType: map[AppType]map[string]string{
-			Web: {
+			AppTypeWeb: {
 				"/cmd/api/main.go": "/cmd/web/main.go",
 			},
 		},
@@ -145,7 +145,7 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 	fileName := strings.TrimSuffix(templateFileName, ".templ")
 
 	// Special case for now.
-	if fileName == "/dev.yaml" && project.Database == SQLite3 && !project.Redis {
+	if fileName == "/dev.yaml" && project.Database == DatabaseSQLite3 && !project.Redis {
 		return true
 	}
 
