@@ -17,6 +17,11 @@ import (
 	{{- if .Redis }}
 	"github.com/redis/go-redis/v9"
 	{{- end }}
+	{{- if .BackgroundJob "sqs" }}
+	"acme/internal/queue"
+	{{- else if eq .BackgroundJob "asynq" }}
+	"github.com/hibiken/asynq"
+	{{- end }}
 	"context"
 	"errors"
 	"fmt"
@@ -54,17 +59,11 @@ type Application struct {
 
 	Logger  *slog.Logger
 	Router  *gin.Engine
-	{{- if ne .Database.String "none" }}
-	DB      *sql.DB
-	{{- end }}
 	{{- if .SMTP }}
 	Mailer  smtp.Mailer
 	{{- end }}
 	{{- if .Storage }}
 	Storage storage.Storage
-	{{- end }}
-	{{- if .Redis }}
-	Redis *redis.Client
 	{{- end }}
 }
 
@@ -86,9 +85,24 @@ type Config struct {
 	{{- if .Redis }}
 	Redis *redis.Client
 	{{- end }}
+	{{- if eq .BackgroundJob "sqs" }}
+	Queue   queue.Queue
+	{{- else if eq .BackgroundJob "asynq" }}
+	Asynq   *asynq.Client
+	{{- end }}
 }
 
 func New(cfg *Config) (*Application, error) {
+	// Inject these to service when needed:
+	{{- if .Redis }}
+	// cfg.Redis
+	{{- end }}
+	{{- if eq .BackgroundJob "sqs" }}
+	// cfg.Queue
+	{{- else if eq .BackgroundJob "asynq" }}
+	// cfg.Asynq
+	{{- end }}
+
 	{{- if ne .Database.String "none" }}
 	query := repo.New(cfg.DB)
 
@@ -141,9 +155,6 @@ func New(cfg *Config) (*Application, error) {
 		Router:   cfg.Router,
 		handlers: handlers,
 		port:			cfg.Port,
-		{{- if .Redis }}
-		Redis:		cfg.Redis,
-		{{- end }}
 	}
 
 	err := s.registerRoutes()

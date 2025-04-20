@@ -22,6 +22,12 @@ import (
 	{{- if .Redis }}
 	"github.com/redis/go-redis/v9"
 	{{- end }}
+
+	{{- if eq .BackgroundJob "sqs" }}
+	"acme/internal/queue"
+	{{- else if eq .BackgroundJob "asynq" }}
+	"github.com/hibiken/asynq"
+	{{- end }}
 )
 
 func main() {
@@ -46,7 +52,7 @@ func main() {
 	
 	{{- if .SMTP }}
 	mailer := smtp.NewMockMailer()
-	// TODO: uncomment this after setting up your SMTP server
+	// TODO: uncomment this after setting up your SMTP
 	// mailer, err := smtp.NewSMTPMailer(&smtp.SMTPMailerConfig{
 	// 	Host:     vars.SmtpHost,
 	// 	Port:     vars.SmtpPort,
@@ -60,13 +66,15 @@ func main() {
 	{{- end }}
 
 	{{- if .Storage }}
-	storage := storage.NewS3Storage(&storage.S3StorageConfig{
-		AccessKey:   vars.S3AccessKey,
-		SecretKey:   vars.S3SecretKey,
-		EndpointURL: vars.S3EndpointURL,
-		Region:      vars.S3Region,
-		Bucket:      vars.S3Bucket,
-	})
+	storage := storage.NewMockStorage()
+	// TODO: uncomment this after setting up your S3
+	// storage := storage.NewS3Storage(&storage.S3StorageConfig{
+	// 	AccessKey:   vars.S3AccessKey,
+	// 	SecretKey:   vars.S3SecretKey,
+	// 	EndpointURL: vars.S3EndpointURL,
+	// 	Region:      vars.S3Region,
+	// 	Bucket:      vars.S3Bucket,
+	// })
 	{{- end }}
 
 	{{- if .Redis }}
@@ -75,6 +83,23 @@ func main() {
 		Password: vars.RedisPassword,
 		DB:       vars.RedisDB,
 	})
+	{{- end }}
+	{{- if eq .BackgroundJob "sqs" }}
+	sqs = queue.NewMockQueue()
+	// TODO: Uncomment this after setting up your SQS 
+	// sqs := queue.NewSQSQueue(&queue.SQSQueueConfig{
+	// 	AccessKey: vars.SQSAccessKey,
+	// 	SecretKey: vars.SQSSecretKey,
+	// 	Region:    vars.SQSRegion,
+	// 	QueueURL:  vars.SQSQueueURL,
+	// })
+	{{- else if eq .BackgroundJob "asynq" }}
+	bg := asynq.NewClient(asynq.RedisClientOpt{
+		Addr:     vars.RedisAddr,
+		Password: vars.RedisPassword,
+		DB:       vars.RedisDB,
+	})
+	defer bg.Close()
 	{{- end }}
 
 	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug}))
@@ -97,6 +122,11 @@ func main() {
 		Redis: rdb,
 		{{- end }}
 		Logger:      logger,
+		{{- if eq .BackgroundJob "sqs" }}
+		Queue:       sqs,
+		{{- else if eq .BackgroundJob "asynq" }}
+		Asynq:       bg,
+		{{- end }}
 	})
 	if err != nil {
 		log.Fatal("failed to create application", err)
