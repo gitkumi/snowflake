@@ -67,9 +67,10 @@ func main() {
 
 	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug}))
 
-	appEnv := env.Environment(vars.Environment)
+	environmentStr := os.Getenv("ENVIRONMENT")
+	appEnv := Environment(environmentStr)
 	if !appEnv.IsValid() {
-		log.Fatalf("invalid environment: '%s'", vars.Environment)
+		return nil, fmt.Errorf("invalid environment: '%s'", environmentStr)
 	}
 
 	app, err := application.New(&application.Config{

@@ -73,13 +73,8 @@ func Init() (*TestApplication, error) {
 
 	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug}))
 
-	appEnv := env.Environment(vars.Environment)
-	if !appEnv.IsValid() {
-		log.Fatalf("invalid environment: '%s'", vars.Environment)
-	}
-
 	app, err := application.New(&application.Config{
-		Environment: appEnv,
+		Environment: vars.Environment,
 		BaseURL: vars.BaseURL,
 		Port:    vars.Port,
 		{{- if ne .Database.String "none" }}
