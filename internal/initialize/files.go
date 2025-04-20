@@ -12,12 +12,13 @@ import (
 )
 
 type FileExclusions struct {
-	NoSMTP     []string
-	NoStorage  []string
-	NoRedis    []string
-	NoAuth     []string
-	ByAppType  map[AppType][]string
-	ByDatabase map[Database][]string
+	NoSMTP          []string
+	NoStorage       []string
+	NoRedis         []string
+	NoAuth          []string
+	ByAppType       map[AppType][]string
+	ByDatabase      map[Database][]string
+	ByBackgroundJob map[BackgroundJob][]string
 }
 
 type FileRenames struct {
@@ -128,6 +129,28 @@ func createFileExclusions() *FileExclusions {
 				"/internal/application/service/book_service.go",
 			},
 		},
+		ByBackgroundJob: map[BackgroundJob][]string{
+			BackgroundJobBasic: {
+				"/internal/queue/queue.go",
+				"/internal/queue/queue_sqs.go",
+				"/internal/queue/queue_mock.go",
+			},
+			BackgroundJobAsynq: {
+				"/internal/application/task.go",
+				"/internal/queue/queue.go",
+				"/internal/queue/queue_sqs.go",
+				"/internal/queue/queue_mock.go",
+			},
+			BackgroundJobSQS: {
+				"/internal/application/task.go",
+			},
+			BackgroundJobNone: {
+				"/internal/application/task.go",
+				"/internal/queue/queue.go",
+				"/internal/queue/queue_sqs.go",
+				"/internal/queue/queue_mock.go",
+			},
+		},
 	}
 }
 
@@ -158,6 +181,14 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 	}
 
 	if excludedPaths, ok := exclusions.ByDatabase[project.Database]; ok {
+		for _, excludedPath := range excludedPaths {
+			if fileName == excludedPath {
+				return true
+			}
+		}
+	}
+
+	if excludedPaths, ok := exclusions.ByBackgroundJob[project.BackgroundJob]; ok {
 		for _, excludedPath := range excludedPaths {
 			if fileName == excludedPath {
 				return true
