@@ -3,9 +3,6 @@ module github.com/gitkumi/snowflake
 go 1.24.0
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.36.3
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.67
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.38.5
 	github.com/charmbracelet/huh v0.7.0
 	github.com/spf13/cobra v1.8.0
 )
