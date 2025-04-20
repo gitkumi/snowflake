@@ -18,6 +18,10 @@ import (
 	{{- if ne .Database.String "none" }}
 	_ "{{.Database.Import}}"
 	{{- end }}
+
+	{{- if .Redis }}
+	"github.com/redis/go-redis/v9"
+	{{- end }}
 )
 
 func main() {
@@ -65,6 +69,14 @@ func main() {
 	})
 	{{- end }}
 
+	{{- if .Redis }}
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     vars.RedisAddr,
+		Password: vars.RedisPassword,
+		DB:       vars.RedisDB,
+	})
+	{{- end }}
+
 	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug}))
 
 	app, err := application.New(&application.Config{
@@ -80,6 +92,9 @@ func main() {
 		{{- end }}
 		{{- if .Storage }}
 		Storage: storage,
+		{{- end }}
+		{{- if .Redis }}
+		Redis: rdb,
 		{{- end }}
 		Logger:      logger,
 	})

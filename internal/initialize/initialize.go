@@ -20,6 +20,7 @@ type Project struct {
 	SMTP     bool
 	Storage  bool
 	Auth     bool
+	Redis    bool
 }
 
 type Config struct {
@@ -33,6 +34,7 @@ type Config struct {
 	NoStorage bool
 	NoAuth    bool
 	NoGit     bool
+	NoRedis   bool
 }
 
 func Run(cfg *Config) error {
@@ -42,6 +44,7 @@ func Run(cfg *Config) error {
 		AppType:  cfg.AppType,
 		SMTP:     !cfg.NoSMTP,
 		Storage:  !cfg.NoStorage,
+		Redis:    !cfg.NoRedis,
 		Auth:     !cfg.NoAuth && !cfg.NoSMTP && cfg.Database != None,
 	}
 
@@ -78,9 +81,9 @@ Run your new project:
 
   $ cd %s`, project.Name, project.Name)
 
-		if project.Database == Postgres || project.Database == MySQL {
+		if project.Database == Postgres || project.Database == MySQL || project.Redis {
 			successMessage += `
-  $ make db.init  # Initialize the docker database dev environment
+  $ make devenv # Initialize the docker dev environment
   $ make dev`
 		} else {
 			successMessage += `

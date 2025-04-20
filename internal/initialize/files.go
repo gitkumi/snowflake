@@ -14,6 +14,7 @@ import (
 type FileExclusions struct {
 	NoSMTP     []string
 	NoStorage  []string
+	NoRedis    []string
 	NoAuth     []string
 	ByAppType  map[AppType][]string
 	ByDatabase map[Database][]string
@@ -72,6 +73,9 @@ func createFileExclusions() *FileExclusions {
 			"/internal/storage/storage_s3.go",
 			"/internal/storage/storage_mock.go",
 		},
+		NoRedis: []string{
+			"/internal/middleware/rate_limit.go",
+		},
 		NoAuth: []string{
 			"/internal/password/password.go",
 			"/internal/password/password_test.go",
@@ -98,9 +102,6 @@ func createFileExclusions() *FileExclusions {
 			},
 		},
 		ByDatabase: map[Database][]string{
-			SQLite3: {
-				"/dev.yaml",
-			},
 			None: {
 				"/sqlc.yaml",
 				"/dev.yaml",
@@ -142,6 +143,11 @@ func createFileRenames() *FileRenames {
 
 func shouldExcludeTemplateFile(templateFileName string, project *Project, exclusions *FileExclusions) bool {
 	fileName := strings.TrimSuffix(templateFileName, ".templ")
+
+	// Special case for now.
+	if fileName == "/dev.yaml" && project.Database == SQLite3 && !project.Redis {
+		return true
+	}
 
 	if excludedPaths, ok := exclusions.ByAppType[project.AppType]; ok {
 		for _, excludedPath := range excludedPaths {

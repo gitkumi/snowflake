@@ -66,8 +66,8 @@ db.down:
 
 	{{- if ne .Database.String "sqlite3"}}
 
-.PHONY: db.init
-db.init:
+.PHONY: devenv
+devenv:
 	docker compose -f dev.yaml up -d
 
 .PHONY: db.destroy

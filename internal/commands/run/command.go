@@ -18,6 +18,7 @@ func Command() *cobra.Command {
 		noGit     bool
 		noSMTP    bool
 		noStorage bool
+		noRedis   bool
 		noAuth    bool
 		quiet     bool
 	)
@@ -69,6 +70,8 @@ func Command() *cobra.Command {
 				OutputDir: outputDir,
 				NoSMTP:    noSMTP,
 				NoStorage: noStorage,
+				NoRedis:   noRedis,
+				NoAuth:    noAuth,
 			}
 
 			err := initialize.Run(cfg)
@@ -85,6 +88,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&noGit, "no-git", false, "Remove git")
 	cmd.Flags().BoolVar(&noSMTP, "no-smtp", false, "Remove SMTP")
 	cmd.Flags().BoolVar(&noStorage, "no-storage", false, "Remove Storage (S3)")
+	cmd.Flags().BoolVar(&noRedis, "no-redis", false, "Remove Redis (Redis comes with ratelimit middleware)")
 	cmd.Flags().BoolVar(&noAuth, "no-auth", false, "Remove Authentication (Authentication requires SMTP)")
 
 	return cmd

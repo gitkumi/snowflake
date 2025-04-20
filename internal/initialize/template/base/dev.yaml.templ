@@ -13,8 +13,18 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+{{- if .Redis }}
+  redis:
+    image: redis:7
+    container_name: dev_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+{{ end }}
+
 volumes:
   postgres_data:
+
 {{- else if eq .Database.String "mysql" }}
 services:
   mysql:
@@ -31,6 +41,26 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
+{{- if .Redis }}
+  redis:
+    image: redis:7
+    container_name: dev_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+{{- end }}
+
 volumes:
   mysql_data:
+
+{{- else }}
+  {{- if .Redis }}
+services:
+  redis:
+    image: redis:7
+    container_name: dev_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+  {{- end }}
 {{- end }}
