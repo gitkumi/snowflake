@@ -1,0 +1,56 @@
+package middleware
+
+import (
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
+	"github.com/tomasen/realip"
+	"github.com/ulule/limiter/v3"
+	redisstore "github.com/ulule/limiter/v3/drivers/store/redis"
+)
+
+func RateLimitMiddleware(rdb *redis.Client) (gin.HandlerFunc, error) {
+	store, err := redisstore.NewStoreWithOptions(rdb, limiter.StoreOptions{
+		Prefix:   "ratelimit",
+		MaxRetry: 3,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Define rate (10 requests per second)
+	rate, err := limiter.NewRateFromFormatted("10-S")
+	if err != nil {
+		return nil, err
+	}
+
+	lim := limiter.New(store, rate)
+
+	return func(c *gin.Context) {
+		ip := realip.FromRequest(c.Request)
+
+		ctx := c.Request.Context()
+		limiterCtx, err := lim.Get(ctx, ip)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "Rate limiter failure",
+			})
+			return
+		}
+
+		c.Header("X-RateLimit-Limit", strconv.FormatInt(limiterCtx.Limit, 10))
+		c.Header("X-RateLimit-Remaining", strconv.FormatInt(limiterCtx.Remaining, 10))
+		c.Header("X-RateLimit-Reset", strconv.FormatInt(limiterCtx.Reset, 10))
+
+		if limiterCtx.Reached {
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
+				"error": "Rate limit exceeded",
+			})
+			return
+		}
+
+		c.Next()
+	}, nil
+}

@@ -17,7 +17,7 @@ func Command() *cobra.Command {
 			projectName := ""
 			appType := initialize.AllAppTypes[0]
 			database := initialize.AllDatabases[0]
-			selectedFeatures := []string{"Git", "SMTP", "Storage", "Auth"} // default selected
+			selectedFeatures := []string{"Git", "SMTP", "Storage"}
 
 			form := huh.NewForm(
 				huh.NewGroup(
@@ -42,6 +42,7 @@ func Command() *cobra.Command {
 							huh.NewOption("Git", "Git"),
 							huh.NewOption("SMTP", "SMTP"),
 							huh.NewOption("Storage", "Storage"),
+							huh.NewOption("Redis", "Redis"),
 							huh.NewOption("Auth", "Auth"),
 						).
 						Value(&selectedFeatures),
@@ -69,6 +70,7 @@ func Command() *cobra.Command {
 			cfg.NoGit = !featureEnabled("Git")
 			cfg.NoSMTP = !featureEnabled("SMTP")
 			cfg.NoStorage = !featureEnabled("Storage")
+			cfg.NoRedis = !featureEnabled("Redis")
 			cfg.NoAuth = !featureEnabled("Auth")
 
 			if err := initialize.Run(cfg); err != nil {

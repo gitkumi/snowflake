@@ -1,6 +1,9 @@
 package application
 
 import (
+	{{- if .Redis }}
+	"fmt"
+	{{- end }}
 	"{{ .Name }}/internal/env"
 	"{{ .Name }}/internal/middleware"
 	"github.com/gin-contrib/cors"
@@ -20,8 +23,18 @@ func NewRouter(cfg *RouterConfig) *gin.Engine {
 	return router
 }
 
-func (app *Application) registerRoutes() {
+func (app *Application) registerRoutes() error {
+	{{- if .Redis }}
+	rateLimit, err := middleware.RateLimitMiddleware(app.Redis)
+	if err != nil {
+		return fmt.Errorf("failed to init rate limit middleware: %v", err)
+	}
+	{{- end }}
+
 	if app.Environment == env.Production {
+		{{- if .Redis }}
+		app.Router.Use(rateLimit)
+		{{- end }}
 		app.Router.Use(middleware.LoggingMiddleware(app.Logger))
 	}
 	{{- if eq .AppType "web"}}
@@ -47,6 +60,8 @@ func (app *Application) registerRoutes() {
 	api.POST("/auth/reset-password/:token", app.handlers.auth.ConsumeResetPassword)
 		{{- end }}
 	{{- end }}
+	
+	return nil
 }
 
 

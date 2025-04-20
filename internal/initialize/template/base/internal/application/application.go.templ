@@ -14,6 +14,9 @@ import (
 	{{- if .Storage }}
 	"{{ .Name }}/internal/storage"
 	{{- end }}
+	{{- if .Redis }}
+	"github.com/redis/go-redis/v9"
+	{{- end }}
 	"context"
 	"errors"
 	"fmt"
@@ -60,6 +63,9 @@ type Application struct {
 	{{- if .Storage }}
 	Storage storage.Storage
 	{{- end }}
+	{{- if .Redis }}
+	Redis *redis.Client
+	{{- end }}
 }
 
 type Config struct {
@@ -77,6 +83,9 @@ type Config struct {
 	{{- end }}
 	Logger      *slog.Logger
 	Environment env.Environment
+	{{- if .Redis }}
+	Redis *redis.Client
+	{{- end }}
 }
 
 func New(cfg *Config) (*Application, error) {
@@ -132,9 +141,15 @@ func New(cfg *Config) (*Application, error) {
 		Router:   cfg.Router,
 		handlers: handlers,
 		port:			cfg.Port,
+		{{- if .Redis }}
+		Redis:		cfg.Redis,
+		{{- end }}
 	}
 
-	s.registerRoutes()
+	err := s.registerRoutes()
+	if err != nil {
+		return nil, err
+	}
 
 	return s, nil
 }

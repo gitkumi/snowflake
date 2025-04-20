@@ -23,6 +23,7 @@ func TestGenerateNoDB(t *testing.T) {
 		NoSMTP:    false,
 		NoStorage: false,
 		NoAuth:    false,
+		NoRedis:   false,
 	}
 
 	err = Run(cf)
@@ -53,6 +54,7 @@ func TestGenerateSQLite3(t *testing.T) {
 		NoSMTP:    false,
 		NoStorage: false,
 		NoAuth:    false,
+		NoRedis:   false,
 	}
 
 	err = Run(cf)
@@ -83,6 +85,7 @@ func TestGeneratePostgres(t *testing.T) {
 		NoSMTP:    false,
 		NoStorage: false,
 		NoAuth:    false,
+		NoRedis:   false,
 	}
 
 	err = Run(cfg)
@@ -113,6 +116,7 @@ func TestGenerateMySQL(t *testing.T) {
 		NoSMTP:    false,
 		NoStorage: false,
 		NoAuth:    false,
+		NoRedis:   false,
 	}
 
 	err = Run(cfg)
@@ -186,6 +190,7 @@ func TestGenerateNoSMTP(t *testing.T) {
 		NoSMTP:    true,
 		NoStorage: false,
 		NoAuth:    false,
+		NoRedis:   false,
 	}
 
 	err = Run(cf)
@@ -216,6 +221,7 @@ func TestGenerateNoStorage(t *testing.T) {
 		NoSMTP:    false,
 		NoStorage: true,
 		NoAuth:    false,
+		NoRedis:   false,
 	}
 
 	err = Run(cf)
@@ -246,6 +252,38 @@ func TestGenerateNoAuth(t *testing.T) {
 		NoSMTP:    false,
 		NoStorage: false,
 		NoAuth:    true,
+		NoRedis:   false,
+	}
+
+	err = Run(cf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+		t.Fatal("Project directory was not created")
+	}
+}
+
+func TestGenerateNoRedis(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	cf := &Config{
+		Quiet:     true,
+		Name:      "acme",
+		Database:  SQLite3,
+		AppType:   API,
+		OutputDir: tmpDir,
+		NoGit:     true,
+		NoSMTP:    false,
+		NoStorage: false,
+		NoAuth:    false,
+		NoRedis:   true,
 	}
 
 	err = Run(cf)
