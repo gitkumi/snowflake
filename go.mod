@@ -5,6 +5,7 @@ go 1.24.0
 require (
 	github.com/charmbracelet/huh v0.7.0
 	github.com/spf13/cobra v1.8.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

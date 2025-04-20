@@ -1,0 +1,33 @@
+-- name: ListBook :many
+SELECT * FROM books
+ORDER BY created_at DESC
+LIMIT ?
+OFFSET ?;
+
+-- name: CountBooks :one
+SELECT COUNT(*) AS count FROM books;
+
+-- name: GetBook :one
+SELECT * FROM books
+WHERE id = ? LIMIT 1;
+
+-- name: CreateBook :one
+INSERT INTO books (
+  title, author, isbn, genre
+) VALUES (
+  ?, ?, ?, ?
+)
+RETURNING *;
+
+-- name: UpdateBook :one
+UPDATE books
+SET title = ?,
+    author = ?,
+    isbn = ?,
+    genre = ?
+WHERE id = ?
+RETURNING *;
+
+-- name: DeleteBook :exec
+DELETE FROM books
+WHERE id = ?;
