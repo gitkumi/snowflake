@@ -34,7 +34,7 @@ type TestApplication struct {
 
 func Init() (*TestApplication, error) {
 	{{- if eq .Database.String "sqlite3" }}
-	rootPath, err := vars.FindFilePath("go.mod")
+	rootPath, err := env.FindFilePath("go.mod")
 	if err != nil {
 		log.Fatal("failed to read environment variables", err)
 	}
