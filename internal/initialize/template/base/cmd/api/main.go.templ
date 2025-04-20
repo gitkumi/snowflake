@@ -85,7 +85,7 @@ func main() {
 	})
 	{{- end }}
 	{{- if eq .BackgroundJob "sqs" }}
-	sqs = queue.NewMockQueue()
+	sqs := queue.NewMockQueue()
 	// TODO: Uncomment this after setting up your SQS 
 	// sqs := queue.NewSQSQueue(&queue.SQSQueueConfig{
 	// 	AccessKey: vars.SQSAccessKey,

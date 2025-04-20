@@ -17,10 +17,12 @@ import (
 	{{- if .Redis }}
 	"github.com/redis/go-redis/v9"
 	{{- end }}
-	{{- if .BackgroundJob "sqs" }}
+	{{- if eq .BackgroundJob "sqs" }}
 	"acme/internal/queue"
 	{{- else if eq .BackgroundJob "asynq" }}
 	"github.com/hibiken/asynq"
+	{{- else if eq .BackgroundJob "basic" }}
+	"sync"
 	{{- end }}
 	"context"
 	"errors"
@@ -30,7 +32,6 @@ import (
 	"net/http"
 	"os/signal"
 	"strconv"
-	"sync"
 	"syscall"
 	"time"
 
@@ -54,7 +55,9 @@ type Application struct {
 	Environment env.Environment
 	baseURL  string
 	port     int
+	{{- if eq .BackgroundJob "basic" }}
 	wg       sync.WaitGroup
+	{{- end }}
 	handlers *Handlers
 
 	Logger  *slog.Logger
@@ -157,7 +160,11 @@ func New(cfg *Config) (*Application, error) {
 		port:			cfg.Port,
 	}
 
+	{{- if .Redis }}
+	err := s.registerRoutes(cfg.Redis)
+	{{- else }}
 	err := s.registerRoutes()
+	{{- end }}
 	if err != nil {
 		return nil, err
 	}
@@ -190,5 +197,7 @@ func (app *Application) Run() {
 		log.Println("listen and serve error: ", err)
 	}
 
+	{{- if eq .BackgroundJob "basic" }}
 	app.wg.Wait()
+	{{- end }}
 }

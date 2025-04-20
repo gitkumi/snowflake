@@ -47,7 +47,7 @@ func Run(cfg *Config) error {
 		AppType:       cfg.AppType,
 		SMTP:          !cfg.NoSMTP,
 		Storage:       !cfg.NoStorage,
-		Redis:         !cfg.NoRedis,
+		Redis:         !cfg.NoRedis || cfg.BackgroundJob == BackgroundJobAsynq,
 		Auth:          !cfg.NoAuth && !cfg.NoSMTP && cfg.Database != DatabaseNone,
 	}
 

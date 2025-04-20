@@ -39,7 +39,7 @@ func Command() *cobra.Command {
 
 					huh.NewSelect[initialize.BackgroundJob]().
 						Title("Select background job").
-						Options(huh.NewOptions(initialize.AllBackgroundJobs[]...)...).
+						Options(huh.NewOptions(initialize.AllBackgroundJobs...)...).
 						Value(&backgroundJob),
 
 					huh.NewMultiSelect[string]().
