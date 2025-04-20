@@ -5,46 +5,51 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
-)
 
-type SQLCConfig struct {
-	Version string `yaml:"version"`
-	SQL     []struct {
-		Engine  string `yaml:"engine"`
-		Schema  string `yaml:"schema"`
-		Queries string `yaml:"queries"`
-		Gen     struct {
-			Go struct {
-				Package string `yaml:"package"`
-				Out     string `yaml:"out"`
-			} `yaml:"go"`
-		} `yaml:"gen"`
-	} `yaml:"sql"`
-}
+	sqliteparser "github.com/gitkumi/snowflake/internal/parser/sqlite"
+)
 
 func Command() *cobra.Command {
 	return &cobra.Command{
 		Use:   "gen",
-		Short: "Generated CRUD",
+		Short: "Generate CRUD from SQL",
 		Run: func(cmd *cobra.Command, args []string) {
-			run()
+			parseTable()
+			parseQueries()
 		},
 	}
 }
 
-func run() {
-	data, err := os.ReadFile("testdata/sqlc.yaml")
+func parseQueries() {
+	sqlFilePath := "testdata/queries.sql"
+	content, err := os.ReadFile(sqlFilePath)
 	if err != nil {
-		fmt.Println("Failed to read file:", err)
+		fmt.Printf("Error reading SQL file: %v\n", err)
 		return
 	}
 
-	var config SQLCConfig
-	if err := yaml.Unmarshal(data, &config); err != nil {
-		fmt.Println("Failed to parse YAML:", err)
+	queries, err := sqliteparser.ParseQueries(string(content))
+	if err != nil {
+		fmt.Printf("Error parsing SQL: %v\n", err)
 		return
 	}
 
-	fmt.Println(config.SQL[0].Gen.Go.Out)
+	fmt.Println(queries)
+}
+
+func parseTable() {
+	sqlFilePath := "testdata/migration.sql"
+	content, err := os.ReadFile(sqlFilePath)
+	if err != nil {
+		fmt.Printf("Error reading SQL file: %v\n", err)
+		return
+	}
+
+	schemas, err := sqliteparser.ParseTable(string(content))
+	if err != nil {
+		fmt.Printf("Error parsing SQL: %v\n", err)
+		return
+	}
+
+	fmt.Println(schemas)
 }

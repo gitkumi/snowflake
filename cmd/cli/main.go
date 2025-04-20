@@ -23,7 +23,7 @@ func Execute() {
 	cmd.AddCommand(run.Command())
 	cmd.AddCommand(tui.Command())
 	cmd.AddCommand(version.Command())
-	cmd.AddCommand(generate.Command())
+	// cmd.AddCommand(generate.Command())
 
 	if err := cmd.Execute(); err != nil {
 		log.Fatal(err)
