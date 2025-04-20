@@ -47,6 +47,7 @@ build:
 {{- end }}
 
 {{- if ne .Database.String "none" }}
+
 .PHONY: db
 db:
 	goose status
@@ -63,7 +64,7 @@ db.up:
 db.down:
 	goose down
 
-{{- if ne .Database.String "sqlite3"}}
+	{{- if ne .Database.String "sqlite3"}}
 
 .PHONY: db.init
 db.init:
@@ -83,7 +84,7 @@ db.create:
 db.drop:
 	docker exec -i dev_mysql \
 		mysql -uroot -pmysql -e "DROP DATABASE IF EXISTS {{ .Name}};"
-{{- end }}
+	{{- end }}
 {{- end }}
 %:
 	@:

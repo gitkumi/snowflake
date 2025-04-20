@@ -1,15 +1,17 @@
 package test
 
 import (
-	"{{ .Name }}/internal/password"
 	"{{ .Name }}/internal/repo"
 	"context"
-	"database/sql"
 	"log"
 	"reflect"
 
 	"github.com/jaswdr/faker"
+	{{- if .Auth }}
+	"{{ .Name }}/internal/password"
+	"database/sql"
 	"github.com/matoous/go-nanoid/v2"
+	{{- end }}
 )
 
 func isZeroValue(v reflect.Value) bool {
