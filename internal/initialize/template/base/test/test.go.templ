@@ -26,6 +26,9 @@ import (
 	{{- if .Redis }}
 	"github.com/redis/go-redis/v9"
 	{{- end }}
+	{{- if eq .BackgroundJob "sqs" }}
+	"acme/internal/queue"
+	{{- end }}
 )
 
 type TestApplication struct {
@@ -82,6 +85,8 @@ func Init() (*TestApplication, error) {
 	})
 	{{- end }}
 
+	sqs := queue.NewMockQueue()
+
 	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug}))
 
 	app, err := application.New(&application.Config{
@@ -100,6 +105,7 @@ func Init() (*TestApplication, error) {
 		{{- end }}
 		Logger: logger,
 		Redis: rdb,
+		Queue: sqs,
 	})
 	if err != nil {
 		log.Fatal("failed to create application", err)

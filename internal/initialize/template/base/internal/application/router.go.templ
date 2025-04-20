@@ -3,6 +3,7 @@ package application
 import (
 	{{- if .Redis }}
 	"fmt"
+	"github.com/redis/go-redis/v9"
 	{{- end }}
 	"{{ .Name }}/internal/env"
 	"{{ .Name }}/internal/middleware"
@@ -23,14 +24,15 @@ func NewRouter(cfg *RouterConfig) *gin.Engine {
 	return router
 }
 
-func (app *Application) registerRoutes() error {
-	{{- if .Redis }}
-	rateLimit, err := middleware.RateLimitMiddleware(app.Redis)
+{{- if .Redis }}
+func (app *Application) registerRoutes(redis *redis.Client) error {
+	rateLimit, err := middleware.RateLimitMiddleware(redis)
 	if err != nil {
 		return fmt.Errorf("failed to init rate limit middleware: %v", err)
 	}
-	{{- end }}
-
+{{- else }}
+func (app *Application) registerRoutes() error {
+{{- end }}
 	if app.Environment == env.Production {
 		{{- if .Redis }}
 		app.Router.Use(rateLimit)

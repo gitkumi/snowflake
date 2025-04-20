@@ -7,13 +7,13 @@ import (
 type AppType string
 
 const (
-	API AppType = "api"
-	Web AppType = "web"
+	AppTypeAPI AppType = "api"
+	AppTypeWeb AppType = "web"
 )
 
 var AllAppTypes = []AppType{
-	API,
-	Web,
+	AppTypeAPI,
+	AppTypeWeb,
 }
 
 func (t AppType) IsValid() bool {
@@ -28,17 +28,17 @@ func (t AppType) IsValid() bool {
 type Database string
 
 const (
-	SQLite3  Database = "sqlite3"
-	Postgres Database = "postgres"
-	MySQL    Database = "mysql"
-	None     Database = "none"
+	DatabaseSQLite3  Database = "sqlite3"
+	DatabasePostgres Database = "postgres"
+	DatabaseMySQL    Database = "mysql"
+	DatabaseNone     Database = "none"
 )
 
 var AllDatabases = []Database{
-	SQLite3,
-	Postgres,
-	MySQL,
-	None,
+	DatabaseSQLite3,
+	DatabasePostgres,
+	DatabaseMySQL,
+	DatabaseNone,
 }
 
 func (d Database) String() string {
@@ -56,11 +56,11 @@ func (d Database) IsValid() bool {
 
 func (d Database) ConnString(projectName string) string {
 	switch d {
-	case SQLite3:
+	case DatabaseSQLite3:
 		return projectName + "_dev.db"
-	case Postgres:
+	case DatabasePostgres:
 		return fmt.Sprintf("user=postgres password=postgres dbname=%s host=localhost port=5432 sslmode=disable", projectName)
-	case MySQL:
+	case DatabaseMySQL:
 		return fmt.Sprintf("mysql:mysql@tcp(localhost:3306)/%s?parseTime=true", projectName)
 	default:
 		return ""
@@ -69,11 +69,11 @@ func (d Database) ConnString(projectName string) string {
 
 func (d Database) Driver() string {
 	switch d {
-	case SQLite3:
+	case DatabaseSQLite3:
 		return "sqlite3"
-	case Postgres:
+	case DatabasePostgres:
 		return "postgres"
-	case MySQL:
+	case DatabaseMySQL:
 		return "mysql"
 	default:
 		return ""
@@ -82,11 +82,11 @@ func (d Database) Driver() string {
 
 func (d Database) SQLCEngine() string {
 	switch d {
-	case SQLite3:
+	case DatabaseSQLite3:
 		return "sqlite"
-	case Postgres:
+	case DatabasePostgres:
 		return "postgresql"
-	case MySQL:
+	case DatabaseMySQL:
 		return "mysql"
 	default:
 		return ""
@@ -95,13 +95,38 @@ func (d Database) SQLCEngine() string {
 
 func (d Database) Import() string {
 	switch d {
-	case SQLite3:
+	case DatabaseSQLite3:
 		return "github.com/mattn/go-sqlite3"
-	case Postgres:
+	case DatabasePostgres:
 		return "github.com/lib/pq"
-	case MySQL:
+	case DatabaseMySQL:
 		return "github.com/go-sql-driver/mysql"
 	default:
 		return ""
 	}
+}
+
+type BackgroundJob string
+
+const (
+	BackgroundJobBasic BackgroundJob = "basic"
+	BackgroundJobSQS   BackgroundJob = "sqs"
+	BackgroundJobAsynq BackgroundJob = "asynq"
+	BackgroundJobNone  BackgroundJob = "none"
+)
+
+var AllBackgroundJobs = []BackgroundJob{
+	BackgroundJobBasic,
+	BackgroundJobSQS,
+	BackgroundJobAsynq,
+	BackgroundJobNone,
+}
+
+func (t BackgroundJob) IsValid() bool {
+	for _, bg := range AllBackgroundJobs {
+		if bg == t {
+			return true
+		}
+	}
+	return false
 }
