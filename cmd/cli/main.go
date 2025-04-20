@@ -1,12 +1,11 @@
 package cli
 
 import (
-	"fmt"
 	"log"
-	"runtime/debug"
 
 	"github.com/gitkumi/snowflake/internal/commands/run"
 	"github.com/gitkumi/snowflake/internal/commands/tui"
+	"github.com/gitkumi/snowflake/internal/commands/version"
 	"github.com/spf13/cobra"
 )
 
@@ -22,25 +21,9 @@ func Execute() {
 	cmd.Root().CompletionOptions.DisableDefaultCmd = true
 	cmd.AddCommand(run.Command())
 	cmd.AddCommand(tui.Command())
-	cmd.AddCommand(showVersion())
+	cmd.AddCommand(version.Command())
 
 	if err := cmd.Execute(); err != nil {
 		log.Fatal(err)
-	}
-}
-
-func showVersion() *cobra.Command {
-	return &cobra.Command{
-		Use:   "version",
-		Short: "Show the current version",
-		Run: func(cmd *cobra.Command, args []string) {
-			info, ok := debug.ReadBuildInfo()
-			if ok {
-				fmt.Println(info.Main.Version)
-				return
-			}
-
-			fmt.Println("dev")
-		},
 	}
 }
