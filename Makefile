@@ -18,7 +18,7 @@ run:
 
 .PHONY: test
 test:
-	gotestsum -f testname
+	go run gotest.tools/gotestsum@latest -f testname
 
 .PHONY: build
 build:
