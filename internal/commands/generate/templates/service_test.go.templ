@@ -1,0 +1,20 @@
+package service
+
+import (
+	"{{ .Name }}/internal/{{ .ModuleName }}"
+	"context"
+	"database/sql"
+)
+
+type {{ .Resource }}Service struct {
+	Query *{{ .ModuleName }}.Queries
+}
+
+func New{{ .Resource }}Service(q *{{ .ModuleName }}.Queries) *{{ .Resource }}Service {
+	return &{{ .Resource }}Service{Query: q}
+}
+{{ range .Methods }}
+func (s *{{ $.Resource }}Service) {{ .Name }}(ctx context.Context{{range .Params}}, {{ .Name }} {{ .Type }}{{end}}) ({{range $i, $type := .ReturnType}}{{if gt $i 0}}, {{end}}{{ $type }}{{end}}) {
+	return s.Query.{{ .Name }}(ctx{{range .Params}}, {{ .Name }}{{end}})
+}
+{{ end }}

@@ -1,6 +1,8 @@
 package generate
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -9,7 +11,7 @@ func Command() *cobra.Command {
 		Use:   "gen",
 		Short: "Generate CRUD from SQL",
 		Run: func(cmd *cobra.Command, args []string) {
-			Generate()
+			fmt.Println("wip")
 		},
 	}
 }
