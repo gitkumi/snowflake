@@ -1,13 +1,13 @@
 package handler_test
 
 import (
+	"{{ .Name }}/internal/dto"
+	"{{ .Name }}/internal/repo"
+	"{{ .Name }}/test"
 	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"{{ .Name }}/internal/application/handler"
-	"{{ .Name }}/internal/repo"
-	"{{ .Name }}/test"
 	"strconv"
 	"testing"
 )
@@ -68,12 +68,12 @@ func TestCreateBook(t *testing.T) {
 
 	testCases := []struct {
 		name       string
-		input      handler.CreateBookInput
+		input      dto.CreateBookInput
 		statusCode int
 	}{
 		{
 			name: "Valid Book",
-			input: handler.CreateBookInput{
+			input: dto.CreateBookInput{
 				Title:  "Test Book",
 				Author: "Test Author",
 				ISBN:   "1234567890",
@@ -83,7 +83,7 @@ func TestCreateBook(t *testing.T) {
 		},
 		{
 			name: "Missing Title",
-			input: handler.CreateBookInput{
+			input: dto.CreateBookInput{
 				Author: "Test Author",
 				ISBN:   "1234567890",
 				Genre:  "Fiction",
@@ -124,13 +124,13 @@ func TestUpdateBook(t *testing.T) {
 	testCases := []struct {
 		name         string
 		bookID       int64
-		input        handler.UpdateBookInput
+		input        dto.UpdateBookInput
 		expectedCode int
 	}{
 		{
 			name:   "Valid Update",
 			bookID: book.ID,
-			input: handler.UpdateBookInput{
+			input: dto.UpdateBookInput{
 				Title:  "Updated Book",
 				Author: "Updated Author",
 				ISBN:   "0987654321",

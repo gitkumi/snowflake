@@ -1,0 +1,8 @@
+package dto
+
+func renderNullString(ns sql.NullString) string {
+	if ns.Valid {
+		return ns.String
+	}
+	return ""
+}

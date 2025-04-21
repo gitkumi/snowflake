@@ -1,9 +1,9 @@
 package service
 
 import (
+	"{{ .Name }}/internal/dto"
 	"{{ .Name }}/internal/repo"
 	"context"
-	"database/sql"
 )
 
 type BookService struct {
@@ -11,29 +11,12 @@ type BookService struct {
 }
 
 func NewBookService(q *repo.Queries) *BookService {
-	return &BookService{
-		Query: q,
-	}
+	return &BookService{Query: q}
 }
 
-func (s *BookService) ListBook(ctx context.Context, params repo.ListBookParams) ([]repo.Book, error) {
-	return s.Query.ListBook(ctx, params)
-}
-
-func (s *BookService) GetBook(ctx context.Context, id int64) (repo.Book, error) {
-	return s.Query.GetBook(ctx, id)
-}
-
-func (s *BookService) CreateBook(ctx context.Context, title string, author, isbn, genre sql.NullString) (repo.Book, error) {
-	params := repo.CreateBookParams{
-		Title:  title,
-		Author: author,
-		Isbn:   isbn,
-		Genre:  genre,
-	}
-
+func (s *BookService) CreateBook(ctx context.Context, input dto.CreateBookInput) (repo.Book, error) {
 	{{- if eq .Database.String "mysql"}}
-	result, err := s.Query.CreateBook(ctx, params)
+	result, err := s.Query.CreateBook(ctx, input.Repo())
 	if err != nil {
 		return repo.Book{}, err
 	}
@@ -45,31 +28,31 @@ func (s *BookService) CreateBook(ctx context.Context, title string, author, isbn
 
 	return s.Query.GetBook(ctx, id)
 	{{ else }}
-	return s.Query.CreateBook(ctx, params)
+	return s.Query.CreateBook(ctx, input.Repo())
 	{{- end }}
 }
 
-func (s *BookService) UpdateBook(ctx context.Context, id int64, title string, author, isbn, genre sql.NullString) (repo.Book, error) {
-	params := repo.UpdateBookParams{
-		ID:     id,
-		Title:  title,
-		Author: author,
-		Isbn:   isbn,
-		Genre:  genre,
-	}
-
+func (s *BookService) UpdateBook(ctx context.Context, input dto.UpdateBookInput, id int64) (repo.Book, error) {
 	{{- if eq .Database.String "mysql"}}
-	err := s.Query.UpdateBook(ctx, params)
+	err := s.Query.UpdateBook(ctx, input.Repo(id))
 	if err != nil {
 		return repo.Book{}, err
 	}
 
 	return s.Query.GetBook(ctx, id)
 	{{- else }}
-	return s.Query.UpdateBook(ctx, params)
+	return s.Query.UpdateBook(ctx, input.Repo(id))
 	{{- end }}
 }
 
 func (s *BookService) DeleteBook(ctx context.Context, id int64) error {
 	return s.Query.DeleteBook(ctx, id)
+}
+
+func (s *BookService) GetBook(ctx context.Context, id int64) (repo.Book, error) {
+	return s.Query.GetBook(ctx, id)
+}
+
+func (s *BookService) ListBook(ctx context.Context, arg repo.ListBookParams) ([]repo.Book, error) {
+	return s.Query.ListBook(ctx, arg)
 }

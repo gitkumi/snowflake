@@ -2,11 +2,11 @@ package handler
 
 import (
 	"{{ .Name }}/internal/application/service"
+	"{{ .Name }}/internal/dto"
 	"{{ .Name }}/internal/repo"
 	"database/sql"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,55 +19,17 @@ func NewBookHandler(s *service.BookService) *BookHandler {
 	return &BookHandler{Service: s}
 }
 
-type CreateBookInput struct {
-	Title         string           `json:"title" binding:"required"`
-	Author        string           `json:"author"`
-	ISBN          string           `json:"isbn"`
-	Genre         string           `json:"genre"`
-}
-
-var customMessages = map[string]string{
-	"Title.required": "Title is required.",
-}
-
-type UpdateBookInput struct {
-	Title         string `json:"title"`
-	Author        string `json:"author"`
-	ISBN          string `json:"isbn"`
-	Genre         string `json:"genre"`
-}
-
-type BookResponse struct {
-	Title     string `json:"title"`
-	Author    string `json:"author,omitempty"`
-	Isbn      string `json:"isbn,omitempty"`
-	Genre     string `json:"genre,omitempty"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-}
-
-func NewBookResponse(book repo.Book) BookResponse {
-	return BookResponse{
-		Title:     book.Title,
-		Author:    renderNullString(book.Author),
-		Isbn:      renderNullString(book.Isbn),
-		Genre:     renderNullString(book.Genre),
-		CreatedAt: book.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: book.UpdatedAt.Format(time.RFC3339),
-	}
-}
-
 func (h *BookHandler) ListBook(c *gin.Context) {
 	pagination := getPaginationSettings(c)
 
 	books, err := h.Service.ListBook(c, repo.ListBookParams{
-		{{- if eq .Database.String "sqlite3" }}
-			Limit:  int64(pagination.PerPage),
-			Offset: int64(pagination.Offset),
-		{{- else }}
-			Limit:  int32(pagination.PerPage),
-			Offset: int32(pagination.Offset),
-		{{- end }}
+	{{- if eq .Database.String "sqlite3" }}
+		Limit:  int64(pagination.PerPage),
+		Offset: int64(pagination.Offset),
+	{{- else }}
+		Limit:  int32(pagination.PerPage),
+		Offset: int32(pagination.Offset),
+	{{- end }}
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -77,38 +39,28 @@ func (h *BookHandler) ListBook(c *gin.Context) {
 		books = []repo.Book{}
 	}
 
-	resp := make([]BookResponse, len(books))
+	resp := make([]dto.BookResponse, len(books))
 	for i, book := range books {
-		resp[i] = NewBookResponse((book))
+		resp[i] = dto.NewBookResponse(book)
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": books})
+	c.JSON(http.StatusOK, gin.H{"data": resp})
 }
 
 func (h *BookHandler) CreateBook(c *gin.Context) {
-	var input CreateBookInput
+	var input dto.CreateBookInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		errs := extractValidationErrors(err, customMessages)
-		if len(errs) > 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"errors": errs})
-			return
-		}
-
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "error"})
 		return
 	}
 
-	author := sql.NullString{String: input.Author, Valid: input.Author != ""}
-	isbn := sql.NullString{String: input.ISBN, Valid: input.ISBN != ""}
-	genre := sql.NullString{String: input.Genre, Valid: input.Genre != ""}
-
-	book, err := h.Service.CreateBook(c, input.Title, author, isbn, genre)
+	book, err := h.Service.CreateBook(c, input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": NewBookResponse(book)})
+	c.JSON(http.StatusCreated, gin.H{"data": dto.NewBookResponse(book)})
 }
 
 func (h *BookHandler) GetBook(c *gin.Context) {
@@ -128,7 +80,7 @@ func (h *BookHandler) GetBook(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": NewBookResponse(book)})
+	c.JSON(http.StatusOK, gin.H{"data": dto.NewBookResponse(book)})
 }
 
 func (h *BookHandler) UpdateBook(c *gin.Context) {
@@ -138,17 +90,13 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 		return
 	}
 
-	var input UpdateBookInput
+	var input dto.UpdateBookInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	author := sql.NullString{String: input.Author, Valid: input.Author != ""}
-	isbn := sql.NullString{String: input.ISBN, Valid: input.ISBN != ""}
-	genre := sql.NullString{String: input.Genre, Valid: input.Genre != ""}
-
-	book, err := h.Service.UpdateBook(c, id, input.Title, author, isbn, genre)
+	book, err := h.Service.UpdateBook(c, input, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Book not found"})
@@ -158,7 +106,7 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": NewBookResponse(book)})
+	c.JSON(http.StatusOK, gin.H{"data": dto.NewBookResponse(book)})
 }
 
 func (h *BookHandler) DeleteBook(c *gin.Context) {
