@@ -1,0 +1,60 @@
+package dto
+
+import (
+	"database/sql"
+	"time"
+	"{{ .Name }}/internal/repo"
+)
+
+type CreateBookInput struct {
+	Title  string `json:"title" binding:"required"`
+	Author string `json:"author"`
+	ISBN   string `json:"isbn"`
+	Genre  string `json:"genre"`
+}
+
+func (i CreateBookInput) Repo() repo.CreateBookParams {
+	return repo.CreateBookParams{
+		Title:  i.Title,
+		Author: sql.NullString{String: i.Author, Valid: i.Author != ""},
+		Isbn:   sql.NullString{String: i.ISBN, Valid: i.ISBN != ""},
+		Genre:  sql.NullString{String: i.Genre, Valid: i.Genre != ""},
+	}
+}
+
+type UpdateBookInput struct {
+	Title  string `json:"title" binding:"required"`
+	Author string `json:"author"`
+	ISBN   string `json:"isbn"`
+	Genre  string `json:"genre"`
+}
+
+func (i UpdateBookInput) Repo(id int64) repo.UpdateBookParams {
+	return repo.UpdateBookParams{
+		ID:     id,
+		Title:  i.Title,
+		Author: sql.NullString{String: i.Author, Valid: i.Author != ""},
+		Isbn:   sql.NullString{String: i.ISBN, Valid: i.ISBN != ""},
+		Genre:  sql.NullString{String: i.Genre, Valid: i.Genre != ""},
+	}
+}
+
+type BookResponse struct {
+	Title     string `json:"title"`
+	Author    string `json:"author,omitempty"`
+	Isbn      string `json:"isbn,omitempty"`
+	Genre     string `json:"genre,omitempty"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+func NewBookResponse(book repo.Book) BookResponse {
+	return BookResponse{
+		Title:     book.Title,
+		Author:    renderNullString(book.Author),
+		Isbn:      renderNullString(book.Isbn),
+		Genre:     renderNullString(book.Genre),
+		CreatedAt: book.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: book.UpdatedAt.Format(time.RFC3339),
+	}
+}
