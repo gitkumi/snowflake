@@ -19,7 +19,7 @@ func NewBookHandler(s *service.BookService) *BookHandler {
 	return &BookHandler{Service: s}
 }
 
-type CreateBookInput struct {
+type CreateBook struct {
 	Title         string           `json:"title" binding:"required"`
 	Author        string           `json:"author"`
 	ISBN          string           `json:"isbn"`
@@ -30,7 +30,7 @@ var customMessages = map[string]string{
 	"Title.required": "Title is required.",
 }
 
-type UpdateBookInput struct {
+type UpdateBook struct {
 	Title         string `json:"title"`
 	Author        string `json:"author"`
 	ISBN          string `json:"isbn"`
@@ -86,7 +86,7 @@ func (h *BookHandler) ListBook(c *gin.Context) {
 }
 
 func (h *BookHandler) CreateBook(c *gin.Context) {
-	var input CreateBookInput
+	var input CreateBook
 	if err := c.ShouldBindJSON(&input); err != nil {
 		errs := extractValidationErrors(err, customMessages)
 		if len(errs) > 0 {
@@ -138,7 +138,7 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 		return
 	}
 
-	var input UpdateBookInput
+	var input UpdateBook
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

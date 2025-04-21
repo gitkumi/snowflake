@@ -17,7 +17,7 @@ func NewAuthHandler(s *service.AuthService) *AuthHandler {
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
-	var input dto.RegisterInput
+	var input dto.Register
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -31,7 +31,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
-	var input dto.LoginInput
+	var input dto.Login
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -45,7 +45,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 func (h *AuthHandler) CreateMagicLink(c *gin.Context) {
-	var input dto.CreateMagicLinkInput
+	var input dto.CreateMagicLink
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -58,7 +58,7 @@ func (h *AuthHandler) CreateMagicLink(c *gin.Context) {
 }
 
 func (h *AuthHandler) CreateResetPassword(c *gin.Context) {
-	var input dto.CreateResetPasswordInput
+	var input dto.CreateResetPassword
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -71,7 +71,7 @@ func (h *AuthHandler) CreateResetPassword(c *gin.Context) {
 }
 
 func (h *AuthHandler) CreateConfirmEmail(c *gin.Context) {
-	var input dto.CreateConfirmEmailInput
+	var input dto.CreateConfirmEmail
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -95,7 +95,7 @@ func (h *AuthHandler) ConsumeMagicLink(c *gin.Context) {
 
 func (h *AuthHandler) ConsumeResetPassword(c *gin.Context) {
 	tokenID := c.Param("token")
-	var input dto.ResetPasswordInput
+	var input dto.ResetPassword
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

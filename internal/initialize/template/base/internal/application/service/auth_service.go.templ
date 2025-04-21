@@ -31,7 +31,7 @@ func NewAuthService(baseURL string, q *repo.Queries, mailer smtp.Mailer, db *sql
 	}
 }
 
-func (s *AuthService) Register(ctx context.Context, input dto.RegisterInput) (repo.User, error) {
+func (s *AuthService) Register(ctx context.Context, input dto.Register) (repo.User, error) {
 	data, err := input.Repo()
 	if err != nil {
 		return repo.User{}, err
@@ -126,7 +126,7 @@ func (s *AuthService) Register(ctx context.Context, input dto.RegisterInput) (re
 	{{- end }}
 }
 
-func (s *AuthService) Login(ctx context.Context, input dto.LoginInput) (string, error) {
+func (s *AuthService) Login(ctx context.Context, input dto.Login) (string, error) {
 	user, err := s.Query.GetUserByEmail(ctx, input.Email)
 	if err != nil || user == (repo.User{}) {
 		_, _ = password.VerifyPassword(input.Password, "notsecure")
@@ -249,7 +249,7 @@ func (s *AuthService) ConsumeMagicLink(ctx context.Context, tokenID string) (str
 	return password.CreateJwt(token.Email)
 }
 
-func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, input dto.ResetPasswordInput) (repo.User, error) {
+func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, input dto.ResetPassword) (repo.User, error) {
 	token, err := s.Query.GetUserAuthTokenWithEmail(ctx, repo.GetUserAuthTokenWithEmailParams{
 		ID:   tokenID,
 		Type: "reset_password",

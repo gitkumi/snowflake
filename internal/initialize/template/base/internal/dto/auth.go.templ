@@ -7,29 +7,29 @@ import (
 	"time"
 )
 
-type CreateMagicLinkInput struct {
+type CreateMagicLink struct {
 	Email string `json:"email" binding:"required"`
 }
 
-type CreateConfirmEmailInput struct {
+type CreateConfirmEmail struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
-type CreateResetPasswordInput struct {
+type CreateResetPassword struct {
 	Email string `json:"email" binding:"required,email"`
 }
 
-type ResetPasswordInput struct {
+type ResetPassword struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required,min=6,max=72"`
 }
 
-type LoginInput struct {
+type Login struct {
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
-type RegisterInput struct {
+type Register struct {
 	Email     string  `json:"email" binding:"required,email"`
 	Password  string  `json:"password" binding:"required,min=6,max=72"`
 	Username  string  `json:"username" binding:"required,min=3,max=21"`
@@ -37,7 +37,7 @@ type RegisterInput struct {
 	LastName  *string `json:"last_name"`
 }
 
-func (u RegisterInput) Repo() (repo.CreateUserParams, error) {
+func (u Register) Repo() (repo.CreateUserParams, error) {
 	hashed, err := password.HashPassword(u.Password)
 
 	if err != nil {

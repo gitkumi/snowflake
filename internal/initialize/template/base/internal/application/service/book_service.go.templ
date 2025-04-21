@@ -14,7 +14,7 @@ func NewBookService(q *repo.Queries) *BookService {
 	return &BookService{Query: q}
 }
 
-func (s *BookService) CreateBook(ctx context.Context, input dto.CreateBookInput) (repo.Book, error) {
+func (s *BookService) CreateBook(ctx context.Context, input dto.CreateBook) (repo.Book, error) {
 	{{- if eq .Database.String "mysql"}}
 	result, err := s.Query.CreateBook(ctx, input.Repo())
 	if err != nil {
@@ -32,7 +32,7 @@ func (s *BookService) CreateBook(ctx context.Context, input dto.CreateBookInput)
 	{{- end }}
 }
 
-func (s *BookService) UpdateBook(ctx context.Context, input dto.UpdateBookInput, id int64) (repo.Book, error) {
+func (s *BookService) UpdateBook(ctx context.Context, input dto.UpdateBook, id int64) (repo.Book, error) {
 	{{- if eq .Database.String "mysql"}}
 	err := s.Query.UpdateBook(ctx, input.Repo(id))
 	if err != nil {

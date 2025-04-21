@@ -68,12 +68,12 @@ func TestCreateBook(t *testing.T) {
 
 	testCases := []struct {
 		name       string
-		input      dto.CreateBookInput
+		input      dto.CreateBook
 		statusCode int
 	}{
 		{
 			name: "Valid Book",
-			input: dto.CreateBookInput{
+			input: dto.CreateBook{
 				Title:  "Test Book",
 				Author: "Test Author",
 				ISBN:   "1234567890",
@@ -83,7 +83,7 @@ func TestCreateBook(t *testing.T) {
 		},
 		{
 			name: "Missing Title",
-			input: dto.CreateBookInput{
+			input: dto.CreateBook{
 				Author: "Test Author",
 				ISBN:   "1234567890",
 				Genre:  "Fiction",
@@ -124,13 +124,13 @@ func TestUpdateBook(t *testing.T) {
 	testCases := []struct {
 		name         string
 		bookID       int64
-		input        dto.UpdateBookInput
+		input        dto.UpdateBook
 		expectedCode int
 	}{
 		{
 			name:   "Valid Update",
 			bookID: book.ID,
-			input: dto.UpdateBookInput{
+			input: dto.UpdateBook{
 				Title:  "Updated Book",
 				Author: "Updated Author",
 				ISBN:   "0987654321",

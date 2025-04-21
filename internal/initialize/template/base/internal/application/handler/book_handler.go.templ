@@ -48,7 +48,7 @@ func (h *BookHandler) ListBook(c *gin.Context) {
 }
 
 func (h *BookHandler) CreateBook(c *gin.Context) {
-	var input dto.CreateBookInput
+	var input dto.CreateBook
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "error"})
 		return
@@ -90,7 +90,7 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 		return
 	}
 
-	var input dto.UpdateBookInput
+	var input dto.UpdateBook
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

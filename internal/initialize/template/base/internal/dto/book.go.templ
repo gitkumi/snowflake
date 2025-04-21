@@ -6,14 +6,14 @@ import (
 	"{{ .Name }}/internal/repo"
 )
 
-type CreateBookInput struct {
+type CreateBook struct {
 	Title  string `json:"title" binding:"required"`
 	Author string `json:"author"`
 	ISBN   string `json:"isbn"`
 	Genre  string `json:"genre"`
 }
 
-func (i CreateBookInput) Repo() repo.CreateBookParams {
+func (i CreateBook) Repo() repo.CreateBookParams {
 	return repo.CreateBookParams{
 		Title:  i.Title,
 		Author: sql.NullString{String: i.Author, Valid: i.Author != ""},
@@ -22,14 +22,14 @@ func (i CreateBookInput) Repo() repo.CreateBookParams {
 	}
 }
 
-type UpdateBookInput struct {
+type UpdateBook struct {
 	Title  string `json:"title" binding:"required"`
 	Author string `json:"author"`
 	ISBN   string `json:"isbn"`
 	Genre  string `json:"genre"`
 }
 
-func (i UpdateBookInput) Repo(id int64) repo.UpdateBookParams {
+func (i UpdateBook) Repo(id int64) repo.UpdateBookParams {
 	return repo.UpdateBookParams{
 		ID:     id,
 		Title:  i.Title,
