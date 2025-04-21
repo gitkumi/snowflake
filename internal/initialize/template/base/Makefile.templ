@@ -28,7 +28,7 @@ run:
 
 .PHONY: test
 test:
-	go run gotest.tools/gotestsum@latest -f testname
+	gotestsum -f testname
 
 .PHONY: dev
 dev:
@@ -37,10 +37,10 @@ dev:
 .PHONY: build
 build:
 {{- if ne .Database.String "none" }}
-	go run github.com/sqlc-dev/sqlc/cmd/sqlc@latest generate
+	sqlc generate
 {{- end }}
 {{- if eq .AppType "web"}}
-	go run github.com/a-h/templ/cmd/templ generate
+	templ generate
 	go build -o bin/main cmd/web/*.go
 {{- else}}
 	go build -o bin/main cmd/api/*.go

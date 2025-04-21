@@ -1,9 +1,11 @@
-package initialize
+package initialize_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/gitkumi/snowflake/internal/initialize"
 )
 
 func TestGenerateNoDB(t *testing.T) {
@@ -13,12 +15,12 @@ func TestGenerateNoDB(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &Config{
+	cf := &initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
-		Database:      DatabaseNone,
-		BackgroundJob: BackgroundJobNone,
-		AppType:       AppTypeAPI,
+		Database:      initialize.DatabaseNone,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		NoGit:         true,
 		NoSMTP:        false,
@@ -27,14 +29,14 @@ func TestGenerateNoDB(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = Run(cf)
+	err = initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("Project directory was not created")
+		t.Fatal("project directory not created")
 	}
 }
 
@@ -45,12 +47,12 @@ func TestGenerateSQLite3(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &Config{
+	cf := &initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
-		Database:      DatabaseSQLite3,
-		BackgroundJob: BackgroundJobNone,
-		AppType:       AppTypeAPI,
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		NoGit:         true,
 		NoSMTP:        false,
@@ -59,14 +61,14 @@ func TestGenerateSQLite3(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = Run(cf)
+	err = initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("Project directory was not created")
+		t.Fatal("project directory not created")
 	}
 }
 
@@ -77,12 +79,12 @@ func TestGeneratePostgres(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &Config{
+	cfg := &initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
-		Database:      DatabasePostgres,
-		BackgroundJob: BackgroundJobNone,
-		AppType:       AppTypeAPI,
+		Database:      initialize.DatabasePostgres,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		NoGit:         true,
 		NoSMTP:        false,
@@ -91,14 +93,14 @@ func TestGeneratePostgres(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = Run(cfg)
+	err = initialize.Run(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("Project directory was not created")
+		t.Fatal("project directory not created")
 	}
 }
 
@@ -109,12 +111,12 @@ func TestGenerateMySQL(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &Config{
+	cfg := &initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
-		Database:      DatabaseMySQL,
-		BackgroundJob: BackgroundJobNone,
-		AppType:       AppTypeAPI,
+		Database:      initialize.DatabaseMySQL,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		NoGit:         true,
 		NoSMTP:        false,
@@ -123,14 +125,14 @@ func TestGenerateMySQL(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = Run(cfg)
+	err = initialize.Run(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("Project directory was not created")
+		t.Fatal("project directory not created")
 	}
 }
 
@@ -141,24 +143,28 @@ func TestGenerateWebApp(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cfg := &Config{
+	cfg := &initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
-		Database:      DatabaseSQLite3,
-		BackgroundJob: BackgroundJobNone,
-		AppType:       AppTypeWeb,
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeWeb,
 		OutputDir:     tmpDir,
 		NoGit:         true,
+		NoSMTP:        false,
+		NoStorage:     false,
+		NoAuth:        false,
+		NoRedis:       false,
 	}
 
-	err = Run(cfg)
+	err = initialize.Run(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("Project directory was not created")
+		t.Fatal("project directory not created")
 	}
 
 	apiMainPath := filepath.Join(projectDir, "cmd", "api")
@@ -185,12 +191,12 @@ func TestGenerateNoSMTP(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &Config{
+	cf := &initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
-		Database:      DatabaseSQLite3,
-		BackgroundJob: BackgroundJobNone,
-		AppType:       AppTypeAPI,
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		NoGit:         true,
 		NoSMTP:        true,
@@ -199,14 +205,14 @@ func TestGenerateNoSMTP(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = Run(cf)
+	err = initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("Project directory was not created")
+		t.Fatal("project directory not created")
 	}
 }
 
@@ -217,12 +223,12 @@ func TestGenerateNoStorage(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &Config{
+	cf := &initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
-		Database:      DatabaseSQLite3,
-		BackgroundJob: BackgroundJobNone,
-		AppType:       AppTypeAPI,
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		NoGit:         true,
 		NoSMTP:        false,
@@ -231,14 +237,14 @@ func TestGenerateNoStorage(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = Run(cf)
+	err = initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("Project directory was not created")
+		t.Fatal("project directory not created")
 	}
 }
 
@@ -249,12 +255,12 @@ func TestGenerateNoAuth(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &Config{
+	cf := &initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
-		Database:      DatabaseSQLite3,
-		BackgroundJob: BackgroundJobNone,
-		AppType:       AppTypeAPI,
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		NoGit:         true,
 		NoSMTP:        false,
@@ -263,14 +269,14 @@ func TestGenerateNoAuth(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = Run(cf)
+	err = initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("Project directory was not created")
+		t.Fatal("project directory not created")
 	}
 }
 
@@ -281,12 +287,12 @@ func TestGenerateNoRedis(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &Config{
+	cf := &initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
-		Database:      DatabaseSQLite3,
-		BackgroundJob: BackgroundJobNone,
-		AppType:       AppTypeAPI,
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		NoGit:         true,
 		NoSMTP:        false,
@@ -295,14 +301,14 @@ func TestGenerateNoRedis(t *testing.T) {
 		NoRedis:       true,
 	}
 
-	err = Run(cf)
+	err = initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("Project directory was not created")
+		t.Fatal("project directory not created")
 	}
 }
 
@@ -313,12 +319,12 @@ func TestGenerateBackgroundJobBasic(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &Config{
+	cf := &initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
-		Database:      DatabaseSQLite3,
-		BackgroundJob: BackgroundJobBasic,
-		AppType:       AppTypeAPI,
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobBasic,
+		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		NoGit:         true,
 		NoSMTP:        false,
@@ -327,14 +333,14 @@ func TestGenerateBackgroundJobBasic(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = Run(cf)
+	err = initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("Project directory was not created")
+		t.Fatal("project directory not created")
 	}
 }
 
@@ -345,12 +351,12 @@ func TestGenerateBackgroundJobSQS(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &Config{
+	cf := &initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
-		Database:      DatabaseSQLite3,
-		BackgroundJob: BackgroundJobSQS,
-		AppType:       AppTypeAPI,
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobSQS,
+		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		NoGit:         true,
 		NoSMTP:        false,
@@ -359,14 +365,14 @@ func TestGenerateBackgroundJobSQS(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = Run(cf)
+	err = initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("Project directory was not created")
+		t.Fatal("project directory not created")
 	}
 }
 
@@ -377,12 +383,12 @@ func TestGenerateBackgroundJobAsynq(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	cf := &Config{
+	cf := &initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
-		Database:      DatabaseSQLite3,
-		BackgroundJob: BackgroundJobAsynq,
-		AppType:       AppTypeAPI,
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobAsynq,
+		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		NoGit:         true,
 		NoSMTP:        false,
@@ -391,13 +397,13 @@ func TestGenerateBackgroundJobAsynq(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = Run(cf)
+	err = initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("Project directory was not created")
+		t.Fatal("project directory not created")
 	}
 }
