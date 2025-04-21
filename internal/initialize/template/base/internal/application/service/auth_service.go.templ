@@ -45,7 +45,7 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (repo.U
 	}
 	
 	return s.Query.GetUser(ctx, int64(id))
-	{{- else}}
+	{{- else }}
 	return s.Query.CreateUser(ctx, data)
 	{{- end }}
 }
@@ -93,7 +93,7 @@ func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
 		ID:   nanoid,
 		Type: "magic_link",
 	})
-	{{- else}}
+	{{- else }}
 	token, err := s.Query.CreateUserAuthToken(ctx, repo.CreateUserAuthTokenParams{
 		ID:     nanoid,
 		UserID: user.ID,
@@ -214,7 +214,7 @@ func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, 
 	}
 	
 	return s.Query.GetUser(ctx, user.ID)
-	{{- else}}
+	{{- else }}
 	return s.Query.UpdateUser(ctx, updateParams)
 	{{- end }}
 }
@@ -250,7 +250,7 @@ func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (
 	}
 	
 	return s.Query.GetUser(ctx, user.ID)
-	{{- else}}
+	{{- else }}
 	return s.Query.UpdateUser(ctx, updateParams)
 	{{- end }}
 }

@@ -16,7 +16,7 @@ COPY . .
 # Build the binary
 {{- if eq .AppType "web"}}
 RUN go build -o bin/main ./cmd/web/*.go
-{{- else}}
+{{- else }}
 RUN go build -o bin/main ./cmd/api/*.go
 {{- end }}
 

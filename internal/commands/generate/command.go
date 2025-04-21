@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -35,22 +36,29 @@ func Command() *cobra.Command {
 				log.Fatal(err)
 			}
 
-			tables, err := parseTable()
+			tables, err := parseTable("testdata/migration.sql")
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			queries, err := parseQueries()
+			queries, err := parseQueries("testdata/queries.sql")
 			if err != nil {
 				log.Fatal(err)
 			}
+
+			for _, table := range tables {
+				fmt.Println(table.TableName)
+			}
+
+			return
+
+			fmt.Println(config, tables, queries)
 		},
 	}
 }
 
-func parseQueries() ([]sqliteparser.Query, error) {
-	sqlFilePath := "testdata/queries.sql"
-	content, err := os.ReadFile(sqlFilePath)
+func parseQueries(filePath string) ([]sqliteparser.Query, error) {
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return []sqliteparser.Query{}, err
 	}
@@ -63,9 +71,8 @@ func parseQueries() ([]sqliteparser.Query, error) {
 	return queries, nil
 }
 
-func parseTable() ([]sqliteparser.TableSchema, error) {
-	sqlFilePath := "testdata/migration.sql"
-	content, err := os.ReadFile(sqlFilePath)
+func parseTable(filePath string) ([]sqliteparser.TableSchema, error) {
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		return []sqliteparser.TableSchema{}, err
 	}

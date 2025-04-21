@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"northpole/internal/application/handler"
-	"northpole/internal/repo"
-	"northpole/test"
+	"{{ .Name }}/internal/application/handler"
+	"{{ .Name }}/internal/repo"
+	"{{ .Name }}/test"
 	"strconv"
 	"testing"
 )
@@ -51,13 +51,13 @@ func TestGetBook(t *testing.T) {
 	}
 
 	var response struct {
-		Data []map[string]any `json:"data"`
+		Data map[string]any `json:"data"`
 	}
 	if err := json.Unmarshal(rr.Body.Bytes(), &response); err != nil {
 		t.Fatalf("Unable to parse response: %v", err)
 	}
 
-	bookData := response.Data[0]
+	bookData := response.Data
 	if title, ok := bookData["title"].(string); !ok || title != book.Title {
 		t.Errorf("Expected title %q, got %v", book.Title, bookData["title"])
 	}
@@ -103,7 +103,7 @@ func TestCreateBook(t *testing.T) {
 			ts.Application.Router.ServeHTTP(rr, req)
 
 			if rr.Code != tc.statusCode {
-				t.Fatalf("Expected %d got %d", rr.Code, tc.statusCode)
+				t.Fatalf("Expected %d got %d", tc.statusCode, rr.Code)
 			}
 
 			var response struct {
