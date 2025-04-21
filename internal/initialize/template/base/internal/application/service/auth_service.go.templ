@@ -1,6 +1,8 @@
 package service
 
+
 import (
+	"{{ .Name }}/internal/dto"
 	"{{ .Name }}/internal/password"
 	"{{ .Name }}/internal/repo"
 	"{{ .Name }}/internal/smtp"
@@ -17,24 +19,34 @@ type AuthService struct {
 	BaseURL string
 	Query   *repo.Queries
 	Mailer  smtp.Mailer
+	db      *sql.DB
 }
 
-func NewAuthService(baseURL string, q *repo.Queries, mailer smtp.Mailer) *AuthService {
+func NewAuthService(baseURL string, q *repo.Queries, mailer smtp.Mailer, db *sql.DB) *AuthService {
 	return &AuthService{
 		BaseURL: baseURL,
 		Query:   q,
 		Mailer:  mailer,
+		db:      db,
 	}
 }
 
-func (s *AuthService) Register(ctx context.Context, input RegisterInput) (repo.User, error) {
+func (s *AuthService) Register(ctx context.Context, input dto.RegisterInput) (repo.User, error) {
 	data, err := input.Repo()
 	if err != nil {
 		return repo.User{}, err
 	}
 	
 	{{- if eq .Database.String "mysql"}}
-	result, err := s.Query.CreateUser(ctx, data)
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return repo.User{}, err
+	}
+	defer tx.Rollback()
+	
+	qtx := s.Query.WithTx(tx)
+	
+	result, err := qtx.CreateUser(ctx, data)
 	if err != nil {
 		return repo.User{}, err
 	}
@@ -44,13 +56,77 @@ func (s *AuthService) Register(ctx context.Context, input RegisterInput) (repo.U
 		return repo.User{}, err
 	}
 	
-	return s.Query.GetUser(ctx, int64(id))
+	user, err := qtx.GetUser(ctx, id)
+	if err != nil {
+		return repo.User{}, err
+	}
+	
+	nanoid, err := gonanoid.New()
+	if err != nil {
+		return repo.User{}, err
+	}
+	
+	tokenParams := repo.CreateUserAuthTokenParams{
+		ID:     nanoid,
+		UserID: user.ID,
+		Type:   "confirm_email",
+	}
+	
+	_, err = qtx.CreateUserAuthToken(ctx, tokenParams)
+	if err != nil {
+		return repo.User{}, err
+	}
+	
+	if err = tx.Commit(); err != nil {
+		return repo.User{}, err
+	}
+	
+	confirmEmailURL := path.Join(s.BaseURL, "auth", "confirm-email", nanoid)
+	s.Mailer.Send(smtp.Email{To: user.Email, Subject: "Confirm Email", Body: confirmEmailURL})
+	
+	return user, nil
 	{{- else }}
-	return s.Query.CreateUser(ctx, data)
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return repo.User{}, err
+	}
+	defer tx.Rollback()
+	
+	qtx := s.Query.WithTx(tx)
+	
+	user, err := qtx.CreateUser(ctx, data)
+	if err != nil {
+		return repo.User{}, err
+	}
+	
+	nanoid, err := gonanoid.New()
+	if err != nil {
+		return repo.User{}, err
+	}
+	
+	tokenParams := repo.CreateUserAuthTokenParams{
+		ID:     nanoid,
+		UserID: user.ID,
+		Type:   "confirm_email",
+	}
+	
+	_, err = qtx.CreateUserAuthToken(ctx, tokenParams)
+	if err != nil {
+		return repo.User{}, err
+	}
+	
+	if err = tx.Commit(); err != nil {
+		return repo.User{}, err
+	}
+	
+	confirmEmailURL := path.Join(s.BaseURL, "auth", "confirm-email", nanoid)
+	s.Mailer.Send(smtp.Email{To: user.Email, Subject: "Confirm Email", Body: confirmEmailURL})
+	
+	return user, nil
 	{{- end }}
 }
 
-func (s *AuthService) Login(ctx context.Context, input LoginInput) (string, error) {
+func (s *AuthService) Login(ctx context.Context, input dto.LoginInput) (string, error) {
 	user, err := s.Query.GetUserByEmail(ctx, input.Email)
 	if err != nil || user == (repo.User{}) {
 		_, _ = password.VerifyPassword(input.Password, "notsecure")
@@ -65,7 +141,6 @@ func (s *AuthService) Login(ctx context.Context, input LoginInput) (string, erro
 	return password.CreateJwt(user.Email)
 }
 
-
 func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
 	user, err := s.Query.GetUserByEmail(ctx, email)
 	if err != nil {
@@ -76,7 +151,7 @@ func (s *AuthService) CreateMagicLink(ctx context.Context, email string) error {
 	if err != nil {
 		return err
 	}
-
+	
 	{{- if eq .Database.String "mysql"}}
 	tokenParams := repo.CreateUserAuthTokenParams{
 		ID:     nanoid,
@@ -174,7 +249,7 @@ func (s *AuthService) ConsumeMagicLink(ctx context.Context, tokenID string) (str
 	return password.CreateJwt(token.Email)
 }
 
-func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, input ResetPasswordInput) (repo.User, error) {
+func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, input dto.ResetPasswordInput) (repo.User, error) {
 	token, err := s.Query.GetUserAuthTokenWithEmail(ctx, repo.GetUserAuthTokenWithEmailParams{
 		ID:   tokenID,
 		Type: "reset_password",
@@ -206,7 +281,7 @@ func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, 
 		LastName:       user.LastName,
 		ConfirmedAt:    user.ConfirmedAt,
 	}
-
+	
 	{{- if eq .Database.String "mysql"}}
 	err = s.Query.UpdateUser(ctx, updateParams)
 	if err != nil {
@@ -242,7 +317,7 @@ func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (
 		LastName:       user.LastName,
 		ConfirmedAt:    sql.NullTime{Time: time.Now(), Valid: true},
 	}
-
+	
 	{{- if eq .Database.String "mysql"}}
 	err = s.Query.UpdateUser(ctx, updateParams)
 	if err != nil {

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"{{ .Name }}/internal/application/service"
+	"{{ .Name }}/internal/dto"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +17,7 @@ func NewAuthHandler(s *service.AuthService) *AuthHandler {
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
-	var input service.RegisterInput
+	var input dto.RegisterInput
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -26,11 +27,11 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"data": user})
+	c.JSON(http.StatusCreated, gin.H{"data": dto.NewUserResponse(user)})
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
-	var input service.LoginInput
+	var input dto.LoginInput
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -44,7 +45,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 func (h *AuthHandler) CreateMagicLink(c *gin.Context) {
-	var input service.CreateMagicLinkInput
+	var input dto.CreateMagicLinkInput
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -57,7 +58,7 @@ func (h *AuthHandler) CreateMagicLink(c *gin.Context) {
 }
 
 func (h *AuthHandler) CreateResetPassword(c *gin.Context) {
-	var input service.CreateResetPasswordInput
+	var input dto.CreateResetPasswordInput
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -70,7 +71,7 @@ func (h *AuthHandler) CreateResetPassword(c *gin.Context) {
 }
 
 func (h *AuthHandler) CreateConfirmEmail(c *gin.Context) {
-	var input service.CreateConfirmEmailInput
+	var input dto.CreateConfirmEmailInput
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -94,7 +95,7 @@ func (h *AuthHandler) ConsumeMagicLink(c *gin.Context) {
 
 func (h *AuthHandler) ConsumeResetPassword(c *gin.Context) {
 	tokenID := c.Param("token")
-	var input service.ResetPasswordInput
+	var input dto.ResetPasswordInput
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -104,7 +105,7 @@ func (h *AuthHandler) ConsumeResetPassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, gin.H{"data": dto.NewUserResponse(user)})
 }
 
 func (h *AuthHandler) ConsumeConfirmEmail(c *gin.Context) {
@@ -114,5 +115,5 @@ func (h *AuthHandler) ConsumeConfirmEmail(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": createUserResponse(user)})
+	c.JSON(http.StatusOK, gin.H{"data": dto.NewUserResponse(user)})
 }
