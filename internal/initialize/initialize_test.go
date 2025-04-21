@@ -11,7 +11,7 @@ import (
 func TestGenerateNoDB(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cf := &initialize.Config{
+	err := initialize.Run(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseNone,
@@ -23,9 +23,7 @@ func TestGenerateNoDB(t *testing.T) {
 		NoStorage:     false,
 		NoAuth:        false,
 		NoRedis:       false,
-	}
-
-	err := initialize.Run(cf)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +37,7 @@ func TestGenerateNoDB(t *testing.T) {
 func TestGenerateSQLite3(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cf := &initialize.Config{
+	err := initialize.Run(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
@@ -51,9 +49,7 @@ func TestGenerateSQLite3(t *testing.T) {
 		NoStorage:     false,
 		NoAuth:        false,
 		NoRedis:       false,
-	}
-
-	err := initialize.Run(cf)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +63,7 @@ func TestGenerateSQLite3(t *testing.T) {
 func TestGeneratePostgres(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cfg := &initialize.Config{
+	err := initialize.Run(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabasePostgres,
@@ -79,9 +75,7 @@ func TestGeneratePostgres(t *testing.T) {
 		NoStorage:     false,
 		NoAuth:        false,
 		NoRedis:       false,
-	}
-
-	err := initialize.Run(cfg)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +89,7 @@ func TestGeneratePostgres(t *testing.T) {
 func TestGenerateMySQL(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cfg := &initialize.Config{
+	err := initialize.Run(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseMySQL,
@@ -107,9 +101,7 @@ func TestGenerateMySQL(t *testing.T) {
 		NoStorage:     false,
 		NoAuth:        false,
 		NoRedis:       false,
-	}
-
-	err := initialize.Run(cfg)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +115,7 @@ func TestGenerateMySQL(t *testing.T) {
 func TestGenerateWebApp(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cfg := &initialize.Config{
+	err := initialize.Run(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
@@ -135,9 +127,7 @@ func TestGenerateWebApp(t *testing.T) {
 		NoStorage:     false,
 		NoAuth:        false,
 		NoRedis:       false,
-	}
-
-	err := initialize.Run(cfg)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,7 +157,7 @@ func TestGenerateWebApp(t *testing.T) {
 func TestGenerateNoSMTP(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cf := &initialize.Config{
+	err := initialize.Run(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
@@ -179,9 +169,7 @@ func TestGenerateNoSMTP(t *testing.T) {
 		NoStorage:     false,
 		NoAuth:        false,
 		NoRedis:       false,
-	}
-
-	err := initialize.Run(cf)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,7 +183,7 @@ func TestGenerateNoSMTP(t *testing.T) {
 func TestGenerateNoStorage(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cf := &initialize.Config{
+	err := initialize.Run(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
@@ -207,9 +195,7 @@ func TestGenerateNoStorage(t *testing.T) {
 		NoStorage:     true,
 		NoAuth:        false,
 		NoRedis:       false,
-	}
-
-	err := initialize.Run(cf)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +209,7 @@ func TestGenerateNoStorage(t *testing.T) {
 func TestGenerateNoAuth(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cf := &initialize.Config{
+	err := initialize.Run(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
@@ -235,9 +221,7 @@ func TestGenerateNoAuth(t *testing.T) {
 		NoStorage:     false,
 		NoAuth:        true,
 		NoRedis:       false,
-	}
-
-	err := initialize.Run(cf)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -251,7 +235,7 @@ func TestGenerateNoAuth(t *testing.T) {
 func TestGenerateNoRedis(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cf := &initialize.Config{
+	err := initialize.Run(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
@@ -263,9 +247,7 @@ func TestGenerateNoRedis(t *testing.T) {
 		NoStorage:     false,
 		NoAuth:        false,
 		NoRedis:       true,
-	}
-
-	err := initialize.Run(cf)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -279,7 +261,7 @@ func TestGenerateNoRedis(t *testing.T) {
 func TestGenerateBackgroundJobBasic(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cf := &initialize.Config{
+	err := initialize.Run(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
@@ -291,9 +273,7 @@ func TestGenerateBackgroundJobBasic(t *testing.T) {
 		NoStorage:     false,
 		NoAuth:        false,
 		NoRedis:       false,
-	}
-
-	err := initialize.Run(cf)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -307,7 +287,7 @@ func TestGenerateBackgroundJobBasic(t *testing.T) {
 func TestGenerateBackgroundJobSQS(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cf := &initialize.Config{
+	err := initialize.Run(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
@@ -319,9 +299,7 @@ func TestGenerateBackgroundJobSQS(t *testing.T) {
 		NoStorage:     false,
 		NoAuth:        false,
 		NoRedis:       false,
-	}
-
-	err := initialize.Run(cf)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -335,7 +313,7 @@ func TestGenerateBackgroundJobSQS(t *testing.T) {
 func TestGenerateBackgroundJobAsynq(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	cf := &initialize.Config{
+	err := initialize.Run(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
@@ -347,9 +325,7 @@ func TestGenerateBackgroundJobAsynq(t *testing.T) {
 		NoStorage:     false,
 		NoAuth:        false,
 		NoRedis:       false,
-	}
-
-	err := initialize.Run(cf)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

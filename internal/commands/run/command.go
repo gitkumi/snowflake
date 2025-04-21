@@ -67,7 +67,7 @@ func Command() *cobra.Command {
 				log.Fatalf("Invalid app type: %s. Must be one of: %v", backgroundJob, initialize.AllBackgroundJobs)
 			}
 
-			cfg := &initialize.Config{
+			err := initialize.Run(&initialize.Config{
 				Quiet:         quiet,
 				Name:          args[0],
 				Database:      dbEnum,
@@ -79,9 +79,7 @@ func Command() *cobra.Command {
 				NoStorage:     noStorage,
 				NoRedis:       noRedis,
 				NoAuth:        noAuth,
-			}
-
-			err := initialize.Run(cfg)
+			})
 			if err != nil {
 				log.Fatal(err.Error())
 			}
