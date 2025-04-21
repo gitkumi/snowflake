@@ -9,11 +9,7 @@ import (
 )
 
 func TestGenerateNoDB(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cf := &initialize.Config{
 		Quiet:         true,
@@ -29,7 +25,7 @@ func TestGenerateNoDB(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = initialize.Run(cf)
+	err := initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,11 +37,7 @@ func TestGenerateNoDB(t *testing.T) {
 }
 
 func TestGenerateSQLite3(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cf := &initialize.Config{
 		Quiet:         true,
@@ -61,7 +53,7 @@ func TestGenerateSQLite3(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = initialize.Run(cf)
+	err := initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,11 +65,7 @@ func TestGenerateSQLite3(t *testing.T) {
 }
 
 func TestGeneratePostgres(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cfg := &initialize.Config{
 		Quiet:         true,
@@ -93,7 +81,7 @@ func TestGeneratePostgres(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = initialize.Run(cfg)
+	err := initialize.Run(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,11 +93,7 @@ func TestGeneratePostgres(t *testing.T) {
 }
 
 func TestGenerateMySQL(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cfg := &initialize.Config{
 		Quiet:         true,
@@ -125,7 +109,7 @@ func TestGenerateMySQL(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = initialize.Run(cfg)
+	err := initialize.Run(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,11 +121,7 @@ func TestGenerateMySQL(t *testing.T) {
 }
 
 func TestGenerateWebApp(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cfg := &initialize.Config{
 		Quiet:         true,
@@ -157,7 +137,7 @@ func TestGenerateWebApp(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = initialize.Run(cfg)
+	err := initialize.Run(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,11 +165,7 @@ func TestGenerateWebApp(t *testing.T) {
 }
 
 func TestGenerateNoSMTP(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cf := &initialize.Config{
 		Quiet:         true,
@@ -205,7 +181,7 @@ func TestGenerateNoSMTP(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = initialize.Run(cf)
+	err := initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,11 +193,7 @@ func TestGenerateNoSMTP(t *testing.T) {
 }
 
 func TestGenerateNoStorage(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cf := &initialize.Config{
 		Quiet:         true,
@@ -237,7 +209,7 @@ func TestGenerateNoStorage(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = initialize.Run(cf)
+	err := initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -249,11 +221,7 @@ func TestGenerateNoStorage(t *testing.T) {
 }
 
 func TestGenerateNoAuth(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cf := &initialize.Config{
 		Quiet:         true,
@@ -269,7 +237,7 @@ func TestGenerateNoAuth(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = initialize.Run(cf)
+	err := initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -281,11 +249,7 @@ func TestGenerateNoAuth(t *testing.T) {
 }
 
 func TestGenerateNoRedis(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cf := &initialize.Config{
 		Quiet:         true,
@@ -301,7 +265,7 @@ func TestGenerateNoRedis(t *testing.T) {
 		NoRedis:       true,
 	}
 
-	err = initialize.Run(cf)
+	err := initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -313,11 +277,7 @@ func TestGenerateNoRedis(t *testing.T) {
 }
 
 func TestGenerateBackgroundJobBasic(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cf := &initialize.Config{
 		Quiet:         true,
@@ -333,7 +293,7 @@ func TestGenerateBackgroundJobBasic(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = initialize.Run(cf)
+	err := initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -345,11 +305,7 @@ func TestGenerateBackgroundJobBasic(t *testing.T) {
 }
 
 func TestGenerateBackgroundJobSQS(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cf := &initialize.Config{
 		Quiet:         true,
@@ -365,7 +321,7 @@ func TestGenerateBackgroundJobSQS(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = initialize.Run(cf)
+	err := initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -377,11 +333,7 @@ func TestGenerateBackgroundJobSQS(t *testing.T) {
 }
 
 func TestGenerateBackgroundJobAsynq(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "snowflake_test_*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cf := &initialize.Config{
 		Quiet:         true,
@@ -397,7 +349,7 @@ func TestGenerateBackgroundJobAsynq(t *testing.T) {
 		NoRedis:       false,
 	}
 
-	err = initialize.Run(cf)
+	err := initialize.Run(cf)
 	if err != nil {
 		t.Fatal(err)
 	}
