@@ -3,10 +3,8 @@ module github.com/gitkumi/snowflake
 go 1.24.0
 
 require (
-	github.com/antlr4-go/antlr/v4 v4.13.1
 	github.com/charmbracelet/huh v0.7.0
 	github.com/spf13/cobra v1.8.0
-	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
