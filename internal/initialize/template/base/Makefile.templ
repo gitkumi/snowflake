@@ -1,5 +1,5 @@
 {{- if ne .Database.String "none" }}
-export GOOSE_DBSTRING?={{.Database.ConnString .Name}}
+export GOOSE_DBSTRING?={{.Database.ConnString .Name }}
 export GOOSE_DRIVER:={{.Database.Driver}}
 export GOOSE_MIGRATION_DIR:=./static/sql/migrations
 {{- end }}
@@ -22,7 +22,7 @@ tidy:
 run:
 {{- if eq .AppType "web"}}
 	go run cmd/web/*.go
-{{- else}}
+{{- else }}
 	go run cmd/api/*.go
 {{- end }}
 
@@ -42,7 +42,7 @@ build:
 {{- if eq .AppType "web"}}
 	templ generate
 	go build -o bin/main cmd/web/*.go
-{{- else}}
+{{- else }}
 	go build -o bin/main cmd/api/*.go
 {{- end }}
 
@@ -78,12 +78,12 @@ db.destroy:
 .PHONY: db.create
 db.create:
 	docker exec -i dev_mysql \
-		mysql -uroot -pmysql -e "CREATE DATABASE IF NOT EXISTS {{ .Name}};"
+		mysql -uroot -pmysql -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};"
 
 .PHONY: db.drop
 db.drop:
 	docker exec -i dev_mysql \
-		mysql -uroot -pmysql -e "DROP DATABASE IF EXISTS {{ .Name}};"
+		mysql -uroot -pmysql -e "DROP DATABASE IF EXISTS {{ .Name }};"
 	{{- end }}
 {{- end }}
 %:

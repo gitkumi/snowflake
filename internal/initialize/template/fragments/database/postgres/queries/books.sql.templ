@@ -4,7 +4,7 @@ ORDER BY created_at DESC
 LIMIT $1
 OFFSET $2;
 
--- name: CountBooks :one
+-- name: CountBook :one
 SELECT COUNT(*) AS count FROM books;
 
 -- name: GetBook :one

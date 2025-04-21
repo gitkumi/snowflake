@@ -1,9 +1,9 @@
 package service
 
 import (
+	"{{ .Name }}/internal/repo"
 	"context"
 	"database/sql"
-	"northpole/internal/repo"
 )
 
 type BookService struct {
@@ -31,7 +31,22 @@ func (s *BookService) CreateBook(ctx context.Context, title string, author, isbn
 		Isbn:   isbn,
 		Genre:  genre,
 	}
+
+	{{- if eq .Database.String "mysql"}}
+	result, err := s.Query.CreateBook(ctx, params)
+	if err != nil {
+		return repo.Book{}, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return repo.Book{}, err
+	}
+
+	return s.Query.GetBook(ctx, id)
+	{{ else }}
 	return s.Query.CreateBook(ctx, params)
+	{{- end }}
 }
 
 func (s *BookService) UpdateBook(ctx context.Context, id int64, title string, author, isbn, genre sql.NullString) (repo.Book, error) {
@@ -42,7 +57,17 @@ func (s *BookService) UpdateBook(ctx context.Context, id int64, title string, au
 		Isbn:   isbn,
 		Genre:  genre,
 	}
+
+	{{- if eq .Database.String "mysql"}}
+	err := s.Query.UpdateBook(ctx, params)
+	if err != nil {
+		return repo.Book{}, err
+	}
+
+	return s.Query.GetBook(ctx, id)
+	{{- else }}
 	return s.Query.UpdateBook(ctx, params)
+	{{- end }}
 }
 
 func (s *BookService) DeleteBook(ctx context.Context, id int64) error {
