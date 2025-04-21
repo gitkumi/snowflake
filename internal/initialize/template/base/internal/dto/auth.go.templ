@@ -1,9 +1,10 @@
-package service
+package dto
 
 import (
 	"{{ .Name }}/internal/password"
 	"{{ .Name }}/internal/repo"
 	"database/sql"
+	"time"
 )
 
 type CreateMagicLinkInput struct {
@@ -68,3 +69,39 @@ func (u RegisterInput) Repo() (repo.CreateUserParams, error) {
 
 	return user, nil
 }
+
+type UserResponse struct {
+	ID          int64   `json:"id"`
+	Email       string  `json:"email"`
+	Username    string  `json:"username"`
+	FirstName   *string `json:"first_name"`
+	LastName    *string `json:"last_name"`
+	ConfirmedAt *string `json:"confirmed_at"`
+	CreatedAt   string  `json:"created_at"`
+	UpdatedAt   string  `json:"updated_at"`
+}
+
+func NewUserResponse(u repo.User) UserResponse {
+	user := UserResponse{
+		ID:        u.ID,
+		Email:     u.Email,
+		Username:  u.Username,
+		CreatedAt: u.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: u.UpdatedAt.Format(time.RFC3339),
+	}
+
+	if u.FirstName.Valid {
+		user.FirstName = &u.FirstName.String
+	}
+
+	if u.LastName.Valid {
+		user.LastName = &u.LastName.String
+	}
+
+	if u.ConfirmedAt.Valid {
+		confirmedAt := u.ConfirmedAt.Time.Format(time.RFC3339)
+		user.ConfirmedAt = &confirmedAt
+	}
+
+	return user
+} 
