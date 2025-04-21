@@ -36,6 +36,6 @@ build-all:
 	@cd dist && sha256sum * > SHA256SUMS
 	@echo "Done! Binaries are in the dist/ directory"
 
-.PHONY: list-versions
-list-versions:
+.PHONY: versions
+versions:
 	@git tag -l --sort=-v:refname | head -n 10
