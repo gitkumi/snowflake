@@ -1,5 +1,7 @@
 package dto
 
+import "database/sql"
+
 func renderNullString(ns sql.NullString) string {
 	if ns.Valid {
 		return ns.String
