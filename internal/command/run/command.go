@@ -12,16 +12,16 @@ import (
 
 func Command() *cobra.Command {
 	var (
+		quiet         bool
 		database      string
 		backgroundJob string
 		appType       string
 		outputDir     string
-		noGit         bool
-		noSMTP        bool
-		noStorage     bool
-		noRedis       bool
-		noAuth        bool
-		quiet         bool
+		git           bool
+		smtp          bool
+		storage       bool
+		redis         bool
+		auth          bool
 	)
 
 	cmd := &cobra.Command{
@@ -73,12 +73,12 @@ func Command() *cobra.Command {
 				Database:      dbEnum,
 				BackgroundJob: backgroundJobEnum,
 				AppType:       appTypeEnum,
-				NoGit:         noGit,
+				Git:           git,
 				OutputDir:     outputDir,
-				NoSMTP:        noSMTP,
-				NoStorage:     noStorage,
-				NoRedis:       noRedis,
-				NoAuth:        noAuth,
+				SMTP:          smtp,
+				Storage:       storage,
+				Redis:         redis,
+				Auth:          auth,
 			})
 			if err != nil {
 				log.Fatal(err.Error())
@@ -88,14 +88,15 @@ func Command() *cobra.Command {
 
 	cmd.Flags().StringVarP(&appType, "app-type", "t", "api", fmt.Sprintf("App type %v", initialize.AllAppTypes))
 	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", initialize.AllDatabases))
+
 	cmd.Flags().StringVarP(&backgroundJob, "background-job", "b", "basic", fmt.Sprintf("Background Job type %v", initialize.AllBackgroundJobs))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "Disable project generation messages")
-	cmd.Flags().BoolVar(&noGit, "no-git", false, "Remove git")
-	cmd.Flags().BoolVar(&noSMTP, "no-smtp", false, "Remove SMTP")
-	cmd.Flags().BoolVar(&noStorage, "no-storage", false, "Remove Storage (S3)")
-	cmd.Flags().BoolVar(&noRedis, "no-redis", false, "Remove Redis (Redis comes with ratelimit middleware)")
-	cmd.Flags().BoolVar(&noAuth, "no-auth", false, "Remove Authentication (Authentication requires SMTP)")
+	cmd.Flags().BoolVar(&git, "git", true, "Initialize git")
+	cmd.Flags().BoolVar(&smtp, "smtp", false, "Add SMTP")
+	cmd.Flags().BoolVar(&storage, "storage", false, "Add Storage (S3)")
+	cmd.Flags().BoolVar(&redis, "redis", false, "Add Redis (comes with ratelimit middleware)")
+	cmd.Flags().BoolVar(&auth, "auth", false, "Add Authentication (simple email-based)")
 
 	return cmd
 }

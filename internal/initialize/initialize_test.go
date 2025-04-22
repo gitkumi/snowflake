@@ -18,11 +18,11 @@ func TestGenerateNoDB(t *testing.T) {
 		BackgroundJob: initialize.BackgroundJobNone,
 		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
-		NoGit:         true,
-		NoSMTP:        false,
-		NoStorage:     false,
-		NoAuth:        false,
-		NoRedis:       false,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Auth:          true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -44,11 +44,11 @@ func TestGenerateSQLite3(t *testing.T) {
 		BackgroundJob: initialize.BackgroundJobNone,
 		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
-		NoGit:         true,
-		NoSMTP:        false,
-		NoStorage:     false,
-		NoAuth:        false,
-		NoRedis:       false,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Auth:          true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -70,11 +70,11 @@ func TestGeneratePostgres(t *testing.T) {
 		BackgroundJob: initialize.BackgroundJobNone,
 		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
-		NoGit:         true,
-		NoSMTP:        false,
-		NoStorage:     false,
-		NoAuth:        false,
-		NoRedis:       false,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Auth:          true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -96,11 +96,11 @@ func TestGenerateMySQL(t *testing.T) {
 		BackgroundJob: initialize.BackgroundJobNone,
 		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
-		NoGit:         true,
-		NoSMTP:        false,
-		NoStorage:     false,
-		NoAuth:        false,
-		NoRedis:       false,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Auth:          true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -122,11 +122,11 @@ func TestGenerateWebApp(t *testing.T) {
 		BackgroundJob: initialize.BackgroundJobNone,
 		AppType:       initialize.AppTypeWeb,
 		OutputDir:     tmpDir,
-		NoGit:         true,
-		NoSMTP:        false,
-		NoStorage:     false,
-		NoAuth:        false,
-		NoRedis:       false,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Auth:          true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -164,11 +164,11 @@ func TestGenerateNoSMTP(t *testing.T) {
 		BackgroundJob: initialize.BackgroundJobNone,
 		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
-		NoGit:         true,
-		NoSMTP:        true,
-		NoStorage:     false,
-		NoAuth:        false,
-		NoRedis:       false,
+		Git:           false,
+		SMTP:          false,
+		Storage:       true,
+		Auth:          true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -190,11 +190,11 @@ func TestGenerateNoStorage(t *testing.T) {
 		BackgroundJob: initialize.BackgroundJobNone,
 		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
-		NoGit:         true,
-		NoSMTP:        false,
-		NoStorage:     true,
-		NoAuth:        false,
-		NoRedis:       false,
+		Git:           false,
+		SMTP:          true,
+		Storage:       false,
+		Auth:          true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -216,11 +216,11 @@ func TestGenerateNoAuth(t *testing.T) {
 		BackgroundJob: initialize.BackgroundJobNone,
 		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
-		NoGit:         true,
-		NoSMTP:        false,
-		NoStorage:     false,
-		NoAuth:        true,
-		NoRedis:       false,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Auth:          false,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -242,11 +242,11 @@ func TestGenerateNoRedis(t *testing.T) {
 		BackgroundJob: initialize.BackgroundJobNone,
 		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
-		NoGit:         true,
-		NoSMTP:        false,
-		NoStorage:     false,
-		NoAuth:        false,
-		NoRedis:       true,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Auth:          true,
+		Redis:         false,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -268,11 +268,11 @@ func TestGenerateBackgroundJobBasic(t *testing.T) {
 		BackgroundJob: initialize.BackgroundJobBasic,
 		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
-		NoGit:         true,
-		NoSMTP:        false,
-		NoStorage:     false,
-		NoAuth:        false,
-		NoRedis:       false,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Auth:          true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -294,11 +294,11 @@ func TestGenerateBackgroundJobSQS(t *testing.T) {
 		BackgroundJob: initialize.BackgroundJobSQS,
 		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
-		NoGit:         true,
-		NoSMTP:        false,
-		NoStorage:     false,
-		NoAuth:        false,
-		NoRedis:       false,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Auth:          true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -320,11 +320,11 @@ func TestGenerateBackgroundJobAsynq(t *testing.T) {
 		BackgroundJob: initialize.BackgroundJobAsynq,
 		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
-		NoGit:         true,
-		NoSMTP:        false,
-		NoStorage:     false,
-		NoAuth:        false,
-		NoRedis:       false,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Auth:          true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -334,4 +334,66 @@ func TestGenerateBackgroundJobAsynq(t *testing.T) {
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
 		t.Fatal("project directory not created")
 	}
+}
+
+func FuzzGenerate(f *testing.F) {
+	f.Add(true, true, true, true, 0, 0, 0)
+
+	f.Fuzz(func(t *testing.T,
+		withSMTP, withStorage, withAuth, withRedis bool,
+		appTypeInt, dbTypeInt, jobTypeInt int,
+	) {
+		tmpDir := t.TempDir()
+
+		appTypes := []initialize.AppType{
+			initialize.AppTypeAPI,
+			initialize.AppTypeWeb,
+		}
+		databases := []initialize.Database{
+			initialize.DatabaseSQLite3,
+			initialize.DatabasePostgres,
+			initialize.DatabaseMySQL,
+			initialize.DatabaseNone,
+		}
+		backgroundJobs := []initialize.BackgroundJob{
+			initialize.BackgroundJobBasic,
+			initialize.BackgroundJobSQS,
+			initialize.BackgroundJobAsynq,
+			initialize.BackgroundJobNone,
+		}
+
+		appType := appTypes[abs(appTypeInt)%len(appTypes)]
+		database := databases[abs(dbTypeInt)%len(databases)]
+		backgroundJob := backgroundJobs[abs(jobTypeInt)%len(backgroundJobs)]
+
+		err := initialize.Run(&initialize.Config{
+			Quiet:         true,
+			Name:          "acme",
+			Database:      database,
+			BackgroundJob: backgroundJob,
+			AppType:       appType,
+			OutputDir:     tmpDir,
+			Git:           true,
+			SMTP:          withSMTP,
+			Storage:       withStorage,
+			Auth:          withAuth,
+			Redis:         withRedis,
+		})
+		if err != nil {
+			t.Logf("initialize.Run returned error: %v", err)
+			return
+		}
+
+		projectDir := filepath.Join(tmpDir, "acme")
+		if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+			t.Fatal("project directory not created")
+		}
+	})
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
