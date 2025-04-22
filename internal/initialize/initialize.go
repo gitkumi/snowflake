@@ -14,14 +14,14 @@ import (
 )
 
 type Project struct {
-	Name          string
-	AppType       AppType
-	Database      Database
-	BackgroundJob BackgroundJob
+	Name           string
+	AppType        AppType
+	Database       Database
+	BackgroundJob  BackgroundJob
+	Authentication Authentication
 
 	SMTP           bool
 	Storage        bool
-	Auth           bool
 	Redis          bool
 	OAuthDiscord   bool
 	OAuthFacebook  bool
@@ -31,8 +31,12 @@ type Project struct {
 	OAuthLinkedIn  bool
 }
 
+func (p *Project) WithAuth() bool {
+	return p.Authentication != AuthenticationNone
+}
+
 func (p *Project) WithOAuth() bool {
-	return p.OAuthGoogle || p.OAuthDiscord || p.OAuthFacebook || p.OAuthGitHub || p.OAuthInstagram || p.OAuthLinkedIn
+	return p.WithAuth() && (p.OAuthGoogle || p.OAuthDiscord || p.OAuthFacebook || p.OAuthGitHub || p.OAuthInstagram || p.OAuthLinkedIn)
 }
 
 type Config struct {
@@ -40,14 +44,14 @@ type Config struct {
 	OutputDir string
 	Git       bool
 
-	Name          string
-	AppType       AppType
-	Database      Database
-	BackgroundJob BackgroundJob
+	Name           string
+	AppType        AppType
+	Database       Database
+	BackgroundJob  BackgroundJob
+	Authentication Authentication
 
 	SMTP           bool
 	Storage        bool
-	Auth           bool
 	Redis          bool
 	OAuthDiscord   bool
 	OAuthFacebook  bool
@@ -66,23 +70,32 @@ func Run(cfg *Config) error {
 		SMTP:           cfg.SMTP,
 		Storage:        cfg.Storage,
 		Redis:          cfg.Redis || cfg.BackgroundJob == BackgroundJobAsynq,
-		Auth:           cfg.Database != DatabaseNone && cfg.SMTP && cfg.Auth,
-		OAuthDiscord:   cfg.Auth && cfg.OAuthDiscord,
-		OAuthFacebook:  cfg.Auth && cfg.OAuthFacebook,
-		OAuthGitHub:    cfg.Auth && cfg.OAuthGitHub,
-		OAuthGoogle:    cfg.Auth && cfg.OAuthGoogle,
-		OAuthInstagram: cfg.Auth && cfg.OAuthInstagram,
-		OAuthLinkedIn:  cfg.Auth && cfg.OAuthLinkedIn,
+		Authentication: cfg.Authentication,
+		OAuthDiscord:   cfg.Authentication != AuthenticationNone && cfg.OAuthDiscord,
+		OAuthFacebook:  cfg.Authentication != AuthenticationNone && cfg.OAuthFacebook,
+		OAuthGitHub:    cfg.Authentication != AuthenticationNone && cfg.OAuthGitHub,
+		OAuthGoogle:    cfg.Authentication != AuthenticationNone && cfg.OAuthGoogle,
+		OAuthInstagram: cfg.Authentication != AuthenticationNone && cfg.OAuthInstagram,
+		OAuthLinkedIn:  cfg.Authentication != AuthenticationNone && cfg.OAuthLinkedIn,
+	}
+
+	if cfg.Database == DatabaseNone || !cfg.SMTP {
+		project.Authentication = AuthenticationNone
+		project.OAuthDiscord = false
+		project.OAuthFacebook = false
+		project.OAuthGitHub = false
+		project.OAuthGoogle = false
+		project.OAuthInstagram = false
+		project.OAuthLinkedIn = false
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
 	templateFiles := initializetemplate.BaseFiles
 
-	templateFuncs := createTemplateFuncs(cfg)
 	exclusions := createFileExclusions()
 	renames := createFileRenames()
 
-	if err := createFiles(project, outputPath, templateFiles, templateFuncs, exclusions, cfg.Quiet); err != nil {
+	if err := createFiles(project, outputPath, templateFiles, exclusions, cfg.Quiet); err != nil {
 		return err
 	}
 
@@ -124,7 +137,7 @@ Run your new project:
 }
 
 func createFiles(project *Project, outputPath string, templateFiles fs.FS,
-	templateFuncs map[string]interface{}, exclusions *FileExclusions, quiet bool) error {
+	exclusions *FileExclusions, quiet bool) error {
 
 	if !quiet {
 		fmt.Println("Generating files...")
@@ -135,6 +148,59 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 		New: func() interface{} {
 			return new(bytes.Buffer)
 		},
+	}
+
+	// Load database fragments for the selected database
+	databaseFragments := make(map[string]string)
+
+	if project.Database != DatabaseNone {
+		// Load migration fragments
+		migrationsDir := filepath.Join("fragments/database", string(project.Database), "migrations")
+		err := fs.WalkDir(initializetemplate.DatabaseFragments, migrationsDir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if d.IsDir() {
+				return nil
+			}
+			content, err := fs.ReadFile(initializetemplate.DatabaseFragments, path)
+			if err != nil {
+				return err
+			}
+
+			// Get the base name (without extension) as the template name
+			basename := filepath.Base(path)
+			templateName := "migration_" + basename
+			databaseFragments[templateName] = string(content)
+			return nil
+		})
+		if err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("failed to load database migration fragments: %w", err)
+		}
+
+		// Load query fragments
+		queriesDir := filepath.Join("fragments/database", string(project.Database), "queries")
+		err = fs.WalkDir(initializetemplate.DatabaseFragments, queriesDir, func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if d.IsDir() {
+				return nil
+			}
+			content, err := fs.ReadFile(initializetemplate.DatabaseFragments, path)
+			if err != nil {
+				return err
+			}
+
+			// Get the base name (without extension) as the template name
+			basename := filepath.Base(path)
+			templateName := "query_" + basename
+			databaseFragments[templateName] = string(content)
+			return nil
+		})
+		if err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("failed to load database query fragments: %w", err)
+		}
 	}
 
 	err := fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
@@ -158,9 +224,20 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 			return err
 		}
 
-		tmpl, err := template.New(templateFileName).Funcs(templateFuncs).Parse(string(content))
-		if err != nil {
-			return err
+		// Create the root template for this file
+		rootTemplate := template.New(filepath.Base(templateFileName))
+
+		// Add all database fragments as defined templates first
+		for name, fragment := range databaseFragments {
+			fragmentTemplate := rootTemplate.New(name)
+			if _, err := fragmentTemplate.Parse(fragment); err != nil {
+				return fmt.Errorf("failed to parse database fragment %s: %w", name, err)
+			}
+		}
+
+		// Then parse the main template file
+		if _, err := rootTemplate.Parse(string(content)); err != nil {
+			return fmt.Errorf("failed to parse template %s: %w", templateFileName, err)
 		}
 
 		// Get a buffer from pool and ensure it's reset
@@ -168,8 +245,8 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 		buf.Reset()
 		defer bufPool.Put(buf)
 
-		if err := tmpl.Execute(buf, project); err != nil {
-			return err
+		if err := rootTemplate.Execute(buf, project); err != nil {
+			return fmt.Errorf("error executing template %s: %w", templateFileName, err)
 		}
 
 		filePath := strings.TrimSuffix(targetPath, ".templ")

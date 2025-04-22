@@ -463,11 +463,14 @@ func (s *OAuthService) processOAuthUser(ctx context.Context, provider, providerI
 				return "", fmt.Errorf("failed to create token: %w", err)
 			}
 		} else {
+			{{- if eq .Authentication "email_with_username"}}
 			username := s.generateUsername(email, name)
-
+			{{- end }}
 			userParams := repo.CreateUserParams{
 				Email:    email,
+				{{- if eq .Authentication "email_with_username"}}
 				Username: username,
+				{{- end }}
 				HashedPassword: sql.NullString{
 					Valid: false,
 				},
@@ -519,7 +522,9 @@ func (s *OAuthService) processOAuthUser(ctx context.Context, provider, providerI
 			updateParams := repo.UpdateUserParams{
 				ID:             user.ID,
 				Email:          user.Email,
+				{{- if eq .Authentication "email_with_username"}}
 				Username:       user.Username,
+				{{- end }}
 				HashedPassword: user.HashedPassword,
 				FirstName:      user.FirstName,
 				LastName:       user.LastName,
@@ -545,6 +550,7 @@ func (s *OAuthService) processOAuthUser(ctx context.Context, provider, providerI
 
 	return jwtToken, nil
 }
+
 
 // generateUsername creates a username from email or name
 func (s *OAuthService) generateUsername(email, name string) string {

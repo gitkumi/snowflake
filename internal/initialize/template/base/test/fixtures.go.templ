@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/jaswdr/faker"
-	{{- if .Auth }}
+	{{- if .WithAuth }}
 	"{{ .Name }}/internal/password"
 	"database/sql"
 	"github.com/matoous/go-nanoid/v2"
@@ -66,7 +66,7 @@ func (t TestApplication) CreateBookFixture(custom repo.CreateBookParams) repo.Bo
 	{{- end }}
 }
 
-{{- if .Auth }}
+{{- if .WithAuth }}
 func (t TestApplication) CreateUserFixture(custom repo.CreateUserParams) repo.User {
 	ctx := context.Background()
 	fake := faker.New()
@@ -80,7 +80,7 @@ func (t TestApplication) CreateUserFixture(custom repo.CreateUserParams) repo.Us
 			String: hashed,
 			Valid:  true,
 		},
-		Username: nanoid,
+		{{- if eq .Authentication "email_with_username"}} Username: nanoid, {{- end }}
 		Email:    nanoid + "@example.com",
 		FirstName: sql.NullString{
 			String: fake.Lorem().Text(10),

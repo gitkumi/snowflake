@@ -32,7 +32,9 @@ type OAuthAccount struct {
 // OAuthCreateUserParams used to create a new user with OAuth
 type OAuthCreateUserParams struct {
 	Email        string
+	{{- if eq .Authentication "email_with_username"}}
 	Username     string
+	{{- end }}
 	FirstName    string
 	LastName     string
 	Provider     string
@@ -46,7 +48,9 @@ type OAuthCreateUserParams struct {
 func (p OAuthCreateUserParams) ToUserParams() repo.CreateUserParams {
 	params := repo.CreateUserParams{
 		Email:    p.Email,
+		{{- if eq .Authentication "email_with_username"}}
 		Username: p.Username,
+		{{- end }}
 		// No password for OAuth users by default
 		HashedPassword: sql.NullString{Valid: false},
 	}

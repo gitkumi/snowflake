@@ -6,66 +6,27 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"text/template"
-
-	initializetemplate "github.com/gitkumi/snowflake/internal/initialize/template"
 )
 
 type FileExclusions struct {
-	SMTP           []string
-	Storage        []string
-	Redis          []string
-	Auth           []string
-	OAuthGoogle    []string
-	OAuthFacebook  []string
-	OAuthGithub    []string
-	OAuthLinkedIn  []string
-	OAuthInstagram []string
-	OAuthDiscord   []string
-	AppType        map[AppType][]string
-	Database       map[Database][]string
-	BackgroundJob  map[BackgroundJob][]string
+	SMTP               []string
+	Storage            []string
+	Redis              []string
+	Auth               []string
+	OAuthGoogle        []string
+	OAuthFacebook      []string
+	OAuthGithub        []string
+	OAuthLinkedIn      []string
+	OAuthInstagram     []string
+	OAuthDiscord       []string
+	AppType            map[AppType][]string
+	Database           map[Database][]string
+	BackgroundJob      map[BackgroundJob][]string
+	AuthenticationType map[Authentication][]string
 }
 
 type FileRenames struct {
 	ByAppType map[AppType]map[string]string
-}
-
-func createTemplateFuncs(cfg *Config) template.FuncMap {
-	return template.FuncMap{
-		"DatabaseMigration": func(filename string) (string, error) {
-			return lOAdDatabaseMigration(cfg.Database, filename)
-		},
-		"DatabaseQuery": func(filename string) (string, error) {
-			return lOAdDatabaseQuery(cfg.Database, filename)
-		},
-	}
-}
-
-func lOAdDatabaseMigration(db Database, filename string) (string, error) {
-	if db == DatabaseNone {
-		return "", nil
-	}
-
-	fragmentPath := filepath.Join("fragments/database", string(db), "migrations", filename)
-	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read database fragment: %w", err)
-	}
-	return string(content), nil
-}
-
-func lOAdDatabaseQuery(db Database, filename string) (string, error) {
-	if db == DatabaseNone {
-		return "", nil
-	}
-
-	fragmentPath := filepath.Join("fragments/database", string(db), "queries", filename)
-	content, err := initializetemplate.DatabaseFragments.ReadFile(fragmentPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read database query fragment: %w", err)
-	}
-	return string(content), nil
 }
 
 func createFileExclusions() *FileExclusions {
@@ -83,23 +44,25 @@ func createFileExclusions() *FileExclusions {
 		Redis: []string{
 			"/internal/middleware/rate_limit.go",
 		},
-		Auth: []string{
-			"/internal/dto/auth.go",
-			"/internal/password/password.go",
-			"/internal/password/password_test.go",
-			"/internal/middleware/auth.go",
-			"/internal/middleware/auth_test.go",
-			"/internal/application/handler/auth_handler_test.go",
-			"/internal/application/handler/auth_handler.go",
-			"/internal/application/service/auth_service.go",
-			"/static/sql/migrations/00002_organizations.sql",
-			"/static/sql/migrations/00003_users.sql",
-			"/static/sql/migrations/00004_memberships.sql",
-			"/static/sql/migrations/00005_user_auth_tokens.sql",
-			"/static/sql/queries/memberships.sql",
-			"/static/sql/queries/organizations.sql",
-			"/static/sql/queries/user_auth_tokens.sql",
-			"/static/sql/queries/users.sql",
+		AuthenticationType: map[Authentication][]string{
+			AuthenticationNone: []string{
+				"/internal/dto/auth.go",
+				"/internal/password/password.go",
+				"/internal/password/password_test.go",
+				"/internal/middleware/auth.go",
+				"/internal/middleware/auth_test.go",
+				"/internal/application/handler/auth_handler_test.go",
+				"/internal/application/handler/auth_handler.go",
+				"/internal/application/service/auth_service.go",
+				"/static/sql/migrations/00002_organizations.sql",
+				"/static/sql/migrations/00003_users.sql",
+				"/static/sql/migrations/00004_memberships.sql",
+				"/static/sql/migrations/00005_user_auth_tokens.sql",
+				"/static/sql/queries/memberships.sql",
+				"/static/sql/queries/organizations.sql",
+				"/static/sql/queries/user_auth_tokens.sql",
+				"/static/sql/queries/users.sql",
+			},
 		},
 		AppType: map[AppType][]string{
 			AppTypeAPI: {
@@ -116,11 +79,13 @@ func createFileExclusions() *FileExclusions {
 				"/static/sql/migrations/00003_users.sql",
 				"/static/sql/migrations/00004_memberships.sql",
 				"/static/sql/migrations/00005_user_auth_tokens.sql",
+				"/static/sql/migrations/00006_user_oauth.sql",
 				"/static/sql/queries/organizations.sql",
 				"/static/sql/queries/memberships.sql",
 				"/static/sql/queries/users.sql",
 				"/static/sql/queries/books.sql",
 				"/static/sql/queries/user_auth_tokens.sql",
+				"/static/sql/queries/user_oauth.sql",
 				"/static/static.go",
 				"/internal/application/db.go",
 				"/test/fixtures.go",
@@ -219,6 +184,22 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 		return true
 	}
 
+	if fileName == "/static/sql/migrations/00005_user_oauth.sql" && !project.WithOAuth() {
+		return true
+	}
+
+	if fileName == "/static/sql/queries/user_oauth.sql" && !project.WithOAuth() {
+		return true
+	}
+
+	if excludedPaths, ok := exclusions.AuthenticationType[project.Authentication]; ok {
+		for _, excludedPath := range excludedPaths {
+			if fileName == excludedPath {
+				return true
+			}
+		}
+	}
+
 	if excludedPaths, ok := exclusions.AppType[project.AppType]; ok {
 		for _, excludedPath := range excludedPaths {
 			if fileName == excludedPath {
@@ -243,6 +224,14 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 		}
 	}
 
+	if !project.Redis {
+		for _, excludedPath := range exclusions.Redis {
+			if fileName == excludedPath {
+				return true
+			}
+		}
+	}
+
 	if !project.SMTP {
 		for _, excludedPath := range exclusions.SMTP {
 			if fileName == excludedPath {
@@ -253,14 +242,6 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 
 	if !project.Storage {
 		for _, excludedPath := range exclusions.Storage {
-			if fileName == excludedPath {
-				return true
-			}
-		}
-	}
-
-	if !project.Auth {
-		for _, excludedPath := range exclusions.Auth {
 			if fileName == excludedPath {
 				return true
 			}

@@ -28,7 +28,9 @@ type InstagramOAuth struct {
 
 type InstagramUser struct {
 	ID       string `json:"id"`
+	{{- if eq .Authentication "email_with_username"}}
 	Username string `json:"username"`
+	{{- end }}
 	Name     string `json:"full_name"`
 	Picture  string `json:"profile_picture"`
 }
@@ -37,7 +39,9 @@ type instagramTokenResponse struct {
 	AccessToken string `json:"access_token"`
 	UserInfo    struct {
 		ID       string `json:"id"`
+		{{- if eq .Authentication "email_with_username"}}
 		Username string `json:"username"`
+		{{- end }}
 	} `json:"user"`
 }
 

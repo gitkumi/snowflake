@@ -19,8 +19,8 @@ func Command() *cobra.Command {
 			database := initialize.AllDatabases[0]
 			backgroundJob := initialize.AllBackgroundJobs[0]
 			selectedFeatures := []string{"Git", "SMTP", "Storage"}
-			authEnabled := false
 			selectedAuthProviders := []string{}
+			authType := initialize.AllAuthentications[0]
 
 			// Create the initial form groups
 			projectNameGroup := huh.NewGroup(
@@ -64,9 +64,10 @@ func Command() *cobra.Command {
 			)
 
 			authGroup := huh.NewGroup(
-				huh.NewConfirm().
-					Title("Enable Email Authentication").
-					Value(&authEnabled),
+				huh.NewSelect[initialize.Authentication]().
+					Title("Authentication Type").
+					Options(huh.NewOptions(initialize.AllAuthentications...)...).
+					Value(&authType),
 			)
 
 			oauthProvidersGroup := huh.NewGroup(
@@ -97,8 +98,7 @@ func Command() *cobra.Command {
 				return
 			}
 
-			// If auth is enabled, show the OAuth providers form
-			if authEnabled {
+			if authType != initialize.AuthenticationNone {
 				oauthForm := huh.NewForm(oauthProvidersGroup)
 				if err := oauthForm.Run(); err != nil {
 					fmt.Printf("error running OAuth form: %v\n", err)
@@ -128,11 +128,11 @@ func Command() *cobra.Command {
 			cfg.AppType = appType
 			cfg.Database = database
 			cfg.BackgroundJob = backgroundJob
+			cfg.Authentication = authType
 			cfg.Git = featureEnabled("Git")
 			cfg.SMTP = featureEnabled("SMTP")
 			cfg.Storage = featureEnabled("Storage")
 			cfg.Redis = featureEnabled("Redis")
-			cfg.Auth = authEnabled
 			cfg.OAuthDiscord = authProviderEnabled("OAuthDiscord")
 			cfg.OAuthFacebook = authProviderEnabled("OAuthFacebook")
 			cfg.OAuthGitHub = authProviderEnabled("OAuthGitHub")

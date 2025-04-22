@@ -130,3 +130,26 @@ func (t BackgroundJob) IsValid() bool {
 	}
 	return false
 }
+
+type Authentication string
+
+const (
+	AuthenticationNone              Authentication = "none"
+	AuthenticationEmail             Authentication = "email"
+	AuthenticationEmailWithUsername Authentication = "email_with_username"
+)
+
+var AllAuthentications = []Authentication{
+	AuthenticationNone,
+	AuthenticationEmail,
+	AuthenticationEmailWithUsername,
+}
+
+func (a Authentication) IsValid() bool {
+	for _, auth := range AllAuthentications {
+		if auth == a {
+			return true
+		}
+	}
+	return false
+}

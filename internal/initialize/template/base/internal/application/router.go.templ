@@ -51,7 +51,7 @@ func (app *Application) registerRoutes() error {
 	api.POST("/books", app.handlers.book.CreateBook)
 	api.PATCH("/books/:id", app.handlers.book.UpdateBook)
 	api.DELETE("/books/:id", app.handlers.book.DeleteBook)
-		{{- if and .SMTP .Auth }}
+		{{- if and .SMTP .WithAuth }}
 	api.POST("/auth/register", app.handlers.auth.Register)
 	api.POST("/auth/login", app.handlers.auth.Login)
 	api.POST("/auth/email-login", app.handlers.auth.CreateMagicLink)

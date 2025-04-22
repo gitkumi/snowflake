@@ -66,12 +66,12 @@ db.down:
 
 	{{- if ne .Database.String "sqlite3"}}
 
-.PHONY: devenv
-devenv:
+.PHONY: devenv.up
+devenv.up:
 	docker compose -f dev.yaml up -d
 
-.PHONY: db.destroy
-db.destroy:
+.PHONY: devenv.down
+devenv.down:
 	docker rm container dev_mysql -f
 	docker compose -f dev.yaml down -v
 
