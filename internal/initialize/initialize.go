@@ -15,28 +15,42 @@ import (
 
 type Project struct {
 	Name          string
+	AppType       AppType
 	Database      Database
 	BackgroundJob BackgroundJob
-	AppType       AppType
-	SMTP          bool
-	Storage       bool
-	Auth          bool
-	Redis         bool
+
+	SMTP           bool
+	Storage        bool
+	Auth           bool
+	Redis          bool
+	OAuthDiscord   bool
+	OAuthFacebook  bool
+	OAuthGitHub    bool
+	OAuthGoogle    bool
+	OAuthInstagram bool
+	OAuthLinkedIn  bool
 }
 
 type Config struct {
-	Quiet         bool
-	Name          string
-	Database      Database
-	AppType       AppType
-	BackgroundJob BackgroundJob
-	OutputDir     string
+	Quiet     bool
+	OutputDir string
+	Git       bool
 
-	WithSMTP    bool
-	WithStorage bool
-	WithAuth    bool
-	WithGit     bool
-	WithRedis   bool
+	Name          string
+	AppType       AppType
+	Database      Database
+	BackgroundJob BackgroundJob
+
+	SMTP           bool
+	Storage        bool
+	Auth           bool
+	Redis          bool
+	OAuthDiscord   bool
+	OAuthFacebook  bool
+	OAuthGitHub    bool
+	OAuthGoogle    bool
+	OAuthInstagram bool
+	OAuthLinkedIn  bool
 }
 
 func Run(cfg *Config) error {
@@ -45,10 +59,10 @@ func Run(cfg *Config) error {
 		Database:      cfg.Database,
 		BackgroundJob: cfg.BackgroundJob,
 		AppType:       cfg.AppType,
-		SMTP:          cfg.WithSMTP,
-		Storage:       cfg.WithStorage,
-		Redis:         cfg.WithRedis || cfg.BackgroundJob == BackgroundJobAsynq,
-		Auth:          cfg.WithAuth && cfg.WithSMTP && cfg.Database != DatabaseNone,
+		SMTP:          cfg.SMTP,
+		Storage:       cfg.Storage,
+		Redis:         cfg.Redis || cfg.BackgroundJob == BackgroundJobAsynq,
+		Auth:          cfg.Auth && cfg.SMTP && cfg.Database != DatabaseNone,
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
@@ -70,7 +84,7 @@ func Run(cfg *Config) error {
 		return err
 	}
 
-	if cfg.WithGit {
+	if cfg.Git {
 		if err := runGitCommands(outputPath, cfg.Quiet); err != nil {
 			return err
 		}

@@ -12,13 +12,13 @@ import (
 )
 
 type FileExclusions struct {
-	NoSMTP          []string
-	NoStorage       []string
-	NoRedis         []string
-	NoAuth          []string
-	ByAppType       map[AppType][]string
-	ByDatabase      map[Database][]string
-	ByBackgroundJob map[BackgroundJob][]string
+	SMTP          []string
+	Storage       []string
+	Redis         []string
+	Auth          []string
+	AppType       map[AppType][]string
+	Database      map[Database][]string
+	BackgroundJob map[BackgroundJob][]string
 }
 
 type FileRenames struct {
@@ -64,20 +64,20 @@ func loadDatabaseQuery(db Database, filename string) (string, error) {
 
 func createFileExclusions() *FileExclusions {
 	return &FileExclusions{
-		NoSMTP: []string{
+		SMTP: []string{
 			"/internal/smtp/mailer.go",
 			"/internal/smtp/mailer_smtp.go",
 			"/internal/smtp/mailer_mock.go",
 		},
-		NoStorage: []string{
+		Storage: []string{
 			"/internal/storage/storage.go",
 			"/internal/storage/storage_s3.go",
 			"/internal/storage/storage_mock.go",
 		},
-		NoRedis: []string{
+		Redis: []string{
 			"/internal/middleware/rate_limit.go",
 		},
-		NoAuth: []string{
+		Auth: []string{
 			"/internal/dto/auth.go",
 			"/internal/password/password.go",
 			"/internal/password/password_test.go",
@@ -95,13 +95,13 @@ func createFileExclusions() *FileExclusions {
 			"/static/sql/queries/user_auth_tokens.sql",
 			"/static/sql/queries/users.sql",
 		},
-		ByAppType: map[AppType][]string{
+		AppType: map[AppType][]string{
 			AppTypeAPI: {
 				"/internal/html/hello.templ",
 				"/internal/application/handler/html_handler.go",
 			},
 		},
-		ByDatabase: map[Database][]string{
+		Database: map[Database][]string{
 			DatabaseNone: {
 				"/sqlc.yaml",
 				"/dev.yaml",
@@ -128,7 +128,7 @@ func createFileExclusions() *FileExclusions {
 				"/internal/application/service/book_service.go",
 			},
 		},
-		ByBackgroundJob: map[BackgroundJob][]string{
+		BackgroundJob: map[BackgroundJob][]string{
 			BackgroundJobBasic: {
 				"/internal/queue/queue.go",
 				"/internal/queue/queue_sqs.go",
@@ -171,7 +171,7 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 		return true
 	}
 
-	if excludedPaths, ok := exclusions.ByAppType[project.AppType]; ok {
+	if excludedPaths, ok := exclusions.AppType[project.AppType]; ok {
 		for _, excludedPath := range excludedPaths {
 			if fileName == excludedPath {
 				return true
@@ -179,7 +179,7 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 		}
 	}
 
-	if excludedPaths, ok := exclusions.ByDatabase[project.Database]; ok {
+	if excludedPaths, ok := exclusions.Database[project.Database]; ok {
 		for _, excludedPath := range excludedPaths {
 			if fileName == excludedPath {
 				return true
@@ -187,7 +187,7 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 		}
 	}
 
-	if excludedPaths, ok := exclusions.ByBackgroundJob[project.BackgroundJob]; ok {
+	if excludedPaths, ok := exclusions.BackgroundJob[project.BackgroundJob]; ok {
 		for _, excludedPath := range excludedPaths {
 			if fileName == excludedPath {
 				return true
@@ -196,7 +196,7 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 	}
 
 	if !project.SMTP {
-		for _, excludedPath := range exclusions.NoSMTP {
+		for _, excludedPath := range exclusions.SMTP {
 			if fileName == excludedPath {
 				return true
 			}
@@ -204,7 +204,7 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 	}
 
 	if !project.Storage {
-		for _, excludedPath := range exclusions.NoStorage {
+		for _, excludedPath := range exclusions.Storage {
 			if fileName == excludedPath {
 				return true
 			}
@@ -212,7 +212,7 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 	}
 
 	if !project.Auth {
-		for _, excludedPath := range exclusions.NoAuth {
+		for _, excludedPath := range exclusions.Auth {
 			if fileName == excludedPath {
 				return true
 			}
