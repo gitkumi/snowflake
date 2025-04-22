@@ -335,3 +335,65 @@ func TestGenerateBackgroundJobAsynq(t *testing.T) {
 		t.Fatal("project directory not created")
 	}
 }
+
+func FuzzGenerate(f *testing.F) {
+	f.Add(true, true, true, true, 0, 0, 0)
+
+	f.Fuzz(func(t *testing.T,
+		noSMTP, noStorage, noAuth, noRedis bool,
+		appTypeInt, dbTypeInt, jobTypeInt int,
+	) {
+		tmpDir := t.TempDir()
+
+		appTypes := []initialize.AppType{
+			initialize.AppTypeAPI,
+			initialize.AppTypeWeb,
+		}
+		databases := []initialize.Database{
+			initialize.DatabaseSQLite3,
+			initialize.DatabasePostgres,
+			initialize.DatabaseMySQL,
+			initialize.DatabaseNone,
+		}
+		backgroundJobs := []initialize.BackgroundJob{
+			initialize.BackgroundJobBasic,
+			initialize.BackgroundJobSQS,
+			initialize.BackgroundJobAsynq,
+			initialize.BackgroundJobNone,
+		}
+
+		appType := appTypes[abs(appTypeInt)%len(appTypes)]
+		database := databases[abs(dbTypeInt)%len(databases)]
+		backgroundJob := backgroundJobs[abs(jobTypeInt)%len(backgroundJobs)]
+
+		err := initialize.Run(&initialize.Config{
+			Quiet:         true,
+			Name:          "acme",
+			Database:      database,
+			BackgroundJob: backgroundJob,
+			AppType:       appType,
+			OutputDir:     tmpDir,
+			NoGit:         true,
+			NoSMTP:        noSMTP,
+			NoStorage:     noStorage,
+			NoAuth:        noAuth,
+			NoRedis:       noRedis,
+		})
+		if err != nil {
+			t.Logf("initialize.Run returned error: %v", err)
+			return
+		}
+
+		projectDir := filepath.Join(tmpDir, "acme")
+		if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+			t.Fatal("project directory not created")
+		}
+	})
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
