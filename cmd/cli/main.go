@@ -3,10 +3,10 @@ package cli
 import (
 	"log"
 
-	"github.com/gitkumi/snowflake/internal/commands/generate"
-	"github.com/gitkumi/snowflake/internal/commands/run"
-	"github.com/gitkumi/snowflake/internal/commands/tui"
-	"github.com/gitkumi/snowflake/internal/commands/version"
+	"github.com/gitkumi/snowflake/internal/command/generate"
+	"github.com/gitkumi/snowflake/internal/command/run"
+	"github.com/gitkumi/snowflake/internal/command/tui"
+	"github.com/gitkumi/snowflake/internal/command/version"
 	"github.com/spf13/cobra"
 )
 
