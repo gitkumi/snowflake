@@ -74,11 +74,11 @@ func Command() *cobra.Command {
 			cfg.AppType = appType
 			cfg.Database = database
 			cfg.BackgroundJob = backgroundJob
-			cfg.NoGit = !featureEnabled("Git")
-			cfg.NoSMTP = !featureEnabled("SMTP")
-			cfg.NoStorage = !featureEnabled("Storage")
-			cfg.NoRedis = !featureEnabled("Redis")
-			cfg.NoAuth = !featureEnabled("Auth")
+			cfg.WithGit = featureEnabled("Git")
+			cfg.WithSMTP = featureEnabled("SMTP")
+			cfg.WithStorage = featureEnabled("Storage")
+			cfg.WithRedis = featureEnabled("Redis")
+			cfg.WithAuth = featureEnabled("Auth")
 
 			if err := initialize.Run(cfg); err != nil {
 				fmt.Printf("error creating project: %v\n", err)

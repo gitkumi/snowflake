@@ -12,16 +12,16 @@ import (
 
 func Command() *cobra.Command {
 	var (
+		quiet         bool
 		database      string
 		backgroundJob string
 		appType       string
 		outputDir     string
-		noGit         bool
-		noSMTP        bool
-		noStorage     bool
-		noRedis       bool
-		noAuth        bool
-		quiet         bool
+		withGit       bool
+		withSMTP      bool
+		withStorage   bool
+		withRedis     bool
+		withAuth      bool
 	)
 
 	cmd := &cobra.Command{
@@ -73,12 +73,12 @@ func Command() *cobra.Command {
 				Database:      dbEnum,
 				BackgroundJob: backgroundJobEnum,
 				AppType:       appTypeEnum,
-				NoGit:         noGit,
+				WithGit:       withGit,
 				OutputDir:     outputDir,
-				NoSMTP:        noSMTP,
-				NoStorage:     noStorage,
-				NoRedis:       noRedis,
-				NoAuth:        noAuth,
+				WithSMTP:      withSMTP,
+				WithStorage:   withStorage,
+				WithRedis:     withRedis,
+				WithAuth:      withAuth,
 			})
 			if err != nil {
 				log.Fatal(err.Error())
@@ -91,11 +91,11 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVarP(&backgroundJob, "background-job", "b", "basic", fmt.Sprintf("Background Job type %v", initialize.AllBackgroundJobs))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "Disable project generation messages")
-	cmd.Flags().BoolVar(&noGit, "no-git", false, "Remove git")
-	cmd.Flags().BoolVar(&noSMTP, "no-smtp", false, "Remove SMTP")
-	cmd.Flags().BoolVar(&noStorage, "no-storage", false, "Remove Storage (S3)")
-	cmd.Flags().BoolVar(&noRedis, "no-redis", false, "Remove Redis (Redis comes with ratelimit middleware)")
-	cmd.Flags().BoolVar(&noAuth, "no-auth", false, "Remove Authentication (Authentication requires SMTP)")
+	cmd.Flags().BoolVar(&withGit, "with-git", true, "Initialize git")
+	cmd.Flags().BoolVar(&withSMTP, "with-smtp", false, "Add SMTP")
+	cmd.Flags().BoolVar(&withStorage, "with-storage", false, "Add Storage (S3)")
+	cmd.Flags().BoolVar(&withRedis, "with-redis", false, "Add Redis (comes with ratelimit middleware)")
+	cmd.Flags().BoolVar(&withAuth, "with-auth", false, "Add Authentication (simple email-based)")
 
 	return cmd
 }

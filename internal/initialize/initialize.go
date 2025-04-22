@@ -32,11 +32,11 @@ type Config struct {
 	BackgroundJob BackgroundJob
 	OutputDir     string
 
-	NoSMTP    bool
-	NoStorage bool
-	NoAuth    bool
-	NoGit     bool
-	NoRedis   bool
+	WithSMTP    bool
+	WithStorage bool
+	WithAuth    bool
+	WithGit     bool
+	WithRedis   bool
 }
 
 func Run(cfg *Config) error {
@@ -45,10 +45,10 @@ func Run(cfg *Config) error {
 		Database:      cfg.Database,
 		BackgroundJob: cfg.BackgroundJob,
 		AppType:       cfg.AppType,
-		SMTP:          !cfg.NoSMTP,
-		Storage:       !cfg.NoStorage,
-		Redis:         !cfg.NoRedis || cfg.BackgroundJob == BackgroundJobAsynq,
-		Auth:          !cfg.NoAuth && !cfg.NoSMTP && cfg.Database != DatabaseNone,
+		SMTP:          cfg.WithSMTP,
+		Storage:       cfg.WithStorage,
+		Redis:         cfg.WithRedis || cfg.BackgroundJob == BackgroundJobAsynq,
+		Auth:          cfg.WithAuth && cfg.WithSMTP && cfg.Database != DatabaseNone,
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
@@ -70,7 +70,7 @@ func Run(cfg *Config) error {
 		return err
 	}
 
-	if !cfg.NoGit {
+	if cfg.WithGit {
 		if err := runGitCommands(outputPath, cfg.Quiet); err != nil {
 			return err
 		}
