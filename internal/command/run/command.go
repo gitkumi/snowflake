@@ -12,16 +12,22 @@ import (
 
 func Command() *cobra.Command {
 	var (
-		quiet         bool
-		database      string
-		backgroundJob string
-		appType       string
-		outputDir     string
-		git           bool
-		smtp          bool
-		storage       bool
-		redis         bool
-		auth          bool
+		quiet          bool
+		database       string
+		backgroundJob  string
+		appType        string
+		outputDir      string
+		git            bool
+		smtp           bool
+		storage        bool
+		redis          bool
+		auth           bool
+		oauthDiscord   bool
+		oauthFacebook  bool
+		oauthGitHub    bool
+		oauthGoogle    bool
+		oauthInstagram bool
+		oauthLinkedIn  bool
 	)
 
 	cmd := &cobra.Command{
@@ -97,6 +103,12 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&storage, "storage", false, "Add Storage (S3)")
 	cmd.Flags().BoolVar(&redis, "redis", false, "Add Redis (comes with ratelimit middleware)")
 	cmd.Flags().BoolVar(&auth, "auth", false, "Add Authentication (simple email-based)")
+	cmd.Flags().BoolVar(&oauthDiscord, "oauth-discord", false, "Add Discord OAuth")
+	cmd.Flags().BoolVar(&oauthFacebook, "oauth-facebook", false, "Add Facebook OAuth")
+	cmd.Flags().BoolVar(&oauthGitHub, "oauth-github", false, "Add GitHub OAuth")
+	cmd.Flags().BoolVar(&oauthGoogle, "oauth-google", false, "Add Google OAuth")
+	cmd.Flags().BoolVar(&oauthInstagram, "oauth-instagram", false, "Add Instagram OAuth")
+	cmd.Flags().BoolVar(&oauthLinkedIn, "oauth-linkedin", false, "Add LinkedIn OAuth")
 
 	return cmd
 }

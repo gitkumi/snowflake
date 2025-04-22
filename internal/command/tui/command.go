@@ -26,32 +26,35 @@ func Command() *cobra.Command {
 						Title("Enter project name").
 						Placeholder("acme").
 						Value(&projectName),
-
+				),
+				huh.NewGroup(
 					huh.NewSelect[initialize.AppType]().
 						Title("Select application type").
 						Options(huh.NewOptions(initialize.AllAppTypes...)...).
 						Value(&appType),
-
+				),
+				huh.NewGroup(
 					huh.NewSelect[initialize.Database]().
 						Title("Select database").
 						Options(huh.NewOptions(initialize.AllDatabases...)...).
 						Value(&database),
-
+				),
+				huh.NewGroup(
+					huh.NewMultiSelect[string]().
+						Title("Select additional features").
+						Options(
+							huh.NewOption("Git", "Git"),
+							huh.NewOption("SMTP", "SMTP"),
+							huh.NewOption("Storage (S3)", "Storage"),
+							huh.NewOption("Redis", "Redis"),
+						).
+						Value(&selectedFeatures),
+				),
+				huh.NewGroup(
 					huh.NewSelect[initialize.BackgroundJob]().
 						Title("Select background job").
 						Options(huh.NewOptions(initialize.AllBackgroundJobs...)...).
 						Value(&backgroundJob),
-
-					huh.NewMultiSelect[string]().
-						Title("Select features").
-						Options(
-							huh.NewOption("Git", "Git"),
-							huh.NewOption("SMTP", "SMTP"),
-							huh.NewOption("Storage", "Storage"),
-							huh.NewOption("Redis", "Redis"),
-							huh.NewOption("Auth", "Auth"),
-						).
-						Value(&selectedFeatures),
 				),
 			)
 
@@ -60,7 +63,6 @@ func Command() *cobra.Command {
 				return
 			}
 
-			// Map selected features to config flags
 			featureEnabled := func(name string) bool {
 				for _, f := range selectedFeatures {
 					if f == name {
@@ -79,6 +81,12 @@ func Command() *cobra.Command {
 			cfg.Storage = featureEnabled("Storage")
 			cfg.Redis = featureEnabled("Redis")
 			cfg.Auth = featureEnabled("Auth")
+			cfg.OAuthDiscord = featureEnabled("OAuthDiscord")
+			cfg.OAuthFacebook = featureEnabled("OAuthFacebook")
+			cfg.OAuthGitHub = featureEnabled("OAuthGitHub")
+			cfg.OAuthGoogle = featureEnabled("OAuthGoogle")
+			cfg.OAuthInstagram = featureEnabled("OAuthInstagram")
+			cfg.OAuthLinkedIn = featureEnabled("OAuthLinkedIn")
 
 			if err := initialize.Run(cfg); err != nil {
 				fmt.Printf("error creating project: %v\n", err)
@@ -87,4 +95,13 @@ func Command() *cobra.Command {
 	}
 
 	return cmd
+}
+
+func contains(slice []string, item string) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
+		}
+	}
+	return false
 }
