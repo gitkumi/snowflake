@@ -3,7 +3,7 @@
 CREATE TABLE user_auth_tokens (
   id VARCHAR(255) PRIMARY KEY,
   user_id BIGINT NOT NULL,
-  type VARCHAR(50) NOT NULL CHECK(type IN ('magic_link', 'reset_password', 'confirm_email')),
+  type VARCHAR(50) NOT NULL CHECK(type IN ('magic_link', 'reset_password', 'confirm_email', 'oauth')),
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );

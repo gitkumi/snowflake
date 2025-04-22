@@ -1,0 +1,123 @@
+package oauth
+
+import (
+	"context"
+	"time"
+
+	"golang.org/x/oauth2"
+)
+
+type MockLinkedInOAuth struct {
+	Config             *oauth2.Config
+	StateTimeout       time.Duration
+	states             map[string]time.Time
+	UserToReturn       *LinkedInUser
+	TokenToReturn      *oauth2.Token
+	ErrorOnExchange    bool
+	ErrorOnGetUserInfo bool
+	StoredStates       map[string]time.Time
+	CalledWithCode     string
+	CalledWithState    string
+}
+
+func NewMockLinkedInOAuth() *MockLinkedInOAuth {
+	user := &LinkedInUser{
+		ID:    "mock-user-id",
+		Email: "test@example.com",
+	}
+
+	// Setup mock name data
+	user.FirstName.Localized = map[string]string{"en_US": "Test"}
+	user.FirstName.PreferredLocale.Language = "en"
+	user.FirstName.PreferredLocale.Country = "US"
+
+	user.LastName.Localized = map[string]string{"en_US": "User"}
+	user.LastName.PreferredLocale.Language = "en"
+	user.LastName.PreferredLocale.Country = "US"
+
+	// Setup mock profile picture
+	element := struct {
+		Identifiers []struct {
+			Identifier string `json:"identifier"`
+		} `json:"identifiers"`
+	}{
+		Identifiers: []struct {
+			Identifier string `json:"identifier"`
+		}{
+			{Identifier: "https://example.com/picture.jpg"},
+		},
+	}
+	user.ProfilePicture.DisplayImage.Elements = []struct {
+		Identifiers []struct {
+			Identifier string `json:"identifier"`
+		} `json:"identifiers"`
+	}{element}
+
+	return &MockLinkedInOAuth{
+		Config: &oauth2.Config{
+			ClientID:     "mock-client-id",
+			ClientSecret: "mock-client-secret",
+			RedirectURL:  "http://localhost/callback",
+			Scopes:       []string{"r_liteprofile", "r_emailaddress"},
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  "http://mock-auth-url",
+				TokenURL: "http://mock-token-url",
+			},
+		},
+		StateTimeout: 10 * time.Minute,
+		states:       make(map[string]time.Time),
+		StoredStates: make(map[string]time.Time),
+		UserToReturn: user,
+		TokenToReturn: &oauth2.Token{
+			AccessToken:  "mock-access-token",
+			TokenType:    "Bearer",
+			RefreshToken: "mock-refresh-token",
+			Expiry:       time.Now().Add(1 * time.Hour),
+		},
+	}
+}
+
+func (m *MockLinkedInOAuth) GenerateState() (string, error) {
+	state := "mock-state-token"
+	expiry := time.Now().Add(m.StateTimeout)
+	m.states[state] = expiry
+	m.StoredStates[state] = expiry
+	return state, nil
+}
+
+func (m *MockLinkedInOAuth) VerifyState(state string) bool {
+	m.CalledWithState = state
+	expiry, exists := m.states[state]
+	if !exists {
+		return false
+	}
+
+	valid := time.Now().Before(expiry)
+	delete(m.states, state)
+	return valid
+}
+
+func (m *MockLinkedInOAuth) GetLoginURL(state string) string {
+	return "http://mock-linkedin-auth-url?state=" + state
+}
+
+func (m *MockLinkedInOAuth) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+	m.CalledWithCode = code
+	if m.ErrorOnExchange {
+		return nil, &oauth2.RetrieveError{
+			Response: nil,
+			Body:     []byte("mock exchange error"),
+		}
+	}
+	return m.TokenToReturn, nil
+}
+
+func (m *MockLinkedInOAuth) GetUserInfo(ctx context.Context, token *oauth2.Token) (interface{}, error) {
+	if m.ErrorOnGetUserInfo {
+		return nil, &oauth2.RetrieveError{
+			Response: nil,
+			Body:     []byte("mock get user info error"),
+		}
+	}
+	return m.UserToReturn, nil
+}

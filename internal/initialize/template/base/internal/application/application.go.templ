@@ -11,6 +11,9 @@ import (
 	{{- if .SMTP }}
 	"{{ .Name }}/internal/smtp"
 	{{- end }}
+	{{- if .WithOAuth }}
+	"{{ .Name }}/internal/oauth"
+	{{- end }}
 	{{- if .Storage }}
 	"{{ .Name }}/internal/storage"
 	{{- end }}
@@ -68,6 +71,9 @@ type Application struct {
 	{{- if .Storage }}
 	Storage storage.Storage
 	{{- end }}
+	{{- if .WithOAuth }}
+	oauth  *handler.OAuthHandler
+	{{- end }}
 }
 
 type Config struct {
@@ -93,6 +99,13 @@ type Config struct {
 	{{- else if eq .BackgroundJob "asynq" }}
 	Asynq   *asynq.Client
 	{{- end }}
+
+	{{- if .OAuthGoogle }}GoogleOAuth    oauth.OAuthProvider{{- end }}
+	{{- if .OAuthFacebook }}FacebookOAuth  oauth.OAuthProvider{{- end }}
+	{{- if .OAuthGitHub }}GitHubOAuth    oauth.OAuthProvider{{- end }}
+	{{- if .OAuthLinkedIn }}LinkedInOAuth  oauth.OAuthProvider{{- end }}
+	{{- if .OAuthInstagram }}InstagramOAuth oauth.OAuthProvider{{- end }}
+	{{- if .OAuthDiscord }}DiscordOAuth   oauth.OAuthProvider{{- end }}
 }
 
 func New(cfg *Config) (*Application, error) {
@@ -119,6 +132,21 @@ func New(cfg *Config) (*Application, error) {
 	authService := service.NewAuthService(cfg.BaseURL, query, cfg.Mailer, cfg.DB)
 	authHandler := handler.NewAuthHandler(authService)
 		{{- end }}
+	{{- end }}
+
+	{{- if .WithOAuth }}
+	oauthService := service.NewOAuthService(
+		cfg.BaseURL,
+		cfg.DB,
+		query,
+		{{- if .OAuthGoogle }}cfg.GoogleOAuth,{{- end }}
+		{{- if .OAuthFacebook }}cfg.FacebookOAuth,{{- end }}
+		{{- if .OAuthGitHub }}cfg.GitHubOAuth,{{- end }}
+		{{- if .OAuthLinkedIn }}cfg.LinkedInOAuth,{{- end }}
+		{{- if .OAuthInstagram }}cfg.InstagramOAuth,{{- end }}
+		{{- if .OAuthDiscord }}cfg.DiscordOAuth,{{- end }}
+	)
+	oauthHandler := handler.NewOAuthHandler(oauthService)
 	{{- end }}
 
 	{{- if .Storage }}
@@ -151,6 +179,9 @@ func New(cfg *Config) (*Application, error) {
 		health: healthHandler,
 		{{- if eq .AppType "web"}}
 		html:   htmlHandler,
+		{{- end }}
+		{{- if .WithOAuth }}
+		oauth:  oauthHandler
 		{{- end }}
 	}
 

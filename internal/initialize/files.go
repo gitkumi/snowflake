@@ -12,13 +12,19 @@ import (
 )
 
 type FileExclusions struct {
-	SMTP          []string
-	Storage       []string
-	Redis         []string
-	Auth          []string
-	AppType       map[AppType][]string
-	Database      map[Database][]string
-	BackgroundJob map[BackgroundJob][]string
+	SMTP           []string
+	Storage        []string
+	Redis          []string
+	Auth           []string
+	OAuthGoogle    []string
+	OAuthFacebook  []string
+	OAuthGithub    []string
+	OAuthLinkedIn  []string
+	OAuthInstagram []string
+	OAuthDiscord   []string
+	AppType        map[AppType][]string
+	Database       map[Database][]string
+	BackgroundJob  map[BackgroundJob][]string
 }
 
 type FileRenames struct {
@@ -28,15 +34,15 @@ type FileRenames struct {
 func createTemplateFuncs(cfg *Config) template.FuncMap {
 	return template.FuncMap{
 		"DatabaseMigration": func(filename string) (string, error) {
-			return loadDatabaseMigration(cfg.Database, filename)
+			return lOAdDatabaseMigration(cfg.Database, filename)
 		},
 		"DatabaseQuery": func(filename string) (string, error) {
-			return loadDatabaseQuery(cfg.Database, filename)
+			return lOAdDatabaseQuery(cfg.Database, filename)
 		},
 	}
 }
 
-func loadDatabaseMigration(db Database, filename string) (string, error) {
+func lOAdDatabaseMigration(db Database, filename string) (string, error) {
 	if db == DatabaseNone {
 		return "", nil
 	}
@@ -49,7 +55,7 @@ func loadDatabaseMigration(db Database, filename string) (string, error) {
 	return string(content), nil
 }
 
-func loadDatabaseQuery(db Database, filename string) (string, error) {
+func lOAdDatabaseQuery(db Database, filename string) (string, error) {
 	if db == DatabaseNone {
 		return "", nil
 	}
@@ -150,6 +156,36 @@ func createFileExclusions() *FileExclusions {
 				"/internal/queue/queue_mock.go",
 			},
 		},
+		OAuthGoogle: []string{
+			"/internal/OAuth/google.go",
+			"/internal/OAuth/google_mock.go",
+			"/internal/OAuth/google_test.go",
+		},
+		OAuthFacebook: []string{
+			"/internal/OAuth/facebook.go",
+			"/internal/OAuth/facebook_mock.go",
+			"/internal/OAuth/facebook_test.go",
+		},
+		OAuthGithub: []string{
+			"/internal/OAuth/github.go",
+			"/internal/OAuth/github_mock.go",
+			"/internal/OAuth/github_test.go",
+		},
+		OAuthLinkedIn: []string{
+			"/internal/OAuth/linkedin.go",
+			"/internal/OAuth/linkedin_mock.go",
+			"/internal/OAuth/linkedin_test.go",
+		},
+		OAuthInstagram: []string{
+			"/internal/OAuth/instagram.go",
+			"/internal/OAuth/instagram_mock.go",
+			"/internal/OAuth/instagram_test.go",
+		},
+		OAuthDiscord: []string{
+			"/internal/OAuth/discord.go",
+			"/internal/OAuth/discord_mock.go",
+			"/internal/OAuth/discord_test.go",
+		},
 	}
 }
 
@@ -168,6 +204,18 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 
 	// Special case for now.
 	if fileName == "/dev.yaml" && project.Database == DatabaseSQLite3 && !project.Redis {
+		return true
+	}
+
+	if fileName == "/internal/dto/oauth.go" && !project.WithOAuth() {
+		return true
+	}
+
+	if fileName == "/internal/application/handler/oauth_handler.go" && !project.WithOAuth() {
+		return true
+	}
+
+	if fileName == "/internal/application/service/oauth_service.go" && !project.WithOAuth() {
 		return true
 	}
 
@@ -213,6 +261,54 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 
 	if !project.Auth {
 		for _, excludedPath := range exclusions.Auth {
+			if fileName == excludedPath {
+				return true
+			}
+		}
+	}
+
+	if !project.OAuthGoogle {
+		for _, excludedPath := range exclusions.OAuthGoogle {
+			if fileName == excludedPath {
+				return true
+			}
+		}
+	}
+
+	if !project.OAuthFacebook {
+		for _, excludedPath := range exclusions.OAuthFacebook {
+			if fileName == excludedPath {
+				return true
+			}
+		}
+	}
+
+	if !project.OAuthGitHub {
+		for _, excludedPath := range exclusions.OAuthGithub {
+			if fileName == excludedPath {
+				return true
+			}
+		}
+	}
+
+	if !project.OAuthLinkedIn {
+		for _, excludedPath := range exclusions.OAuthLinkedIn {
+			if fileName == excludedPath {
+				return true
+			}
+		}
+	}
+
+	if !project.OAuthInstagram {
+		for _, excludedPath := range exclusions.OAuthInstagram {
+			if fileName == excludedPath {
+				return true
+			}
+		}
+	}
+
+	if !project.OAuthDiscord {
+		for _, excludedPath := range exclusions.OAuthDiscord {
 			if fileName == excludedPath {
 				return true
 			}

@@ -31,6 +31,10 @@ type Project struct {
 	OAuthLinkedIn  bool
 }
 
+func (p *Project) WithOAuth() bool {
+	return p.OAuthGoogle || p.OAuthDiscord || p.OAuthFacebook || p.OAuthGitHub || p.OAuthInstagram || p.OAuthLinkedIn
+}
+
 type Config struct {
 	Quiet     bool
 	OutputDir string
@@ -55,14 +59,20 @@ type Config struct {
 
 func Run(cfg *Config) error {
 	project := &Project{
-		Name:          cfg.Name,
-		Database:      cfg.Database,
-		BackgroundJob: cfg.BackgroundJob,
-		AppType:       cfg.AppType,
-		SMTP:          cfg.SMTP,
-		Storage:       cfg.Storage,
-		Redis:         cfg.Redis || cfg.BackgroundJob == BackgroundJobAsynq,
-		Auth:          cfg.Auth && cfg.SMTP && cfg.Database != DatabaseNone,
+		Name:           cfg.Name,
+		Database:       cfg.Database,
+		BackgroundJob:  cfg.BackgroundJob,
+		AppType:        cfg.AppType,
+		SMTP:           cfg.SMTP,
+		Storage:        cfg.Storage,
+		Redis:          cfg.Redis || cfg.BackgroundJob == BackgroundJobAsynq,
+		Auth:           cfg.Database != DatabaseNone && cfg.SMTP && cfg.Auth,
+		OAuthDiscord:   cfg.Auth && cfg.OAuthDiscord,
+		OAuthFacebook:  cfg.Auth && cfg.OAuthFacebook,
+		OAuthGitHub:    cfg.Auth && cfg.OAuthGitHub,
+		OAuthGoogle:    cfg.Auth && cfg.OAuthGoogle,
+		OAuthInstagram: cfg.Auth && cfg.OAuthInstagram,
+		OAuthLinkedIn:  cfg.Auth && cfg.OAuthLinkedIn,
 	}
 
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
