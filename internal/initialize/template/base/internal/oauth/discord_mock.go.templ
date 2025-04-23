@@ -37,7 +37,7 @@ func NewMockDiscordOAuth() *MockDiscordOAuth {
 		StoredStates: make(map[string]time.Time),
 		UserToReturn: &DiscordUser{
 			ID:            "mock-user-id",
-			{{- if eq .Authentication "email_with_username"}}
+			{{- if eq .Authentication "email-with-username"}}
 			Username:      "testuser",
 			{{- end }}
 			Discriminator: "1234",

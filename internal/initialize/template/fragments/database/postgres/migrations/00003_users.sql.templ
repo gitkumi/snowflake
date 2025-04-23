@@ -3,7 +3,7 @@
 CREATE TABLE users (
   id BIGSERIAL PRIMARY KEY,
   email TEXT NOT NULL,
-  {{- if eq .Authentication "email_with_username"}}
+  {{- if eq .Authentication "email-with-username"}}
   username TEXT NOT NULL,
   {{- end }}
   hashed_password TEXT,
@@ -12,7 +12,7 @@ CREATE TABLE users (
   confirmed_at TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  {{- if eq .Authentication "email_with_username"}}
+  {{- if eq .Authentication "email-with-username"}}
   UNIQUE(username),
   {{- end }}
   UNIQUE(email)

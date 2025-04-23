@@ -133,14 +133,30 @@ func Init() (*TestApplication, error) {
 		Storage: storage,
 		{{- end }}
 		Logger: logger,
+		{{- if .Redis }}
 		Redis: rdb,
+		{{- end }}
+		{{- if eq .BackgroundJob "sqs" }}
 		Queue: sqs,
-		{{- if .OAuthGoogle }}GoogleOAuth:    mockGoogleOAuth,{{- end }}
-		{{- if .OAuthFacebook }}FacebookOAuth:  mockFacebookOAuth,{{- end }}
-		{{- if .OAuthGitHub }}GitHubOAuth:    mockGitHubOAuth,{{- end }}
-		{{- if .OAuthLinkedIn }}LinkedInOAuth:  mockLinkedInOAuth,{{- end }}
-		{{- if .OAuthInstagram }}InstagramOAuth: mockInstagramOAuth,{{- end }}
-		{{- if .OAuthDiscord }}DiscordOAuth:   mockDiscordOAuth,{{- end }}
+		{{- end }}
+		{{- if .OAuthGoogle }}
+		GoogleOAuth:    mockGoogleOAuth,
+		{{- end }}
+		{{- if .OAuthFacebook }}
+		FacebookOAuth:  mockFacebookOAuth,
+		{{- end }}
+		{{- if .OAuthGitHub }}
+		GitHubOAuth:    mockGitHubOAuth,
+		{{- end }}
+		{{- if .OAuthLinkedIn }}
+		LinkedInOAuth:  mockLinkedInOAuth,
+		{{- end }}
+		{{- if .OAuthInstagram }}
+		InstagramOAuth: mockInstagramOAuth,
+		{{- end }}
+		{{- if .OAuthDiscord }}
+		DiscordOAuth:   mockDiscordOAuth,
+		{{- end }}
 	})
 	if err != nil {
 		log.Fatal("failed to create application", err)

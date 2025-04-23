@@ -28,7 +28,7 @@ type DiscordOAuth struct {
 
 type DiscordUser struct {
 	ID            string `json:"id"`
-	{{- if eq .Authentication "email_with_username"}}
+	{{- if eq .Authentication "email-with-username"}}
 	Username      string `json:"username"`
 	{{- end }}
 	Discriminator string `json:"discriminator"`

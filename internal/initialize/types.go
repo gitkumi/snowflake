@@ -39,10 +39,10 @@ const (
 )
 
 var AllDatabases = []Database{
+	DatabaseNone,
 	DatabaseSQLite3,
 	DatabasePostgres,
 	DatabaseMySQL,
-	DatabaseNone,
 }
 
 func (d Database) String() string {
@@ -119,9 +119,9 @@ const (
 )
 
 var AllBackgroundJobs = []BackgroundJob{
+	BackgroundJobNone,
 	BackgroundJobBasic,
 	BackgroundJobSQS,
-	BackgroundJobNone,
 }
 
 func (t BackgroundJob) IsValid() bool {
@@ -142,7 +142,7 @@ type Authentication string
 const (
 	AuthenticationNone              Authentication = "none"
 	AuthenticationEmail             Authentication = "email"
-	AuthenticationEmailWithUsername Authentication = "email_with_username"
+	AuthenticationEmailWithUsername Authentication = "email-with-username"
 )
 
 var AllAuthentications = []Authentication{

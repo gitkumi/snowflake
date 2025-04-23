@@ -80,7 +80,7 @@ func (t TestApplication) CreateUserFixture(custom repo.CreateUserParams) repo.Us
 			String: hashed,
 			Valid:  true,
 		},
-		{{- if eq .Authentication "email_with_username"}} Username: nanoid, {{- end }}
+		{{- if eq .Authentication "email-with-username"}} Username: nanoid, {{- end }}
 		Email:    nanoid + "@example.com",
 		FirstName: sql.NullString{
 			String: fake.Lorem().Text(10),

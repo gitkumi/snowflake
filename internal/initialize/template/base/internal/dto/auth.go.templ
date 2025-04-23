@@ -32,7 +32,7 @@ type Login struct {
 type Register struct {
 	Email     string  `json:"email" binding:"required,email"`
 	Password  string  `json:"password" binding:"required,min=6,max=72"`
-	{{- if eq .Authentication "email_with_username"}}
+	{{- if eq .Authentication "email-with-username"}}
 	Username  string  `json:"username" binding:"required,min=3,max=21"`
 	{{- end }}
 	FirstName *string `json:"first_name"`
@@ -52,7 +52,7 @@ func (u Register) Repo() (repo.CreateUserParams, error) {
 			String: hashed,
 			Valid:  true,
 		},
-	{{- if eq .Authentication "email_with_username"}}
+	{{- if eq .Authentication "email-with-username"}}
 	Username: u.Username,
 	{{- end }}
 	}
@@ -77,7 +77,7 @@ func (u Register) Repo() (repo.CreateUserParams, error) {
 type UserResponse struct {
 	ID          int64   `json:"id"`
 	Email       string  `json:"email"`
-	{{- if eq .Authentication "email_with_username"}}
+	{{- if eq .Authentication "email-with-username"}}
 	Username    string  `json:"username"`
 	{{- end }}
 	FirstName   *string `json:"first_name"`
@@ -91,7 +91,7 @@ func NewUserResponse(u repo.User) UserResponse {
 	user := UserResponse{
 		ID:        u.ID,
 		Email:     u.Email,
-		{{- if eq .Authentication "email_with_username"}}
+		{{- if eq .Authentication "email-with-username"}}
 		Username:  u.Username,
 		{{- end }}
 		CreatedAt: u.CreatedAt.Format(time.RFC3339),

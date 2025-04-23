@@ -39,7 +39,12 @@ func Command() *cobra.Command {
 			databaseGroup := huh.NewGroup(
 				huh.NewSelect[initialize.Database]().
 					Title("Select database").
-					Options(huh.NewOptions(initialize.AllDatabases...)...).
+					Options(
+						huh.NewOption("None", initialize.DatabaseNone),
+						huh.NewOption("SQLite3", initialize.DatabaseSQLite3),
+						huh.NewOption("Postgres", initialize.DatabasePostgres),
+						huh.NewOption("MySQL", initialize.DatabaseMySQL),
+					).
 					Value(&database),
 			)
 
@@ -72,7 +77,7 @@ func Command() *cobra.Command {
 					Options(
 						huh.NewOption("None", initialize.AuthenticationNone),
 						huh.NewOption("Email", initialize.AuthenticationEmail),
-						huh.NewOption("Email with username", initialize.AuthenticationEmailWithUsername),
+						huh.NewOption("Email with Username", initialize.AuthenticationEmailWithUsername),
 					).
 					Value(&authType),
 			)

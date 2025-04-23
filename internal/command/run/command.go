@@ -98,9 +98,8 @@ func Command() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&appType, "app-type", "t", "api", fmt.Sprintf("App type %v", initialize.AllAppTypes))
-	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", initialize.AllDatabases))
-
-	cmd.Flags().StringVarP(&backgroundJob, "background-job", "b", "basic", fmt.Sprintf("Background Job type %v", initialize.AllBackgroundJobs))
+	cmd.Flags().StringVarP(&database, "database", "d", "none", fmt.Sprintf("Database type %v", initialize.AllDatabases))
+	cmd.Flags().StringVarP(&backgroundJob, "background-job", "b", "none", fmt.Sprintf("Background Job type %v", initialize.AllBackgroundJobs))
 	cmd.Flags().StringVarP(&authentication, "authentication", "a", "none", fmt.Sprintf("Authentication type %v", initialize.AllAuthentications))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "Disable project generation messages")

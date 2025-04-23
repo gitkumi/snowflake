@@ -20,7 +20,7 @@ func TestRegister(t *testing.T) {
 	jsonValue, _ := json.Marshal(map[string]string{
 		"email":    nanoid + "@example.com",
 		"password": "notsecure",
-		{{- if eq .Authentication "email_with_username"}}
+		{{- if eq .Authentication "email-with-username"}}
 		"username": nanoid,
 		{{- end }}
 	})

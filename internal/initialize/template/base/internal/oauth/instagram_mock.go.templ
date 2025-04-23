@@ -37,7 +37,7 @@ func NewMockInstagramOAuth() *MockInstagramOAuth {
 		StoredStates: make(map[string]time.Time),
 		UserToReturn: &InstagramUser{
 			ID:       "mock-user-id",
-			{{- if eq .Authentication "email_with_username"}}
+			{{- if eq .Authentication "email-with-username"}}
 			Username: "testuser",
 			{{- end }}
 			Name:     "Test User",
