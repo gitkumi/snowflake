@@ -40,8 +40,8 @@ func Run(cfg *Config) error {
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
 
 	templateFiles := initializetemplate.BaseFiles
-	exclusions := createFileExclusions()
-	renames := createFileRenames()
+	exclusions := NewFileExclusions()
+	renames := NewFileRenames()
 
 	databaseFragments, err := initializetemplate.CreateDatabaseFragments(string(project.Database))
 	if err != nil {
@@ -52,7 +52,7 @@ func Run(cfg *Config) error {
 		return err
 	}
 
-	if err := renameFiles(project, outputPath, renames); err != nil {
+	if err := RenameFiles(project, outputPath, renames); err != nil {
 		return err
 	}
 
@@ -124,7 +124,7 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 		templateFileName := strings.TrimPrefix(path, "base")
 		targetPath := filepath.Join(outputPath, templateFileName)
 
-		if shouldExcludeTemplateFile(templateFileName, project, exclusions) {
+		if ExcludeTemplateFile(templateFileName, project, exclusions) {
 			return nil
 		}
 

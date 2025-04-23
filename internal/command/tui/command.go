@@ -46,7 +46,7 @@ func Command() *cobra.Command {
 
 			featuresGroup := huh.NewGroup(
 				huh.NewMultiSelect[string]().
-					Title("Select additional features").
+					Title("Add additional features").
 					Options(
 						huh.NewOption("Git", "Git"),
 						huh.NewOption("SMTP", "SMTP"),
@@ -65,7 +65,7 @@ func Command() *cobra.Command {
 
 			authGroup := huh.NewGroup(
 				huh.NewSelect[initialize.Authentication]().
-					Title("Authentication Type").
+					Title("Select authentication").
 					Options(huh.NewOptions(initialize.AllAuthentications...)...).
 					Value(&authType),
 			)

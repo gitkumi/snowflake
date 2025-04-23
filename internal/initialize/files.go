@@ -35,7 +35,7 @@ type FileRenames struct {
 	ByAppType map[AppType]map[string]string
 }
 
-func createFileExclusions() *FileExclusions {
+func NewFileExclusions() *FileExclusions {
 	return &FileExclusions{
 		SMTP: []string{
 			"/internal/smtp/mailer.go",
@@ -198,7 +198,7 @@ func createFileExclusions() *FileExclusions {
 	}
 }
 
-func createFileRenames() *FileRenames {
+func NewFileRenames() *FileRenames {
 	return &FileRenames{
 		ByAppType: map[AppType]map[string]string{
 			AppTypeWeb: {
@@ -208,7 +208,7 @@ func createFileRenames() *FileRenames {
 	}
 }
 
-func shouldExcludeTemplateFile(templateFileName string, project *Project, exclusions *FileExclusions) bool {
+func ExcludeTemplateFile(templateFileName string, project *Project, exclusions *FileExclusions) bool {
 	fileName := strings.TrimSuffix(templateFileName, ".templ")
 
 	for _, fn := range exclusions.ExcludeFuncs {
@@ -300,7 +300,7 @@ func shouldExcludeTemplateFile(templateFileName string, project *Project, exclus
 	return false
 }
 
-func renameFiles(project *Project, outputPath string, renames *FileRenames) error {
+func RenameFiles(project *Project, outputPath string, renames *FileRenames) error {
 	oldDirs := make(map[string]bool)
 
 	renameMappings, ok := renames.ByAppType[project.AppType]
@@ -329,12 +329,12 @@ func renameFiles(project *Project, outputPath string, renames *FileRenames) erro
 		oldDirs[oldDir] = true
 	}
 
-	return removeEmptyDirs(oldDirs)
+	return RemoveEmptyDirs(oldDirs)
 }
 
-func removeEmptyDirs(paths map[string]bool) error {
+func RemoveEmptyDirs(paths map[string]bool) error {
 	for dir := range paths {
-		isEmpty, err := isDirectoryEmpty(dir)
+		isEmpty, err := IsDirectoryEmpty(dir)
 		if err != nil {
 			return fmt.Errorf("failed to check if directory %s is empty: %v", dir, err)
 		}
@@ -347,7 +347,7 @@ func removeEmptyDirs(paths map[string]bool) error {
 	return nil
 }
 
-func isDirectoryEmpty(name string) (bool, error) {
+func IsDirectoryEmpty(name string) (bool, error) {
 	f, err := os.Open(name)
 	if err != nil {
 		return false, err
