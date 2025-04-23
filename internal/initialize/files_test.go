@@ -85,4 +85,3 @@ func TestIsDirectoryEmpty(t *testing.T) {
 		t.Error("Non-empty directory should not be reported as empty")
 	}
 }
-

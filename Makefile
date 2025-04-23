@@ -3,9 +3,9 @@ audit:
 	go mod tidy -diff
 	go mod verify
 	test -z "$(shell gofmt -l .)" 
-	go vet $(go list ./... | grep -v '^./grammar')
-	go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-U1000 $(go list ./... | grep -v '^./grammar')
-	go run golang.org/x/vuln/cmd/govulncheck@latest $(go list ./... | grep -v '^./grammar')
+	go vet $(go list ./...)
+	go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-U1000 $(go list ./...)
+	go run golang.org/x/vuln/cmd/govulncheck@latest $(go list ./...)
 
 .PHONY: tidy
 tidy:

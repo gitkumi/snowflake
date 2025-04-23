@@ -16,16 +16,16 @@ var DatabaseFragments embed.FS
 
 func loadFragments(fsys fs.FS, dir string, prefix string) (map[string]string, error) {
 	fragments := make(map[string]string)
-	
+
 	err := fs.WalkDir(fsys, dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if d.IsDir() {
 			return nil
 		}
-		
+
 		content, err := fs.ReadFile(fsys, path)
 		if err != nil {
 			return err
@@ -41,7 +41,7 @@ func loadFragments(fsys fs.FS, dir string, prefix string) (map[string]string, er
 	if err != nil && !os.IsNotExist(err) {
 		return nil, fmt.Errorf("failed to load fragments from directory %s: %w", dir, err)
 	}
-	
+
 	return fragments, nil
 }
 
@@ -57,7 +57,7 @@ func CreateDatabaseFragments(database string) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Add migration fragments to result
 	for k, v := range migrationFragments {
 		databaseFragments[k] = v
@@ -69,7 +69,7 @@ func CreateDatabaseFragments(database string) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Add query fragments to result
 	for k, v := range queryFragments {
 		databaseFragments[k] = v
