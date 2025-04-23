@@ -13,32 +13,6 @@ import (
 	initializetemplate "github.com/gitkumi/snowflake/internal/initialize/template"
 )
 
-type Project struct {
-	Name           string
-	AppType        AppType
-	Database       Database
-	BackgroundJob  BackgroundJob
-	Authentication Authentication
-
-	SMTP           bool
-	Storage        bool
-	Redis          bool
-	OAuthDiscord   bool
-	OAuthFacebook  bool
-	OAuthGitHub    bool
-	OAuthGoogle    bool
-	OAuthInstagram bool
-	OAuthLinkedIn  bool
-}
-
-func (p *Project) WithAuth() bool {
-	return p.Authentication != AuthenticationNone
-}
-
-func (p *Project) WithOAuth() bool {
-	return p.WithAuth() && (p.OAuthGoogle || p.OAuthDiscord || p.OAuthFacebook || p.OAuthGitHub || p.OAuthInstagram || p.OAuthLinkedIn)
-}
-
 type Config struct {
 	Quiet     bool
 	OutputDir string
@@ -62,36 +36,10 @@ type Config struct {
 }
 
 func Run(cfg *Config) error {
-	project := &Project{
-		Name:           cfg.Name,
-		Database:       cfg.Database,
-		BackgroundJob:  cfg.BackgroundJob,
-		AppType:        cfg.AppType,
-		SMTP:           cfg.SMTP,
-		Storage:        cfg.Storage,
-		Redis:          cfg.Redis || cfg.BackgroundJob == BackgroundJobAsynq,
-		Authentication: cfg.Authentication,
-		OAuthDiscord:   cfg.Authentication != AuthenticationNone && cfg.OAuthDiscord,
-		OAuthFacebook:  cfg.Authentication != AuthenticationNone && cfg.OAuthFacebook,
-		OAuthGitHub:    cfg.Authentication != AuthenticationNone && cfg.OAuthGitHub,
-		OAuthGoogle:    cfg.Authentication != AuthenticationNone && cfg.OAuthGoogle,
-		OAuthInstagram: cfg.Authentication != AuthenticationNone && cfg.OAuthInstagram,
-		OAuthLinkedIn:  cfg.Authentication != AuthenticationNone && cfg.OAuthLinkedIn,
-	}
-
-	if cfg.Database == DatabaseNone || !cfg.SMTP {
-		project.Authentication = AuthenticationNone
-		project.OAuthDiscord = false
-		project.OAuthFacebook = false
-		project.OAuthGitHub = false
-		project.OAuthGoogle = false
-		project.OAuthInstagram = false
-		project.OAuthLinkedIn = false
-	}
-
+	project := NewProject(cfg)
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
-	templateFiles := initializetemplate.BaseFiles
 
+	templateFiles := initializetemplate.BaseFiles
 	exclusions := createFileExclusions()
 	renames := createFileRenames()
 
@@ -118,27 +66,36 @@ func Run(cfg *Config) error {
 		}
 	}
 
-	if !cfg.Quiet {
-		fmt.Println("")
-		successMessage := fmt.Sprintf(`✅ Snowflake project '%s' created! 🎉
-
-Run your new project:
-
-  $ cd %s`, project.Name, project.Name)
-
-		if project.Database == DatabasePostgres || project.Database == DatabaseMySQL || project.Redis {
-			successMessage += `
-  $ make devenv # Initialize the docker dev environment
-  $ make dev`
-		} else {
-			successMessage += `
-  $ make dev`
-		}
-
-		fmt.Println(successMessage)
-	}
+	printSuccessMessage(project.Name, project.Database, project.Redis, cfg.Quiet)
 
 	return nil
+}
+
+func processTemplate(templateContent []byte, templateFileName string,
+	databaseFragments map[string]string, project *Project, buf *bytes.Buffer) ([]byte, error) {
+
+	rootTemplate := template.New(filepath.Base(templateFileName))
+
+	// Add database fragments as sub-templates
+	for name, fragment := range databaseFragments {
+		fragmentTemplate := rootTemplate.New(name)
+		if _, err := fragmentTemplate.Parse(fragment); err != nil {
+			return nil, fmt.Errorf("failed to parse database fragment %s: %w", name, err)
+		}
+	}
+
+	// Parse the main template
+	if _, err := rootTemplate.Parse(string(templateContent)); err != nil {
+		return nil, fmt.Errorf("failed to parse template %s: %w", templateFileName, err)
+	}
+
+	// Execute the template with the project data
+	buf.Reset()
+	if err := rootTemplate.Execute(buf, project); err != nil {
+		return nil, fmt.Errorf("error executing template %s: %w", templateFileName, err)
+	}
+
+	return buf.Bytes(), nil
 }
 
 func createFiles(project *Project, outputPath string, templateFiles fs.FS,
@@ -148,6 +105,7 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 		fmt.Println("Generating files...")
 	}
 
+	// Create a buffer pool for template rendering
 	bufPool := sync.Pool{
 		New: func() interface{} {
 			return new(bytes.Buffer)
@@ -175,25 +133,12 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 			return err
 		}
 
-		rootTemplate := template.New(filepath.Base(templateFileName))
-
-		for name, fragment := range databaseFragments {
-			fragmentTemplate := rootTemplate.New(name)
-			if _, err := fragmentTemplate.Parse(fragment); err != nil {
-				return fmt.Errorf("failed to parse database fragment %s: %w", name, err)
-			}
-		}
-
-		if _, err := rootTemplate.Parse(string(content)); err != nil {
-			return fmt.Errorf("failed to parse template %s: %w", templateFileName, err)
-		}
-
 		buf := bufPool.Get().(*bytes.Buffer)
-		buf.Reset()
 		defer bufPool.Put(buf)
 
-		if err := rootTemplate.Execute(buf, project); err != nil {
-			return fmt.Errorf("error executing template %s: %w", templateFileName, err)
+		processedContent, err := processTemplate(content, templateFileName, databaseFragments, project, buf)
+		if err != nil {
+			return err
 		}
 
 		filePath := strings.TrimSuffix(targetPath, ".templ")
@@ -202,8 +147,32 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 			return fmt.Errorf("failed to create directory %s: %v", targetDir, err)
 		}
 
-		return os.WriteFile(filePath, buf.Bytes(), 0666)
+		return os.WriteFile(filePath, processedContent, 0666)
 	})
 
 	return err
+}
+
+func printSuccessMessage(projectName string, database Database, redis bool, quiet bool) {
+	if quiet {
+		return
+	}
+
+	fmt.Println("")
+	successMessage := fmt.Sprintf(`✅ Snowflake project '%s' created! 🎉
+
+Run your new project:
+
+  $ cd %s`, projectName, projectName)
+
+	if database == DatabasePostgres || database == DatabaseMySQL || redis {
+		successMessage += `
+  $ make devenv # Initialize the docker dev environment
+  $ make dev`
+	} else {
+		successMessage += `
+  $ make dev`
+	}
+
+	fmt.Println(successMessage)
 }

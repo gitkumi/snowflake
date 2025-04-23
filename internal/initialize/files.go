@@ -211,112 +211,88 @@ func createFileRenames() *FileRenames {
 func shouldExcludeTemplateFile(templateFileName string, project *Project, exclusions *FileExclusions) bool {
 	fileName := strings.TrimSuffix(templateFileName, ".templ")
 
-	for _, multiExclusion := range exclusions.ExcludeFuncs {
-		if fileName == multiExclusion.FilePath && multiExclusion.Check(project) {
+	for _, fn := range exclusions.ExcludeFuncs {
+		if fileName == fn.FilePath && fn.Check(project) {
 			return true
 		}
 	}
 
-	if excludedPaths, ok := exclusions.AuthenticationType[project.Authentication]; ok {
-		for _, excludedPath := range excludedPaths {
-			if fileName == excludedPath {
-				return true
+	mapExclusions := []struct {
+		exclusionMap interface{}
+		key          interface{}
+	}{
+		{exclusions.AuthenticationType, project.Authentication},
+		{exclusions.AppType, project.AppType},
+		{exclusions.Database, project.Database},
+		{exclusions.BackgroundJob, project.BackgroundJob},
+	}
+
+	for _, mapExcl := range mapExclusions {
+		switch m := mapExcl.exclusionMap.(type) {
+		case map[Authentication][]string:
+			if key, ok := mapExcl.key.(Authentication); ok {
+				if excludedPaths, exists := m[key]; exists {
+					for _, path := range excludedPaths {
+						if fileName == path {
+							return true
+						}
+					}
+				}
+			}
+		case map[AppType][]string:
+			if key, ok := mapExcl.key.(AppType); ok {
+				if excludedPaths, exists := m[key]; exists {
+					for _, path := range excludedPaths {
+						if fileName == path {
+							return true
+						}
+					}
+				}
+			}
+		case map[Database][]string:
+			if key, ok := mapExcl.key.(Database); ok {
+				if excludedPaths, exists := m[key]; exists {
+					for _, path := range excludedPaths {
+						if fileName == path {
+							return true
+						}
+					}
+				}
+			}
+		case map[BackgroundJob][]string:
+			if key, ok := mapExcl.key.(BackgroundJob); ok {
+				if excludedPaths, exists := m[key]; exists {
+					for _, path := range excludedPaths {
+						if fileName == path {
+							return true
+						}
+					}
+				}
 			}
 		}
 	}
 
-	if excludedPaths, ok := exclusions.AppType[project.AppType]; ok {
-		for _, excludedPath := range excludedPaths {
-			if fileName == excludedPath {
-				return true
-			}
-		}
+	featureExclusions := []struct {
+		enabled  bool
+		pathList []string
+	}{
+		{project.Redis, exclusions.Redis},
+		{project.SMTP, exclusions.SMTP},
+		{project.Storage, exclusions.Storage},
+		{project.OAuthGoogle, exclusions.OAuthGoogle},
+		{project.OAuthFacebook, exclusions.OAuthFacebook},
+		{project.OAuthGitHub, exclusions.OAuthGithub},
+		{project.OAuthLinkedIn, exclusions.OAuthLinkedIn},
+		{project.OAuthInstagram, exclusions.OAuthInstagram},
+		{project.OAuthDiscord, exclusions.OAuthDiscord},
 	}
 
-	if excludedPaths, ok := exclusions.Database[project.Database]; ok {
-		for _, excludedPath := range excludedPaths {
-			if fileName == excludedPath {
-				return true
-			}
-		}
-	}
-
-	if excludedPaths, ok := exclusions.BackgroundJob[project.BackgroundJob]; ok {
-		for _, excludedPath := range excludedPaths {
-			if fileName == excludedPath {
-				return true
-			}
-		}
-	}
-
-	if !project.Redis {
-		for _, excludedPath := range exclusions.Redis {
-			if fileName == excludedPath {
-				return true
-			}
-		}
-	}
-
-	if !project.SMTP {
-		for _, excludedPath := range exclusions.SMTP {
-			if fileName == excludedPath {
-				return true
-			}
-		}
-	}
-
-	if !project.Storage {
-		for _, excludedPath := range exclusions.Storage {
-			if fileName == excludedPath {
-				return true
-			}
-		}
-	}
-
-	if !project.OAuthGoogle {
-		for _, excludedPath := range exclusions.OAuthGoogle {
-			if fileName == excludedPath {
-				return true
-			}
-		}
-	}
-
-	if !project.OAuthFacebook {
-		for _, excludedPath := range exclusions.OAuthFacebook {
-			if fileName == excludedPath {
-				return true
-			}
-		}
-	}
-
-	if !project.OAuthGitHub {
-		for _, excludedPath := range exclusions.OAuthGithub {
-			if fileName == excludedPath {
-				return true
-			}
-		}
-	}
-
-	if !project.OAuthLinkedIn {
-		for _, excludedPath := range exclusions.OAuthLinkedIn {
-			if fileName == excludedPath {
-				return true
-			}
-		}
-	}
-
-	if !project.OAuthInstagram {
-		for _, excludedPath := range exclusions.OAuthInstagram {
-			if fileName == excludedPath {
-				return true
-			}
-		}
-	}
-
-	if !project.OAuthDiscord {
-		for _, excludedPath := range exclusions.OAuthDiscord {
-			if fileName == excludedPath {
-				return true
+	for _, feature := range featureExclusions {
+		if !feature.enabled {
+			for _, path := range feature.pathList {
+				if fileName == path {
+					return true
+				}
 			}
 		}
 	}

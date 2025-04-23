@@ -13,6 +13,37 @@ type Command struct {
 	Args    []string
 }
 
+func runCommand(cmd Command, workDir string, quiet bool) error {
+	if _, err := exec.LookPath(cmd.Name); err != nil {
+		return fmt.Errorf("%s is not installed or not found in PATH", cmd.Name)
+	}
+
+	if cmd.Message != "" && !quiet {
+		fmt.Println(cmd.Message)
+	}
+
+	execCmd := exec.Command(cmd.Name, cmd.Args...)
+	execCmd.Dir = workDir
+
+	if quiet {
+		execCmd.Stdout = io.Discard
+	} else {
+		execCmd.Stdout = os.Stdout
+	}
+	execCmd.Stderr = os.Stderr
+
+	return execCmd.Run()
+}
+
+func runCommands(commands []Command, workDir string, quiet bool) error {
+	for _, cmd := range commands {
+		if err := runCommand(cmd, workDir, quiet); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func runPostCommands(project *Project, outputPath string, quiet bool) error {
 	commands := []Command{
 		{
@@ -37,31 +68,7 @@ func runPostCommands(project *Project, outputPath string, quiet bool) error {
 		},
 	}
 
-	for _, cmd := range commands {
-		if _, err := exec.LookPath(cmd.Name); err != nil {
-			return fmt.Errorf("%s is not installed or not found in PATH", cmd.Name)
-		}
-
-		if cmd.Message != "" && !quiet {
-			fmt.Println(cmd.Message)
-		}
-
-		execCmd := exec.Command(cmd.Name, cmd.Args...)
-		execCmd.Dir = outputPath
-
-		if quiet {
-			execCmd.Stdout = io.Discard
-		} else {
-			execCmd.Stdout = os.Stdout
-		}
-		execCmd.Stderr = os.Stderr
-
-		if err := execCmd.Run(); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return runCommands(commands, outputPath, quiet)
 }
 
 func runGitCommands(outputPath string, quiet bool) error {
@@ -92,25 +99,5 @@ func runGitCommands(outputPath string, quiet bool) error {
 		fmt.Println("snowflake: initializing git")
 	}
 
-	for _, cmd := range commands {
-		if cmd.Message != "" && !quiet {
-			fmt.Println(cmd.Message)
-		}
-
-		execCmd := exec.Command(cmd.Name, cmd.Args...)
-		execCmd.Dir = outputPath
-
-		if quiet {
-			execCmd.Stdout = io.Discard
-		} else {
-			execCmd.Stdout = os.Stdout
-		}
-		execCmd.Stderr = os.Stderr
-
-		if err := execCmd.Run(); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return runCommands(commands, outputPath, quiet)
 }
