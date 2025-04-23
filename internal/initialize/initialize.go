@@ -150,11 +150,8 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 		},
 	}
 
-	// Load database fragments for the selected database
 	databaseFragments := make(map[string]string)
-
 	if project.Database != DatabaseNone {
-		// Load migration fragments
 		migrationsDir := filepath.Join("fragments/database", string(project.Database), "migrations")
 		err := fs.WalkDir(initializetemplate.DatabaseFragments, migrationsDir, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
@@ -168,7 +165,6 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 				return err
 			}
 
-			// Get the base name (without extension) as the template name
 			basename := filepath.Base(path)
 			templateName := "migration_" + basename
 			databaseFragments[templateName] = string(content)
@@ -178,7 +174,6 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 			return fmt.Errorf("failed to load database migration fragments: %w", err)
 		}
 
-		// Load query fragments
 		queriesDir := filepath.Join("fragments/database", string(project.Database), "queries")
 		err = fs.WalkDir(initializetemplate.DatabaseFragments, queriesDir, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
@@ -192,7 +187,6 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 				return err
 			}
 
-			// Get the base name (without extension) as the template name
 			basename := filepath.Base(path)
 			templateName := "query_" + basename
 			databaseFragments[templateName] = string(content)

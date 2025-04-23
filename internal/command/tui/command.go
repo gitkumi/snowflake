@@ -90,7 +90,6 @@ func Command() *cobra.Command {
 				databaseGroup,
 				featuresGroup,
 				backgroundJobGroup,
-				authGroup,
 			)
 
 			if err := initialForm.Run(); err != nil {
@@ -98,11 +97,21 @@ func Command() *cobra.Command {
 				return
 			}
 
-			if authType != initialize.AuthenticationNone {
-				oauthForm := huh.NewForm(oauthProvidersGroup)
-				if err := oauthForm.Run(); err != nil {
-					fmt.Printf("error running OAuth form: %v\n", err)
+			// Only ask for authentication if database is not 'none'
+			if database != initialize.DatabaseNone {
+				authForm := huh.NewForm(authGroup)
+				if err := authForm.Run(); err != nil {
+					fmt.Printf("error running auth form: %v\n", err)
 					return
+				}
+
+				// Only ask for OAuth providers if authentication is not 'none'
+				if authType != initialize.AuthenticationNone {
+					oauthForm := huh.NewForm(oauthProvidersGroup)
+					if err := oauthForm.Run(); err != nil {
+						fmt.Printf("error running OAuth form: %v\n", err)
+						return
+					}
 				}
 			}
 
