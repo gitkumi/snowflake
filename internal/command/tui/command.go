@@ -18,11 +18,10 @@ func Command() *cobra.Command {
 			appType := initialize.AllAppTypes[0]
 			database := initialize.AllDatabases[0]
 			backgroundJob := initialize.AllBackgroundJobs[0]
-			selectedFeatures := []string{"Git", "SMTP", "Storage"}
+			selectedFeatures := []string{"Git"}
 			selectedAuthProviders := []string{}
 			authType := initialize.AllAuthentications[0]
 
-			// Create the initial form groups
 			projectNameGroup := huh.NewGroup(
 				huh.NewInput().
 					Title("Enter project name").
@@ -58,15 +57,23 @@ func Command() *cobra.Command {
 
 			backgroundJobGroup := huh.NewGroup(
 				huh.NewSelect[initialize.BackgroundJob]().
-					Title("Select background job").
-					Options(huh.NewOptions(initialize.AllBackgroundJobs...)...).
+					Title("Select Queue").
+					Options(
+						huh.NewOption("None", initialize.BackgroundJobNone),
+						huh.NewOption("Basic (sync.WaitGroup)", initialize.BackgroundJobBasic),
+						huh.NewOption("SQS", initialize.BackgroundJobSQS),
+					).
 					Value(&backgroundJob),
 			)
 
 			authGroup := huh.NewGroup(
 				huh.NewSelect[initialize.Authentication]().
-					Title("Select authentication").
-					Options(huh.NewOptions(initialize.AllAuthentications...)...).
+					Title("Select Authentication").
+					Options(
+						huh.NewOption("None", initialize.AuthenticationNone),
+						huh.NewOption("Email", initialize.AuthenticationEmail),
+						huh.NewOption("Email with username", initialize.AuthenticationEmailWithUsername),
+					).
 					Value(&authType),
 			)
 
@@ -74,12 +81,12 @@ func Command() *cobra.Command {
 				huh.NewMultiSelect[string]().
 					Title("Add OAuth Provider").
 					Options(
-						huh.NewOption("Google OAuth", "OAuthGoogle"),
-						huh.NewOption("Facebook OAuth", "OAuthFacebook"),
-						huh.NewOption("GitHub OAuth", "OAuthGitHub"),
-						huh.NewOption("Discord OAuth", "OAuthDiscord"),
-						huh.NewOption("Instagram OAuth", "OAuthInstagram"),
-						huh.NewOption("LinkedIn OAuth", "OAuthLinkedIn"),
+						huh.NewOption("Google", "OAuthGoogle"),
+						huh.NewOption("Facebook", "OAuthFacebook"),
+						huh.NewOption("GitHub", "OAuthGitHub"),
+						huh.NewOption("Discord", "OAuthDiscord"),
+						huh.NewOption("Instagram", "OAuthInstagram"),
+						huh.NewOption("LinkedIn", "OAuthLinkedIn"),
 					).
 					Value(&selectedAuthProviders),
 			)

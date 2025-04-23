@@ -27,8 +27,8 @@ type FileExclusions struct {
 }
 
 type ExcludeFunc struct {
-	FilePath string
-	Check    func(*Project) bool
+	FilePaths []string
+	Check     func(*Project) bool
 }
 
 type FileRenames struct {
@@ -153,37 +153,19 @@ func NewFileExclusions() *FileExclusions {
 		},
 		ExcludeFuncs: []*ExcludeFunc{
 			{
-				FilePath: "/internal/dto/oauth.go",
+				FilePaths: []string{
+					"/internal/dto/oauth.go",
+					"/internal/application/handler/oauth_handler.go",
+					"/internal/application/service/oauth_service.go",
+					"/static/sql/migrations/00005_user_oauth.sql",
+					"/static/sql/queries/user_oauth.sql",
+				},
 				Check: func(p *Project) bool {
 					return !p.WithOAuth()
 				},
 			},
 			{
-				FilePath: "/internal/application/handler/oauth_handler.go",
-				Check: func(p *Project) bool {
-					return !p.WithOAuth()
-				},
-			},
-			{
-				FilePath: "/internal/application/service/oauth_service.go",
-				Check: func(p *Project) bool {
-					return !p.WithOAuth()
-				},
-			},
-			{
-				FilePath: "/static/sql/migrations/00005_user_oauth.sql",
-				Check: func(p *Project) bool {
-					return !p.WithOAuth()
-				},
-			},
-			{
-				FilePath: "/static/sql/queries/user_oauth.sql",
-				Check: func(p *Project) bool {
-					return !p.WithOAuth()
-				},
-			},
-			{
-				FilePath: "/dev.yaml",
+				FilePaths: []string{"/dev.yaml"},
 				Check: func(p *Project) bool {
 					return p.Database == DatabaseSQLite3 && !p.Redis
 				},
@@ -206,62 +188,9 @@ func ExcludeTemplateFile(templateFileName string, project *Project, exclusions *
 	fileName := strings.TrimSuffix(templateFileName, ".templ")
 
 	for _, fn := range exclusions.ExcludeFuncs {
-		if fileName == fn.FilePath && fn.Check(project) {
-			return true
-		}
-	}
-
-	mapExclusions := []struct {
-		exclusionMap interface{}
-		key          interface{}
-	}{
-		{exclusions.AuthenticationType, project.Authentication},
-		{exclusions.AppType, project.AppType},
-		{exclusions.Database, project.Database},
-		{exclusions.BackgroundJob, project.BackgroundJob},
-	}
-
-	for _, mapExcl := range mapExclusions {
-		switch m := mapExcl.exclusionMap.(type) {
-		case map[Authentication][]string:
-			if key, ok := mapExcl.key.(Authentication); ok {
-				if excludedPaths, exists := m[key]; exists {
-					for _, path := range excludedPaths {
-						if fileName == path {
-							return true
-						}
-					}
-				}
-			}
-		case map[AppType][]string:
-			if key, ok := mapExcl.key.(AppType); ok {
-				if excludedPaths, exists := m[key]; exists {
-					for _, path := range excludedPaths {
-						if fileName == path {
-							return true
-						}
-					}
-				}
-			}
-		case map[Database][]string:
-			if key, ok := mapExcl.key.(Database); ok {
-				if excludedPaths, exists := m[key]; exists {
-					for _, path := range excludedPaths {
-						if fileName == path {
-							return true
-						}
-					}
-				}
-			}
-		case map[BackgroundJob][]string:
-			if key, ok := mapExcl.key.(BackgroundJob); ok {
-				if excludedPaths, exists := m[key]; exists {
-					for _, path := range excludedPaths {
-						if fileName == path {
-							return true
-						}
-					}
-				}
+		for _, filePath := range fn.FilePaths {
+			if fileName == filePath && fn.Check(project) {
+				return true
 			}
 		}
 	}
@@ -287,6 +216,36 @@ func ExcludeTemplateFile(templateFileName string, project *Project, exclusions *
 				if fileName == path {
 					return true
 				}
+			}
+		}
+	}
+
+	if paths, ok := exclusions.AuthenticationType[project.Authentication]; ok {
+		for _, path := range paths {
+			if fileName == path {
+				return true
+			}
+		}
+
+	}
+	if paths, ok := exclusions.AppType[project.AppType]; ok {
+		for _, path := range paths {
+			if fileName == path {
+				return true
+			}
+		}
+	}
+	if paths, ok := exclusions.Database[project.Database]; ok {
+		for _, path := range paths {
+			if fileName == path {
+				return true
+			}
+		}
+	}
+	if paths, ok := exclusions.BackgroundJob[project.BackgroundJob]; ok {
+		for _, path := range paths {
+			if fileName == path {
+				return true
 			}
 		}
 	}
