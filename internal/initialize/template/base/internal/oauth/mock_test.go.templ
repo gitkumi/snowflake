@@ -1,0 +1,154 @@
+package oauth
+
+import (
+	"context"
+	"testing"
+	"time"
+)
+
+func TestMockGitHubOAuth(t *testing.T) {
+	mock := NewMockGitHubOAuth()
+	
+	t.Run("Basic Provider Interface", func(t *testing.T) {
+		testOAuthProvider(t, mock)
+	})
+	
+	t.Run("State Expiry", func(t *testing.T) {
+		TestStateExpiry(t, mock, func(expiry time.Time) {
+			for s := range mock.states {
+				mock.states[s] = expiry
+			}
+		})
+	})
+	
+	t.Run("State Cleanup", func(t *testing.T) {
+		TestStateCleanup(t, mock, 
+			func() int { return len(mock.states) },
+			func(state string, expiry time.Time) { mock.states[state] = expiry },
+		)
+	})
+	
+	t.Run("Multiple State Verification", func(t *testing.T) {
+		TestMultipleStateVerification(t, mock)
+	})
+	
+	t.Run("Exchange Tracks Code", func(t *testing.T) {
+		ctx := context.Background()
+		code := "test-code-value"
+		_, err := mock.Exchange(ctx, code)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if mock.CalledWithCode != code {
+			t.Errorf("Exchange should track the code it was called with: expected %q, got %q", code, mock.CalledWithCode)
+		}
+	})
+	
+	t.Run("VerifyState Tracks State", func(t *testing.T) {
+		state, _ := mock.GenerateState()
+		mock.VerifyState(state)
+		if mock.CalledWithState != state {
+			t.Errorf("VerifyState should track the state it was called with: expected %q, got %q", state, mock.CalledWithState)
+		}
+	})
+}
+
+func TestMockGoogleOAuth(t *testing.T) {
+	mock := NewMockGoogleOAuth()
+	
+	t.Run("Basic Provider Interface", func(t *testing.T) {
+		testOAuthProvider(t, mock)
+	})
+	
+	t.Run("State Expiry", func(t *testing.T) {
+		TestStateExpiry(t, mock, func(expiry time.Time) {
+			for s := range mock.states {
+				mock.states[s] = expiry
+			}
+		})
+	})
+	
+	t.Run("Multiple State Verification", func(t *testing.T) {
+		TestMultipleStateVerification(t, mock)
+	})
+}
+
+func TestMockFacebookOAuth(t *testing.T) {
+	mock := NewMockFacebookOAuth()
+	
+	t.Run("Basic Provider Interface", func(t *testing.T) {
+		testOAuthProvider(t, mock)
+	})
+	
+	t.Run("State Expiry", func(t *testing.T) {
+		TestStateExpiry(t, mock, func(expiry time.Time) {
+			for s := range mock.states {
+				mock.states[s] = expiry
+			}
+		})
+	})
+	
+	t.Run("Multiple State Verification", func(t *testing.T) {
+		TestMultipleStateVerification(t, mock)
+	})
+}
+
+func TestMockLinkedInOAuth(t *testing.T) {
+	mock := NewMockLinkedInOAuth()
+	
+	t.Run("Basic Provider Interface", func(t *testing.T) {
+		testOAuthProvider(t, mock)
+	})
+	
+	t.Run("State Expiry", func(t *testing.T) {
+		TestStateExpiry(t, mock, func(expiry time.Time) {
+			for s := range mock.states {
+				mock.states[s] = expiry
+			}
+		})
+	})
+	
+	t.Run("Multiple State Verification", func(t *testing.T) {
+		TestMultipleStateVerification(t, mock)
+	})
+}
+
+func TestMockInstagramOAuth(t *testing.T) {
+	mock := NewMockInstagramOAuth()
+	
+	t.Run("Basic Provider Interface", func(t *testing.T) {
+		testOAuthProvider(t, mock)
+	})
+	
+	t.Run("State Expiry", func(t *testing.T) {
+		TestStateExpiry(t, mock, func(expiry time.Time) {
+			for s := range mock.states {
+				mock.states[s] = expiry
+			}
+		})
+	})
+	
+	t.Run("Multiple State Verification", func(t *testing.T) {
+		TestMultipleStateVerification(t, mock)
+	})
+}
+
+func TestMockDiscordOAuth(t *testing.T) {
+	mock := NewMockDiscordOAuth()
+	
+	t.Run("Basic Provider Interface", func(t *testing.T) {
+		testOAuthProvider(t, mock)
+	})
+	
+	t.Run("State Expiry", func(t *testing.T) {
+		TestStateExpiry(t, mock, func(expiry time.Time) {
+			for s := range mock.states {
+				mock.states[s] = expiry
+			}
+		})
+	})
+	
+	t.Run("Multiple State Verification", func(t *testing.T) {
+		TestMultipleStateVerification(t, mock)
+	})
+} 

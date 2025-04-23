@@ -3,15 +3,19 @@
 CREATE TABLE users (
   id BIGSERIAL PRIMARY KEY,
   email TEXT NOT NULL,
+  {{- if eq .Authentication "email_with_username"}}
   username TEXT NOT NULL,
+  {{- end }}
   hashed_password TEXT,
   first_name TEXT,
   last_name TEXT,
   confirmed_at TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(email),
-  UNIQUE(username)
+  {{- if eq .Authentication "email_with_username"}}
+  UNIQUE(username),
+  {{- end }}
+  UNIQUE(email)
 );
 
 CREATE OR REPLACE FUNCTION update_users_updated_at()

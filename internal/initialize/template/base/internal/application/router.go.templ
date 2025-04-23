@@ -51,7 +51,7 @@ func (app *Application) registerRoutes() error {
 	api.POST("/books", app.handlers.book.CreateBook)
 	api.PATCH("/books/:id", app.handlers.book.UpdateBook)
 	api.DELETE("/books/:id", app.handlers.book.DeleteBook)
-		{{- if and .SMTP .Auth }}
+		{{- if and .SMTP .WithAuth }}
 	api.POST("/auth/register", app.handlers.auth.Register)
 	api.POST("/auth/login", app.handlers.auth.Login)
 	api.POST("/auth/email-login", app.handlers.auth.CreateMagicLink)
@@ -63,6 +63,32 @@ func (app *Application) registerRoutes() error {
 		{{- end }}
 	{{- end }}
 	
+
+	{{- if .OAuthGoogle }}
+	api.GET("/oauth/google/callback", app.handlers.oauth.GoogleCallback)
+	api.GET("/oauth/google", app.handlers.oauth.GoogleLogin)
+	{{- end }}
+	{{- if .OAuthFacebook }}
+	api.GET("/oauth/facebook", app.handlers.oauth.FacebookLogin)
+	api.GET("/oauth/facebook/callback", app.handlers.oauth.FacebookCallback)
+	{{- end }}
+	{{- if .OAuthGitHub }}
+	api.GET("/oauth/github", app.handlers.oauth.GitHubLogin)
+	api.GET("/oauth/github/callback", app.handlers.oauth.GitHubCallback)
+	{{- end }}
+	{{- if .OAuthLinkedIn }}
+	api.GET("/oauth/linkedin", app.handlers.oauth.LinkedInLogin)
+	api.GET("/oauth/linkedin/callback", app.handlers.oauth.LinkedInCallback)
+	{{- end }}
+	{{- if .OAuthInstagram }}
+	api.GET("/oauth/instagram", app.handlers.oauth.InstagramLogin)
+	api.GET("/oauth/instagram/callback", app.handlers.oauth.InstagramCallback)
+	{{- end }}
+	{{- if .OAuthDiscord }}
+	api.GET("/oauth/discord", app.handlers.oauth.DiscordLogin)
+	api.GET("/oauth/discord/callback", app.handlers.oauth.DiscordCallback)
+	{{- end }}
+
 	return nil
 }
 

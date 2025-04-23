@@ -1,0 +1,121 @@
+package oauth
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
+
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/facebook"
+)
+
+type FacebookOAuth struct {
+	Config       *oauth2.Config
+	StateTimeout time.Duration
+	states       map[string]time.Time
+}
+
+type FacebookUser struct {
+	ID        string `json:"id"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Picture   struct {
+		Data struct {
+			URL string `json:"url"`
+		} `json:"data"`
+	} `json:"picture"`
+}
+
+func NewFacebookOAuth(clientID, clientSecret, redirectURL string) *FacebookOAuth {
+	config := &oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  redirectURL,
+		Scopes: []string{
+			"email",
+			"public_profile",
+		},
+		Endpoint: facebook.Endpoint,
+	}
+
+	return &FacebookOAuth{
+		Config:       config,
+		StateTimeout: 10 * time.Minute,
+		states:       make(map[string]time.Time),
+	}
+}
+
+func (f *FacebookOAuth) GenerateState() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+
+	state := base64.StdEncoding.EncodeToString(b)
+	f.states[state] = time.Now().Add(f.StateTimeout)
+
+	for s, t := range f.states {
+		if time.Now().After(t) {
+			delete(f.states, s)
+		}
+	}
+
+	return state, nil
+}
+
+func (f *FacebookOAuth) VerifyState(state string) bool {
+	expiry, exists := f.states[state]
+	if !exists {
+		return false
+	}
+
+	valid := time.Now().Before(expiry)
+	delete(f.states, state)
+	return valid
+}
+
+func (f *FacebookOAuth) GetLoginURL(state string) string {
+	return f.Config.AuthCodeURL(state)
+}
+
+func (f *FacebookOAuth) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+	return f.Config.Exchange(ctx, code)
+}
+
+func (f *FacebookOAuth) GetUserInfo(ctx context.Context, token *oauth2.Token) (interface{}, error) {
+	client := f.Config.Client(ctx, token)
+
+	resp, err := client.Get("https://graph.facebook.com/me?fields=id,email,name,first_name,last_name,picture")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get user info: %s", resp.Status)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var user FacebookUser
+	if err := json.Unmarshal(data, &user); err != nil {
+		return nil, err
+	}
+
+	if user.Email == "" {
+		return nil, errors.New("email not provided by Facebook")
+	}
+
+	return &user, nil
+}

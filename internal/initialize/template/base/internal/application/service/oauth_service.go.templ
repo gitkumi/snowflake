@@ -1,0 +1,575 @@
+package service
+
+import (
+	"{{ .Name }}/internal/oauth"
+	"{{ .Name }}/internal/password"
+	"{{ .Name }}/internal/repo"
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/matoous/go-nanoid/v2"
+	"golang.org/x/oauth2"
+)
+
+type OAuthService struct {
+	BaseURL        string
+	Query          *repo.Queries
+	{{- if .OAuthGoogle }}
+	GoogleOAuth    oauth.OAuthProvider
+	{{- end }}
+	{{- if .OAuthFacebook }}
+	FacebookOAuth  oauth.OAuthProvider
+	{{- end }}
+	{{- if .OAuthGitHub }}
+	GitHubOAuth    oauth.OAuthProvider
+	{{- end }}
+	{{- if .OAuthLinkedIn }}
+	LinkedInOAuth  oauth.OAuthProvider
+	{{- end }}
+	{{- if .OAuthInstagram }}
+	InstagramOAuth oauth.OAuthProvider
+	{{- end }}
+	{{- if .OAuthDiscord }}
+	DiscordOAuth   oauth.OAuthProvider
+	{{- end }}
+	db             *sql.DB
+}
+
+func NewOAuthService(
+	baseURL string,
+	db *sql.DB,
+	query *repo.Queries,
+	{{- if .OAuthGoogle }}
+	googleOAuth oauth.OAuthProvider,
+	{{- end }}
+	{{- if .OAuthFacebook }}
+	facebookOAuth oauth.OAuthProvider,
+	{{- end }}
+	{{- if .OAuthGitHub }}
+	githubOAuth oauth.OAuthProvider,
+	{{- end }}
+	{{- if .OAuthLinkedIn }}
+	linkedInOAuth oauth.OAuthProvider,
+	{{- end }}
+	{{- if .OAuthInstagram }}
+	instagramOAuth oauth.OAuthProvider,
+	{{- end }}
+	{{- if .OAuthDiscord }}
+	discordOAuth oauth.OAuthProvider,
+	{{- end }}
+) *OAuthService {
+	return &OAuthService{
+		BaseURL:        baseURL,
+		Query:          query,
+		{{- if .OAuthGoogle }}
+		GoogleOAuth:    googleOAuth,
+		{{- end }}
+		{{- if .OAuthFacebook }}
+		FacebookOAuth:  facebookOAuth,
+		{{- end }}
+		{{- if .OAuthGitHub }}
+		GitHubOAuth:    githubOAuth,
+		{{- end }}
+		{{- if .OAuthLinkedIn }}
+		LinkedInOAuth:  linkedInOAuth,
+		{{- end }}
+		{{- if .OAuthInstagram }}
+		InstagramOAuth: instagramOAuth,
+		{{- end }}
+		{{- if .OAuthDiscord }}
+		DiscordOAuth:   discordOAuth,
+		{{- end }}
+		db:             db,
+	}
+}
+
+{{- if .OAuthGoogle }}
+func (s *OAuthService) GenerateGoogleAuthURL(ctx context.Context) (string, string, error) {
+	state, err := s.GoogleOAuth.GenerateState()
+	if err != nil {
+		return "", "", err
+	}
+	url := s.GoogleOAuth.GetLoginURL(state)
+	return url, state, nil
+}
+
+func (s *OAuthService) HandleGoogleCallback(ctx context.Context, code, state string) (string, error) {
+	if !s.GoogleOAuth.VerifyState(state) {
+		return "", errors.New("invalid state parameter")
+	}
+
+	token, err := s.GoogleOAuth.Exchange(ctx, code)
+	if err != nil {
+		return "", fmt.Errorf("failed to exchange token: %w", err)
+	}
+
+	googleUserInterface, err := s.GoogleOAuth.GetUserInfo(ctx, token)
+	if err != nil {
+		return "", fmt.Errorf("failed to get user info: %w", err)
+	}
+
+	googleUser, ok := googleUserInterface.(*oauth.GoogleUser)
+	if !ok {
+		return "", fmt.Errorf("invalid user type returned from Google OAuth")
+	}
+
+	return s.processOAuthUser(ctx, "google", googleUser.ID, googleUser.Email, googleUser.Name, googleUser.GivenName, googleUser.FamilyName, googleUser.Picture, token)
+}
+{{- end }}
+
+{{- if .OAuthFacebook }}
+func (s *OAuthService) GenerateFacebookAuthURL(ctx context.Context) (string, string, error) {
+	state, err := s.FacebookOAuth.GenerateState()
+	if err != nil {
+		return "", "", err
+	}
+	url := s.FacebookOAuth.GetLoginURL(state)
+	return url, state, nil
+}
+
+func (s *OAuthService) HandleFacebookCallback(ctx context.Context, code, state string) (string, error) {
+	if !s.FacebookOAuth.VerifyState(state) {
+		return "", errors.New("invalid state parameter")
+	}
+
+	token, err := s.FacebookOAuth.Exchange(ctx, code)
+	if err != nil {
+		return "", fmt.Errorf("failed to exchange token: %w", err)
+	}
+
+	fbUserInterface, err := s.FacebookOAuth.GetUserInfo(ctx, token)
+	if err != nil {
+		return "", fmt.Errorf("failed to get user info: %w", err)
+	}
+
+	fbUser, ok := fbUserInterface.(*oauth.FacebookUser)
+	if !ok {
+		return "", fmt.Errorf("invalid user type returned from Facebook OAuth")
+	}
+
+	pictureURL := ""
+	if fbUser.Picture.Data.URL != "" {
+		pictureURL = fbUser.Picture.Data.URL
+	}
+
+	return s.processOAuthUser(ctx, "facebook", fbUser.ID, fbUser.Email, fbUser.Name, fbUser.FirstName, fbUser.LastName, pictureURL, token)
+}
+{{- end }}
+
+{{- if .OAuthGitHub }}
+func (s *OAuthService) GenerateGitHubAuthURL(ctx context.Context) (string, string, error) {
+	state, err := s.GitHubOAuth.GenerateState()
+	if err != nil {
+		return "", "", err
+	}
+	url := s.GitHubOAuth.GetLoginURL(state)
+	return url, state, nil
+}
+
+func (s *OAuthService) HandleGitHubCallback(ctx context.Context, code, state string) (string, error) {
+	if !s.GitHubOAuth.VerifyState(state) {
+		return "", errors.New("invalid state parameter")
+	}
+
+	token, err := s.GitHubOAuth.Exchange(ctx, code)
+	if err != nil {
+		return "", fmt.Errorf("failed to exchange token: %w", err)
+	}
+
+	githubUserInterface, err := s.GitHubOAuth.GetUserInfo(ctx, token)
+	if err != nil {
+		return "", fmt.Errorf("failed to get user info: %w", err)
+	}
+
+	githubUser, ok := githubUserInterface.(*oauth.GitHubUser)
+	if !ok {
+		return "", fmt.Errorf("invalid user type returned from GitHub OAuth")
+	}
+
+	// GitHub doesn't have separate first/last name fields, so split the name if available
+	firstName := ""
+	lastName := ""
+	if githubUser.Name != "" {
+		nameParts := strings.Split(githubUser.Name, " ")
+		if len(nameParts) > 0 {
+			firstName = nameParts[0]
+		}
+		if len(nameParts) > 1 {
+			lastName = strings.Join(nameParts[1:], " ")
+		}
+	}
+
+	return s.processOAuthUser(ctx, "github", fmt.Sprintf("%d", githubUser.ID), githubUser.Email, githubUser.Name, firstName, lastName, githubUser.AvatarURL, token)
+}
+{{- end }}
+
+{{- if .OAuthLinkedIn }}
+func (s *OAuthService) GenerateLinkedInAuthURL(ctx context.Context) (string, string, error) {
+	state, err := s.LinkedInOAuth.GenerateState()
+	if err != nil {
+		return "", "", err
+	}
+	url := s.LinkedInOAuth.GetLoginURL(state)
+	return url, state, nil
+}
+
+func (s *OAuthService) HandleLinkedInCallback(ctx context.Context, code, state string) (string, error) {
+	if !s.LinkedInOAuth.VerifyState(state) {
+		return "", errors.New("invalid state parameter")
+	}
+
+	token, err := s.LinkedInOAuth.Exchange(ctx, code)
+	if err != nil {
+		return "", fmt.Errorf("failed to exchange token: %w", err)
+	}
+
+	linkedInUserInterface, err := s.LinkedInOAuth.GetUserInfo(ctx, token)
+	if err != nil {
+		return "", fmt.Errorf("failed to get user info: %w", err)
+	}
+
+	linkedInUser, ok := linkedInUserInterface.(*oauth.LinkedInUser)
+	if !ok {
+		return "", fmt.Errorf("invalid user type returned from LinkedIn OAuth")
+	}
+
+	// Extract first and last name from LinkedIn data
+	firstName := ""
+	lastName := ""
+
+	if len(linkedInUser.FirstName.Localized) > 0 {
+		// Get first name from preferred locale
+		locale := fmt.Sprintf("%s_%s", linkedInUser.FirstName.PreferredLocale.Language, linkedInUser.FirstName.PreferredLocale.Country)
+		if name, ok := linkedInUser.FirstName.Localized[locale]; ok {
+			firstName = name
+		} else {
+			// Fallback to first localized name
+			for _, name := range linkedInUser.FirstName.Localized {
+				firstName = name
+				break
+			}
+		}
+	}
+
+	if len(linkedInUser.LastName.Localized) > 0 {
+		// Get last name from preferred locale
+		locale := fmt.Sprintf("%s_%s", linkedInUser.LastName.PreferredLocale.Language, linkedInUser.LastName.PreferredLocale.Country)
+		if name, ok := linkedInUser.LastName.Localized[locale]; ok {
+			lastName = name
+		} else {
+			// Fallback to first localized name
+			for _, name := range linkedInUser.LastName.Localized {
+				lastName = name
+				break
+			}
+		}
+	}
+
+	// Get profile picture URL if available
+	pictureURL := ""
+	if len(linkedInUser.ProfilePicture.DisplayImage.Elements) > 0 &&
+		len(linkedInUser.ProfilePicture.DisplayImage.Elements[0].Identifiers) > 0 {
+		pictureURL = linkedInUser.ProfilePicture.DisplayImage.Elements[0].Identifiers[0].Identifier
+	}
+
+	fullName := strings.TrimSpace(firstName + " " + lastName)
+	return s.processOAuthUser(ctx, "linkedin", linkedInUser.ID, linkedInUser.Email, fullName, firstName, lastName, pictureURL, token)
+}
+{{- end }}
+
+{{- if .OAuthInstagram }}
+func (s *OAuthService) GenerateInstagramAuthURL(ctx context.Context) (string, string, error) {
+	state, err := s.InstagramOAuth.GenerateState()
+	if err != nil {
+		return "", "", err
+	}
+	url := s.InstagramOAuth.GetLoginURL(state)
+	return url, state, nil
+}
+
+func (s *OAuthService) HandleInstagramCallback(ctx context.Context, code, state string) (string, error) {
+	if !s.InstagramOAuth.VerifyState(state) {
+		return "", errors.New("invalid state parameter")
+	}
+
+	token, err := s.InstagramOAuth.Exchange(ctx, code)
+	if err != nil {
+		return "", fmt.Errorf("failed to exchange token: %w", err)
+	}
+
+	instagramUserInterface, err := s.InstagramOAuth.GetUserInfo(ctx, token)
+	if err != nil {
+		return "", fmt.Errorf("failed to get user info: %w", err)
+	}
+
+	instagramUser, ok := instagramUserInterface.(*oauth.InstagramUser)
+	if !ok {
+		return "", fmt.Errorf("invalid user type returned from Instagram OAuth")
+	}
+
+	// Instagram OAuth doesn't always provide an email, so we'll build one from username
+	email := ""
+	if instagramUser.Username != "" {
+		email = instagramUser.Username + "@instagram.com"
+	}
+
+	// For Instagram, we'll use the full_name field for both display name and first name
+	// since Instagram doesn't split names
+	firstName := instagramUser.Name
+	lastName := ""
+
+	return s.processOAuthUser(ctx, "instagram", instagramUser.ID, email, instagramUser.Name, firstName, lastName, instagramUser.Picture, token)
+}
+{{- end }}
+
+{{- if .OAuthDiscord }}
+func (s *OAuthService) GenerateDiscordAuthURL(ctx context.Context) (string, string, error) {
+	state, err := s.DiscordOAuth.GenerateState()
+	if err != nil {
+		return "", "", err
+	}
+	url := s.DiscordOAuth.GetLoginURL(state)
+	return url, state, nil
+}
+
+func (s *OAuthService) HandleDiscordCallback(ctx context.Context, code, state string) (string, error) {
+	if !s.DiscordOAuth.VerifyState(state) {
+		return "", errors.New("invalid state parameter")
+	}
+
+	token, err := s.DiscordOAuth.Exchange(ctx, code)
+	if err != nil {
+		return "", fmt.Errorf("failed to exchange token: %w", err)
+	}
+
+	discordUserInterface, err := s.DiscordOAuth.GetUserInfo(ctx, token)
+	if err != nil {
+		return "", fmt.Errorf("failed to get user info: %w", err)
+	}
+
+	discordUser, ok := discordUserInterface.(*oauth.DiscordUser)
+	if !ok {
+		return "", fmt.Errorf("invalid user type returned from Discord OAuth")
+	}
+
+	// Discord provides username, but we'll use global_name as the display name if available
+	displayName := discordUser.Username
+	if discordUser.GlobalName != "" {
+		displayName = discordUser.GlobalName
+	}
+
+	// Split the display name into first/last name if possible
+	firstName := displayName
+	lastName := ""
+	if displayName != "" {
+		nameParts := strings.Split(displayName, " ")
+		if len(nameParts) > 0 {
+			firstName = nameParts[0]
+		}
+		if len(nameParts) > 1 {
+			lastName = strings.Join(nameParts[1:], " ")
+		}
+	}
+
+	// Construct avatar URL if available
+	avatarURL := ""
+	if discordUser.Avatar != "" {
+		avatarURL = fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", discordUser.ID, discordUser.Avatar)
+	}
+
+	return s.processOAuthUser(ctx, "discord", discordUser.ID, discordUser.Email, displayName, firstName, lastName, avatarURL, token)
+}
+{{- end }}
+
+func (s *OAuthService) processOAuthUser(ctx context.Context, provider, providerID, email, name, firstName, lastName, pictureURL string, token *oauth2.Token) (string, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback()
+
+	qtx := s.Query.WithTx(tx)
+
+	oauthAccount, err := qtx.GetUserOAuthAccount(ctx, repo.GetUserOAuthAccountParams{
+		Provider:       provider,
+		ProviderUserID: providerID,
+	})
+
+	var jwtToken string
+
+	if err == nil {
+		_, err = qtx.UpdateUserOAuthAccount(ctx, repo.UpdateUserOAuthAccountParams{
+			ID: oauthAccount.ID,
+			AccessToken: sql.NullString{
+				String: token.AccessToken,
+				Valid:  token.AccessToken != "",
+			},
+			RefreshToken: sql.NullString{
+				String: token.RefreshToken,
+				Valid:  token.RefreshToken != "",
+			},
+			TokenExpiresAt: sql.NullTime{
+				Time:  token.Expiry,
+				Valid: !token.Expiry.IsZero(),
+			},
+		})
+		if err != nil {
+			return "", fmt.Errorf("failed to update OAuth account: %w", err)
+		}
+
+		user, err := qtx.GetUser(ctx, oauthAccount.UserID)
+		if err != nil {
+			return "", fmt.Errorf("failed to get user: %w", err)
+		}
+
+		jwtToken, err = password.CreateJwt(user.Email)
+		if err != nil {
+			return "", fmt.Errorf("failed to create token: %w", err)
+		}
+	} else {
+		user, err := qtx.GetUserByEmail(ctx, email)
+
+		if err == nil && user != (repo.User{}) {
+			createParams := repo.CreateUserOAuthAccountParams{
+				UserID:         user.ID,
+				Provider:       provider,
+				ProviderUserID: providerID,
+				ProviderEmail:  email,
+				AccessToken: sql.NullString{
+					String: token.AccessToken,
+					Valid:  token.AccessToken != "",
+				},
+				RefreshToken: sql.NullString{
+					String: token.RefreshToken,
+					Valid:  token.RefreshToken != "",
+				},
+				TokenExpiresAt: sql.NullTime{
+					Time:  token.Expiry,
+					Valid: !token.Expiry.IsZero(),
+				},
+			}
+
+			_, err = qtx.CreateUserOAuthAccount(ctx, createParams)
+			if err != nil {
+				return "", fmt.Errorf("failed to create OAuth account: %w", err)
+			}
+
+			jwtToken, err = password.CreateJwt(user.Email)
+			if err != nil {
+				return "", fmt.Errorf("failed to create token: %w", err)
+			}
+		} else {
+			{{- if eq .Authentication "email_with_username"}}
+			username := s.generateUsername(email, name)
+			{{- end }}
+			userParams := repo.CreateUserParams{
+				Email:    email,
+				{{- if eq .Authentication "email_with_username"}}
+				Username: username,
+				{{- end }}
+				HashedPassword: sql.NullString{
+					Valid: false,
+				},
+			}
+
+			if firstName != "" {
+				userParams.FirstName = sql.NullString{
+					String: firstName,
+					Valid:  true,
+				}
+			}
+
+			if lastName != "" {
+				userParams.LastName = sql.NullString{
+					String: lastName,
+					Valid:  true,
+				}
+			}
+
+			user, err := qtx.CreateUser(ctx, userParams)
+			if err != nil {
+				return "", fmt.Errorf("failed to create user: %w", err)
+			}
+
+			createParams := repo.CreateUserOAuthAccountParams{
+				UserID:         user.ID,
+				Provider:       provider,
+				ProviderUserID: providerID,
+				ProviderEmail:  email,
+				AccessToken: sql.NullString{
+					String: token.AccessToken,
+					Valid:  token.AccessToken != "",
+				},
+				RefreshToken: sql.NullString{
+					String: token.RefreshToken,
+					Valid:  token.RefreshToken != "",
+				},
+				TokenExpiresAt: sql.NullTime{
+					Time:  token.Expiry,
+					Valid: !token.Expiry.IsZero(),
+				},
+			}
+
+			_, err = qtx.CreateUserOAuthAccount(ctx, createParams)
+			if err != nil {
+				return "", fmt.Errorf("failed to create OAuth account: %w", err)
+			}
+
+			updateParams := repo.UpdateUserParams{
+				ID:             user.ID,
+				Email:          user.Email,
+				{{- if eq .Authentication "email_with_username"}}
+				Username:       user.Username,
+				{{- end }}
+				HashedPassword: user.HashedPassword,
+				FirstName:      user.FirstName,
+				LastName:       user.LastName,
+				// Set confirmed_at since OAuth emails are verified
+				ConfirmedAt: sql.NullTime{Time: time.Now(), Valid: true},
+			}
+
+			_, err = qtx.UpdateUser(ctx, updateParams)
+			if err != nil {
+				return "", fmt.Errorf("failed to update user: %w", err)
+			}
+
+			jwtToken, err = password.CreateJwt(user.Email)
+			if err != nil {
+				return "", fmt.Errorf("failed to create token: %w", err)
+			}
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return "", fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return jwtToken, nil
+}
+
+
+// generateUsername creates a username from email or name
+func (s *OAuthService) generateUsername(email, name string) string {
+	if email != "" {
+		username := strings.Split(email, "@")[0]
+		// Add random suffix to avoid username collisions
+		suffix, _ := gonanoid.New(4)
+		return username + "_" + suffix
+	}
+
+	if name != "" {
+		// Convert name to lowercase and replace spaces with underscores
+		username := strings.ToLower(strings.ReplaceAll(name, " ", "_"))
+		// Add random suffix to avoid username collisions
+		suffix, _ := gonanoid.New(4)
+		return username + "_" + suffix
+	}
+
+	// Fallback to random username
+	username, _ := gonanoid.New(10)
+	return "user_" + username
+}

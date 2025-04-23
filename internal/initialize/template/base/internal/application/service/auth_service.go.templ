@@ -275,7 +275,9 @@ func (s *AuthService) ConsumeResetPassword(ctx context.Context, tokenID string, 
 	updateParams := repo.UpdateUserParams{
 		ID:             user.ID,
 		Email:          user.Email,
+		{{- if eq .Authentication "email_with_username"}}
 		Username:       user.Username,
+		{{- end }}
 		HashedPassword: sql.NullString{String: hashed, Valid: true},
 		FirstName:      user.FirstName,
 		LastName:       user.LastName,
@@ -311,7 +313,9 @@ func (s *AuthService) ConsumeConfirmEmail(ctx context.Context, tokenID string) (
 	updateParams := repo.UpdateUserParams{
 		ID:             user.ID,
 		Email:          user.Email,
+		{{- if eq .Authentication "email_with_username"}}
 		Username:       user.Username,
+		{{- end }}
 		HashedPassword: user.HashedPassword,
 		FirstName:      user.FirstName,
 		LastName:       user.LastName,

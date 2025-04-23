@@ -1,0 +1,42 @@
+-- +goose Up
+-- +goose StatementBegin
+-- Add provider_type to user_auth_tokens to support OAuth
+CREATE TABLE user_oauth_accounts (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  provider TEXT NOT NULL CHECK(provider IN ('google', 'facebook', 'github', 'discord', 'linkedin', 'instagram')),
+  provider_user_id TEXT NOT NULL,
+  provider_email TEXT NOT NULL,
+  access_token TEXT,
+  refresh_token TEXT,
+  token_expires_at DATETIME,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(provider, provider_user_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TRIGGER update_user_oauth_accounts_updated_at
+AFTER UPDATE ON user_oauth_accounts
+WHEN old.updated_at <> current_timestamp
+BEGIN
+    UPDATE user_oauth_accounts
+    SET updated_at = current_timestamp
+    WHERE id = OLD.id;
+END;
+
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+-- Restore original constraint
+ALTER TABLE user_auth_tokens 
+DROP CONSTRAINT user_auth_tokens_type_check;
+
+ALTER TABLE user_auth_tokens
+ADD CONSTRAINT user_auth_tokens_type_check 
+CHECK(type IN ('magic_link', 'reset_password', 'confirm_email'));
+
+-- Drop the OAuth accounts table
+DROP TABLE user_oauth_accounts;
+-- +goose StatementEnd 

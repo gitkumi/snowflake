@@ -1,0 +1,110 @@
+package dto
+
+import (
+	"{{ .Name }}/internal/repo"
+	"database/sql"
+	"time"
+)
+
+// OAuthCallback represents the callback data from OAuth provider
+type OAuthCallback struct {
+	Code  string `form:"code" binding:"required"`
+	State string `form:"state" binding:"required"`
+}
+
+// OAuthUserResponse extends UserResponse with OAuth provider information
+type OAuthUserResponse struct {
+	UserResponse
+	Provider string `json:"provider"`
+}
+
+// OAuthAccount represents an OAuth account
+type OAuthAccount struct {
+	ID             int64     `json:"id"`
+	UserID         int64     `json:"user_id"`
+	Provider       string    `json:"provider"`
+	ProviderUserID string    `json:"provider_user_id"`
+	ProviderEmail  string    `json:"provider_email"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+// OAuthCreateUserParams used to create a new user with OAuth
+type OAuthCreateUserParams struct {
+	Email        string
+	{{- if eq .Authentication "email_with_username"}}
+	Username     string
+	{{- end }}
+	FirstName    string
+	LastName     string
+	Provider     string
+	ProviderID   string
+	AccessToken  string
+	RefreshToken string
+	ExpiresAt    time.Time
+}
+
+// ToUserParams converts OAuthCreateUserParams to repo.CreateUserParams
+func (p OAuthCreateUserParams) ToUserParams() repo.CreateUserParams {
+	params := repo.CreateUserParams{
+		Email:    p.Email,
+		{{- if eq .Authentication "email_with_username"}}
+		Username: p.Username,
+		{{- end }}
+		// No password for OAuth users by default
+		HashedPassword: sql.NullString{Valid: false},
+	}
+
+	if p.FirstName != "" {
+		params.FirstName = sql.NullString{
+			String: p.FirstName,
+			Valid:  true,
+		}
+	}
+
+	if p.LastName != "" {
+		params.LastName = sql.NullString{
+			String: p.LastName,
+			Valid:  true,
+		}
+	}
+
+	return params
+}
+
+// ToOAuthParams converts OAuthCreateUserParams to repo.CreateUserOAuthAccountParams
+func (p OAuthCreateUserParams) ToOAuthParams(userID int64) repo.CreateUserOAuthAccountParams {
+	var tokenExpires sql.NullTime
+	if !p.ExpiresAt.IsZero() {
+		tokenExpires = sql.NullTime{
+			Time:  p.ExpiresAt,
+			Valid: true,
+		}
+	}
+
+	var accessToken, refreshToken sql.NullString
+
+	if p.AccessToken != "" {
+		accessToken = sql.NullString{
+			String: p.AccessToken,
+			Valid:  true,
+		}
+	}
+
+	if p.RefreshToken != "" {
+		refreshToken = sql.NullString{
+			String: p.RefreshToken,
+			Valid:  true,
+		}
+	}
+
+	return repo.CreateUserOAuthAccountParams{
+		UserID:         userID,
+		Provider:       p.Provider,
+		ProviderUserID: p.ProviderID,
+		ProviderEmail:  p.Email,
+		AccessToken:    accessToken,
+		RefreshToken:   refreshToken,
+		TokenExpiresAt: tokenExpires,
+	}
+}

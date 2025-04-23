@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+// AppType defines the type of application to generate
 type AppType string
 
 const (
@@ -25,6 +26,11 @@ func (t AppType) IsValid() bool {
 	return false
 }
 
+func (t AppType) String() string {
+	return string(t)
+}
+
+// Database defines the database engine to use
 type Database string
 
 const (
@@ -106,6 +112,7 @@ func (d Database) Import() string {
 	}
 }
 
+// BackgroundJob defines the type of background job system to use
 type BackgroundJob string
 
 const (
@@ -130,3 +137,42 @@ func (t BackgroundJob) IsValid() bool {
 	}
 	return false
 }
+
+func (t BackgroundJob) String() string {
+	return string(t)
+}
+
+// Authentication defines the type of authentication system to use
+type Authentication string
+
+const (
+	AuthenticationNone              Authentication = "none"
+	AuthenticationEmail             Authentication = "email"
+	AuthenticationEmailWithUsername Authentication = "email_with_username"
+)
+
+var AllAuthentications = []Authentication{
+	AuthenticationNone,
+	AuthenticationEmail,
+	AuthenticationEmailWithUsername,
+}
+
+func (a Authentication) IsValid() bool {
+	for _, auth := range AllAuthentications {
+		if auth == a {
+			return true
+		}
+	}
+	return false
+}
+
+func (a Authentication) String() string {
+	return string(a)
+}
+
+// RequiresDatabase returns true if this authentication method requires a database
+func (a Authentication) RequiresDatabase() bool {
+	return a != AuthenticationNone
+}
+
+// RequiresSMTP returns true if this

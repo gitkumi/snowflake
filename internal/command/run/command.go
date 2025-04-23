@@ -12,16 +12,22 @@ import (
 
 func Command() *cobra.Command {
 	var (
-		quiet         bool
-		database      string
-		backgroundJob string
-		appType       string
-		outputDir     string
-		git           bool
-		smtp          bool
-		storage       bool
-		redis         bool
-		auth          bool
+		quiet          bool
+		database       string
+		backgroundJob  string
+		authentication string
+		appType        string
+		outputDir      string
+		git            bool
+		smtp           bool
+		storage        bool
+		redis          bool
+		oauthDiscord   bool
+		oauthFacebook  bool
+		oauthGitHub    bool
+		oauthGoogle    bool
+		oauthInstagram bool
+		oauthLinkedIn  bool
 	)
 
 	cmd := &cobra.Command{
@@ -67,18 +73,23 @@ func Command() *cobra.Command {
 				log.Fatalf("Invalid app type: %s. Must be one of: %v", backgroundJob, initialize.AllBackgroundJobs)
 			}
 
+			authenticationEnum := initialize.Authentication(authentication)
+			if !backgroundJobEnum.IsValid() {
+				log.Fatalf("Invalid authentication: %s. Must be one of: %v", authentication, initialize.AllAuthentications)
+			}
+
 			err := initialize.Run(&initialize.Config{
-				Quiet:         quiet,
-				Name:          args[0],
-				Database:      dbEnum,
-				BackgroundJob: backgroundJobEnum,
-				AppType:       appTypeEnum,
-				Git:           git,
-				OutputDir:     outputDir,
-				SMTP:          smtp,
-				Storage:       storage,
-				Redis:         redis,
-				Auth:          auth,
+				Quiet:          quiet,
+				Name:           args[0],
+				Database:       dbEnum,
+				BackgroundJob:  backgroundJobEnum,
+				AppType:        appTypeEnum,
+				Git:            git,
+				OutputDir:      outputDir,
+				SMTP:           smtp,
+				Storage:        storage,
+				Redis:          redis,
+				Authentication: authenticationEnum,
 			})
 			if err != nil {
 				log.Fatal(err.Error())
@@ -90,13 +101,19 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVarP(&database, "database", "d", "sqlite3", fmt.Sprintf("Database type %v", initialize.AllDatabases))
 
 	cmd.Flags().StringVarP(&backgroundJob, "background-job", "b", "basic", fmt.Sprintf("Background Job type %v", initialize.AllBackgroundJobs))
+	cmd.Flags().StringVarP(&authentication, "authentication", "a", "none", fmt.Sprintf("Authentication type %v", initialize.AllAuthentications))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "Disable project generation messages")
 	cmd.Flags().BoolVar(&git, "git", true, "Initialize git")
 	cmd.Flags().BoolVar(&smtp, "smtp", false, "Add SMTP")
 	cmd.Flags().BoolVar(&storage, "storage", false, "Add Storage (S3)")
 	cmd.Flags().BoolVar(&redis, "redis", false, "Add Redis (comes with ratelimit middleware)")
-	cmd.Flags().BoolVar(&auth, "auth", false, "Add Authentication (simple email-based)")
+	cmd.Flags().BoolVar(&oauthDiscord, "oauth-discord", false, "Add Discord OAuth")
+	cmd.Flags().BoolVar(&oauthFacebook, "oauth-facebook", false, "Add Facebook OAuth")
+	cmd.Flags().BoolVar(&oauthGitHub, "oauth-github", false, "Add GitHub OAuth")
+	cmd.Flags().BoolVar(&oauthGoogle, "oauth-google", false, "Add Google OAuth")
+	cmd.Flags().BoolVar(&oauthInstagram, "oauth-instagram", false, "Add Instagram OAuth")
+	cmd.Flags().BoolVar(&oauthLinkedIn, "oauth-linkedin", false, "Add LinkedIn OAuth")
 
 	return cmd
 }

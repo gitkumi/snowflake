@@ -19,51 +19,114 @@ func Command() *cobra.Command {
 			database := initialize.AllDatabases[0]
 			backgroundJob := initialize.AllBackgroundJobs[0]
 			selectedFeatures := []string{"Git", "SMTP", "Storage"}
+			selectedAuthProviders := []string{}
+			authType := initialize.AllAuthentications[0]
 
-			form := huh.NewForm(
-				huh.NewGroup(
-					huh.NewInput().
-						Title("Enter project name").
-						Placeholder("acme").
-						Value(&projectName),
-
-					huh.NewSelect[initialize.AppType]().
-						Title("Select application type").
-						Options(huh.NewOptions(initialize.AllAppTypes...)...).
-						Value(&appType),
-
-					huh.NewSelect[initialize.Database]().
-						Title("Select database").
-						Options(huh.NewOptions(initialize.AllDatabases...)...).
-						Value(&database),
-
-					huh.NewSelect[initialize.BackgroundJob]().
-						Title("Select background job").
-						Options(huh.NewOptions(initialize.AllBackgroundJobs...)...).
-						Value(&backgroundJob),
-
-					huh.NewMultiSelect[string]().
-						Title("Select features").
-						Options(
-							huh.NewOption("Git", "Git"),
-							huh.NewOption("SMTP", "SMTP"),
-							huh.NewOption("Storage", "Storage"),
-							huh.NewOption("Redis", "Redis"),
-							huh.NewOption("Auth", "Auth"),
-						).
-						Value(&selectedFeatures),
-				),
+			// Create the initial form groups
+			projectNameGroup := huh.NewGroup(
+				huh.NewInput().
+					Title("Enter project name").
+					Placeholder("acme").
+					Value(&projectName),
 			)
 
-			if err := form.Run(); err != nil {
+			appTypeGroup := huh.NewGroup(
+				huh.NewSelect[initialize.AppType]().
+					Title("Select application type").
+					Options(huh.NewOptions(initialize.AllAppTypes...)...).
+					Value(&appType),
+			)
+
+			databaseGroup := huh.NewGroup(
+				huh.NewSelect[initialize.Database]().
+					Title("Select database").
+					Options(huh.NewOptions(initialize.AllDatabases...)...).
+					Value(&database),
+			)
+
+			featuresGroup := huh.NewGroup(
+				huh.NewMultiSelect[string]().
+					Title("Add additional features").
+					Options(
+						huh.NewOption("Git", "Git"),
+						huh.NewOption("SMTP", "SMTP"),
+						huh.NewOption("Storage (S3)", "Storage"),
+						huh.NewOption("Redis", "Redis"),
+					).
+					Value(&selectedFeatures),
+			)
+
+			backgroundJobGroup := huh.NewGroup(
+				huh.NewSelect[initialize.BackgroundJob]().
+					Title("Select background job").
+					Options(huh.NewOptions(initialize.AllBackgroundJobs...)...).
+					Value(&backgroundJob),
+			)
+
+			authGroup := huh.NewGroup(
+				huh.NewSelect[initialize.Authentication]().
+					Title("Select authentication").
+					Options(huh.NewOptions(initialize.AllAuthentications...)...).
+					Value(&authType),
+			)
+
+			oauthProvidersGroup := huh.NewGroup(
+				huh.NewMultiSelect[string]().
+					Title("Add OAuth Provider").
+					Options(
+						huh.NewOption("Discord OAuth", "OAuthDiscord"),
+						huh.NewOption("Facebook OAuth", "OAuthFacebook"),
+						huh.NewOption("GitHub OAuth", "OAuthGitHub"),
+						huh.NewOption("Google OAuth", "OAuthGoogle"),
+						huh.NewOption("Instagram OAuth", "OAuthInstagram"),
+						huh.NewOption("LinkedIn OAuth", "OAuthLinkedIn"),
+					).
+					Value(&selectedAuthProviders),
+			)
+
+			initialForm := huh.NewForm(
+				projectNameGroup,
+				appTypeGroup,
+				databaseGroup,
+				featuresGroup,
+				backgroundJobGroup,
+			)
+
+			if err := initialForm.Run(); err != nil {
 				fmt.Printf("error running form: %v\n", err)
 				return
 			}
 
-			// Map selected features to config flags
+			// Only ask for authentication if database is not 'none'
+			if database != initialize.DatabaseNone {
+				authForm := huh.NewForm(authGroup)
+				if err := authForm.Run(); err != nil {
+					fmt.Printf("error running auth form: %v\n", err)
+					return
+				}
+
+				// Only ask for OAuth providers if authentication is not 'none'
+				if authType != initialize.AuthenticationNone {
+					oauthForm := huh.NewForm(oauthProvidersGroup)
+					if err := oauthForm.Run(); err != nil {
+						fmt.Printf("error running OAuth form: %v\n", err)
+						return
+					}
+				}
+			}
+
 			featureEnabled := func(name string) bool {
 				for _, f := range selectedFeatures {
 					if f == name {
+						return true
+					}
+				}
+				return false
+			}
+
+			authProviderEnabled := func(name string) bool {
+				for _, p := range selectedAuthProviders {
+					if p == name {
 						return true
 					}
 				}
@@ -74,11 +137,17 @@ func Command() *cobra.Command {
 			cfg.AppType = appType
 			cfg.Database = database
 			cfg.BackgroundJob = backgroundJob
+			cfg.Authentication = authType
 			cfg.Git = featureEnabled("Git")
 			cfg.SMTP = featureEnabled("SMTP")
 			cfg.Storage = featureEnabled("Storage")
 			cfg.Redis = featureEnabled("Redis")
-			cfg.Auth = featureEnabled("Auth")
+			cfg.OAuthDiscord = authProviderEnabled("OAuthDiscord")
+			cfg.OAuthFacebook = authProviderEnabled("OAuthFacebook")
+			cfg.OAuthGitHub = authProviderEnabled("OAuthGitHub")
+			cfg.OAuthGoogle = authProviderEnabled("OAuthGoogle")
+			cfg.OAuthInstagram = authProviderEnabled("OAuthInstagram")
+			cfg.OAuthLinkedIn = authProviderEnabled("OAuthLinkedIn")
 
 			if err := initialize.Run(cfg); err != nil {
 				fmt.Printf("error creating project: %v\n", err)
@@ -87,4 +156,13 @@ func Command() *cobra.Command {
 	}
 
 	return cmd
+}
+
+func contains(slice []string, item string) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
+		}
+	}
+	return false
 }

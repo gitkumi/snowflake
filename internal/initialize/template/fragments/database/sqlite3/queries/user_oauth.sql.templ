@@ -1,0 +1,32 @@
+-- name: GetUserOAuthAccount :one
+SELECT * FROM user_oauth_accounts
+WHERE provider = ? AND provider_user_id = ? LIMIT 1;
+
+-- name: GetUserOAuthAccountByUserID :one
+SELECT * FROM user_oauth_accounts
+WHERE user_id = ? AND provider = ? LIMIT 1;
+
+-- name: ListUserOAuthAccounts :many
+SELECT * FROM user_oauth_accounts
+WHERE user_id = ?;
+
+-- name: CreateUserOAuthAccount :one
+INSERT INTO user_oauth_accounts (
+  user_id, provider, provider_user_id, provider_email, access_token, refresh_token, token_expires_at
+) VALUES (
+  ?, ?, ?, ?, ?, ?, ?
+)
+RETURNING *;
+
+-- name: UpdateUserOAuthAccount :one
+UPDATE user_oauth_accounts
+SET 
+  access_token = ?,
+  refresh_token = ?,
+  token_expires_at = ?
+WHERE id = ?
+RETURNING *;
+
+-- name: DeleteUserOAuthAccount :exec
+DELETE FROM user_oauth_accounts
+WHERE id = ?; 

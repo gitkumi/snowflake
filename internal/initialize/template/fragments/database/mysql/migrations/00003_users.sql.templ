@@ -3,15 +3,19 @@
 CREATE TABLE users (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(255) NOT NULL,
+  {{- if eq .Authentication "email_with_username"}}
   username VARCHAR(255) NOT NULL,
+  {{- end }}
   hashed_password VARCHAR(255),
   first_name VARCHAR(255),
   last_name VARCHAR(255),
   confirmed_at TIMESTAMP NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY unique_email (email),
-  UNIQUE KEY unique_username (username)
+  {{- if eq .Authentication "email_with_username"}}
+  UNIQUE KEY unique_username (username),
+  {{- end }}
+  UNIQUE KEY unique_email (email)
 );
 -- +goose StatementEnd
 

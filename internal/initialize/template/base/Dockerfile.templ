@@ -47,6 +47,30 @@ ARG S3_ENDPOINT_URL
 ARG S3_REGION
 ARG S3_BUCKET
 {{- end }}
+{{- if .OAuthGoogle }}
+ARG GOOGLE_CLIENT_ID
+ARG GOOGLE_CLIENT_SECRET
+{{- end }}
+{{- if .OAuthFacebook }}
+ARG FACEBOOK_CLIENT_ID
+ARG FACEBOOK_CLIENT_SECRET
+{{- end }}
+{{- if .OAuthGitHub }}
+ARG GITHUB_CLIENT_ID
+ARG GITHUB_CLIENT_SECRET
+{{- end }}
+{{- if .OAuthLinkedIn }}
+ARG LINKEDIN_CLIENT_ID
+ARG LINKEDIN_CLIENT_SECRET
+{{- end }}
+{{- if .OAuthInstagram }}
+ARG INSTAGRAM_CLIENT_ID
+ARG INSTAGRAM_CLIENT_SECRET
+{{- end }}
+{{- if .OAuthDiscord }}
+ARG DISCORD_CLIENT_ID
+ARG DISCORD_CLIENT_SECRET
+{{- end }}
 
 ENV ENVIRONMENT=production \
 	{{- if .SMTP }}

@@ -1,0 +1,168 @@
+package oauth
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
+
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
+)
+
+type GitHubOAuth struct {
+	Config       *oauth2.Config
+	StateTimeout time.Duration
+	states       map[string]time.Time
+}
+
+type GitHubUser struct {
+	ID        int    `json:"id"`
+	Login     string `json:"login"`
+	NodeID    string `json:"node_id"`
+	AvatarURL string `json:"avatar_url"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	Bio       string `json:"bio"`
+}
+
+type GitHubEmail struct {
+	Email    string `json:"email"`
+	Primary  bool   `json:"primary"`
+	Verified bool   `json:"verified"`
+}
+
+func NewGitHubOAuth(clientID, clientSecret, redirectURL string) *GitHubOAuth {
+	config := &oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  redirectURL,
+		Scopes: []string{
+			"user:email",
+			"read:user",
+		},
+		Endpoint: github.Endpoint,
+	}
+
+	return &GitHubOAuth{
+		Config:       config,
+		StateTimeout: 10 * time.Minute,
+		states:       make(map[string]time.Time),
+	}
+}
+
+func (g *GitHubOAuth) GenerateState() (string, error) {
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+
+	state := base64.StdEncoding.EncodeToString(b)
+	g.states[state] = time.Now().Add(g.StateTimeout)
+
+	for s, t := range g.states {
+		if time.Now().After(t) {
+			delete(g.states, s)
+		}
+	}
+
+	return state, nil
+}
+
+func (g *GitHubOAuth) VerifyState(state string) bool {
+	expiry, exists := g.states[state]
+	if !exists {
+		return false
+	}
+
+	valid := time.Now().Before(expiry)
+	delete(g.states, state)
+	return valid
+}
+
+func (g *GitHubOAuth) GetLoginURL(state string) string {
+	return g.Config.AuthCodeURL(state)
+}
+
+func (g *GitHubOAuth) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+	return g.Config.Exchange(ctx, code)
+}
+
+func (g *GitHubOAuth) GetUserInfo(ctx context.Context, token *oauth2.Token) (interface{}, error) {
+	client := g.Config.Client(ctx, token)
+
+	resp, err := client.Get("https://api.github.com/user")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get user info: %s", resp.Status)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var user GitHubUser
+	if err := json.Unmarshal(data, &user); err != nil {
+		return nil, err
+	}
+
+	if user.Email == "" {
+		primaryEmail, err := g.getPrimaryEmail(ctx, client)
+		if err != nil {
+			return nil, err
+		}
+		user.Email = primaryEmail
+	}
+
+	if user.Email == "" {
+		return nil, errors.New("email not provided by GitHub")
+	}
+
+	return &user, nil
+}
+
+func (g *GitHubOAuth) getPrimaryEmail(ctx context.Context, client *http.Client) (string, error) {
+	resp, err := client.Get("https://api.github.com/user/emails")
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to get user emails: %s", resp.Status)
+	}
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var emails []GitHubEmail
+	if err := json.Unmarshal(data, &emails); err != nil {
+		return "", err
+	}
+
+	for _, email := range emails {
+		if email.Primary && email.Verified {
+			return email.Email, nil
+		}
+	}
+
+	for _, email := range emails {
+		if email.Verified {
+			return email.Email, nil
+		}
+	}
+
+	return "", errors.New("no verified email found")
+}

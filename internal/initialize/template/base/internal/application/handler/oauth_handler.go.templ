@@ -1,0 +1,191 @@
+package handler
+
+import (
+	"{{ .Name }}/internal/application/service"
+	"{{ .Name }}/internal/dto"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+type OAuthHandler struct {
+	Service *service.OAuthService
+}
+
+func NewOAuthHandler(s *service.OAuthService) *OAuthHandler {
+	return &OAuthHandler{Service: s}
+}
+
+{{- if .OAuthGoogle }}
+// GoogleLogin initiates the Google OAuth flow
+func (h *OAuthHandler) GoogleLogin(c *gin.Context) {
+	url, _, err := h.Service.GenerateGoogleAuthURL(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"login_url": url})
+}
+
+// GoogleCallback handles the OAuth callback from Google
+func (h *OAuthHandler) GoogleCallback(c *gin.Context) {
+	var input dto.OAuthCallback
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	token, err := h.Service.HandleGoogleCallback(c, input.Code, input.State)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+{{- end }}
+
+{{- if .OAuthFacebook }}
+// FacebookLogin initiates the Facebook OAuth flow
+func (h *OAuthHandler) FacebookLogin(c *gin.Context) {
+	url, _, err := h.Service.GenerateFacebookAuthURL(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"login_url": url})
+}
+
+// FacebookCallback handles the OAuth callback from Facebook
+func (h *OAuthHandler) FacebookCallback(c *gin.Context) {
+	var input dto.OAuthCallback
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	token, err := h.Service.HandleFacebookCallback(c, input.Code, input.State)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+{{- end }}
+
+{{- if .OAuthGitHub }}
+// GitHubLogin initiates the GitHub OAuth flow
+func (h *OAuthHandler) GitHubLogin(c *gin.Context) {
+	url, _, err := h.Service.GenerateGitHubAuthURL(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"login_url": url})
+}
+
+// GitHubCallback handles the OAuth callback from GitHub
+func (h *OAuthHandler) GitHubCallback(c *gin.Context) {
+	var input dto.OAuthCallback
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	token, err := h.Service.HandleGitHubCallback(c, input.Code, input.State)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+{{- end }}
+
+{{- if .OAuthLinkedIn }}
+// LinkedInLogin initiates the LinkedIn OAuth flow
+func (h *OAuthHandler) LinkedInLogin(c *gin.Context) {
+	url, _, err := h.Service.GenerateLinkedInAuthURL(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"login_url": url})
+}
+
+// LinkedInCallback handles the OAuth callback from LinkedIn
+func (h *OAuthHandler) LinkedInCallback(c *gin.Context) {
+	var input dto.OAuthCallback
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	token, err := h.Service.HandleLinkedInCallback(c, input.Code, input.State)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+{{- end }}
+
+{{- if .OAuthInstagram }}
+// InstagramLogin initiates the Instagram OAuth flow
+func (h *OAuthHandler) InstagramLogin(c *gin.Context) {
+	url, _, err := h.Service.GenerateInstagramAuthURL(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"login_url": url})
+}
+
+// InstagramCallback handles the OAuth callback from Instagram
+func (h *OAuthHandler) InstagramCallback(c *gin.Context) {
+	var input dto.OAuthCallback
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	token, err := h.Service.HandleInstagramCallback(c, input.Code, input.State)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+{{- end }}
+
+{{- if .OAuthDiscord }}
+// DiscordLogin initiates the Discord OAuth flow
+func (h *OAuthHandler) DiscordLogin(c *gin.Context) {
+	url, _, err := h.Service.GenerateDiscordAuthURL(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"login_url": url})
+}
+
+// DiscordCallback handles the OAuth callback from Discord
+func (h *OAuthHandler) DiscordCallback(c *gin.Context) {
+	var input dto.OAuthCallback
+	if err := c.ShouldBindQuery(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	token, err := h.Service.HandleDiscordCallback(c, input.Code, input.State)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+{{- end }}

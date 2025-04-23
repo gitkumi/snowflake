@@ -12,16 +12,28 @@ WHERE email = ? LIMIT 1;
 
 -- name: CreateUser :execresult
 INSERT INTO users (
-  email, username, hashed_password, first_name, last_name
+  email, 
+  {{- if eq .Authentication "email_with_username"}}
+  username, 
+  {{- end }}
+  hashed_password, 
+  first_name, 
+  last_name
 ) VALUES (
+  {{- if eq .Authentication "email_with_username"}}
   ?, ?, ?, ?, ?
+  {{- else }}
+  ?, ?, ?, ?
+  {{- end}}
 );
 
 
 -- name: UpdateUser :exec
 UPDATE users
 SET email = ?,
+    {{- if eq .Authentication "email_with_username"}}
     username = ?,
+    {{- end }}
     hashed_password = ?,
     first_name = ?,
     last_name = ?,
