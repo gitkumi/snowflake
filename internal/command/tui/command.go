@@ -74,10 +74,10 @@ func Command() *cobra.Command {
 				huh.NewMultiSelect[string]().
 					Title("Add OAuth Provider").
 					Options(
-						huh.NewOption("Discord OAuth", "OAuthDiscord"),
+						huh.NewOption("Google OAuth", "OAuthGoogle"),
 						huh.NewOption("Facebook OAuth", "OAuthFacebook"),
 						huh.NewOption("GitHub OAuth", "OAuthGitHub"),
-						huh.NewOption("Google OAuth", "OAuthGoogle"),
+						huh.NewOption("Discord OAuth", "OAuthDiscord"),
 						huh.NewOption("Instagram OAuth", "OAuthInstagram"),
 						huh.NewOption("LinkedIn OAuth", "OAuthLinkedIn"),
 					).
