@@ -28,8 +28,6 @@ import (
 
 	{{- if eq .BackgroundJob "sqs" }}
 	"acme/internal/queue"
-	{{- else if eq .BackgroundJob "asynq" }}
-	"github.com/hibiken/asynq"
 	{{- end }}
 )
 
@@ -98,13 +96,6 @@ func main() {
 	// 	Region:    vars.SQSRegion,
 	// 	QueueURL:  vars.SQSQueueURL,
 	// })
-	{{- else if eq .BackgroundJob "asynq" }}
-	bg := asynq.NewClient(asynq.RedisClientOpt{
-		Addr:     vars.RedisAddr,
-		Password: vars.RedisPassword,
-		DB:       vars.RedisDB,
-	})
-	defer bg.Close()
 	{{- end }}
 
 	{{- if .OAuthGoogle }}
@@ -187,8 +178,6 @@ func main() {
 		Logger:      logger,
 		{{- if eq .BackgroundJob "sqs" }}
 		Queue:       sqs,
-		{{- else if eq .BackgroundJob "asynq" }}
-		Asynq:       bg,
 		{{- end }}
 		{{- if .OAuthGoogle }}GoogleOAuth:    googleOAuth,{{- end }}
 		{{- if .OAuthFacebook }}FacebookOAuth:  facebookOAuth,{{- end }}

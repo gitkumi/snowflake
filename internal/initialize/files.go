@@ -111,12 +111,6 @@ func NewFileExclusions() *FileExclusions {
 				"/internal/queue/queue_sqs.go",
 				"/internal/queue/queue_mock.go",
 			},
-			BackgroundJobAsynq: {
-				"/internal/application/task.go",
-				"/internal/queue/queue.go",
-				"/internal/queue/queue_sqs.go",
-				"/internal/queue/queue_mock.go",
-			},
 			BackgroundJobSQS: {
 				"/internal/application/task.go",
 			},

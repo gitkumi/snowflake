@@ -22,8 +22,6 @@ import (
 	{{- end }}
 	{{- if eq .BackgroundJob "sqs" }}
 	"acme/internal/queue"
-	{{- else if eq .BackgroundJob "asynq" }}
-	"github.com/hibiken/asynq"
 	{{- else if eq .BackgroundJob "basic" }}
 	"sync"
 	{{- end }}
@@ -96,8 +94,6 @@ type Config struct {
 	{{- end }}
 	{{- if eq .BackgroundJob "sqs" }}
 	Queue   queue.Queue
-	{{- else if eq .BackgroundJob "asynq" }}
-	Asynq   *asynq.Client
 	{{- end }}
 
 	{{- if .OAuthGoogle }}
@@ -130,8 +126,6 @@ func New(cfg *Config) (*Application, error) {
 	{{- end }}
 	{{- if eq .BackgroundJob "sqs" }}
 	// cfg.Queue
-	{{- else if eq .BackgroundJob "asynq" }}
-	// cfg.Asynq
 	{{- end }}
 
 	{{- if ne .Database.String "none" }}

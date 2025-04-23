@@ -410,38 +410,6 @@ func TestGenerateBackgroundJobSQS(t *testing.T) {
 	}
 }
 
-func TestGenerateBackgroundJobAsynq(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:          true,
-		Name:           "acme",
-		Database:       initialize.DatabaseSQLite3,
-		BackgroundJob:  initialize.BackgroundJobAsynq,
-		AppType:        initialize.AppTypeAPI,
-		OutputDir:      tmpDir,
-		Git:            false,
-		SMTP:           true,
-		Storage:        true,
-		Authentication: initialize.AuthenticationEmail,
-		OAuthGoogle:    false,
-		OAuthDiscord:   false,
-		OAuthFacebook:  false,
-		OAuthGitHub:    false,
-		OAuthInstagram: false,
-		OAuthLinkedIn:  false,
-		Redis:          true,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
 func TestGenerateOAuthGoogle(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -501,7 +469,6 @@ func FuzzGenerate(f *testing.F) {
 		backgroundJobs := []initialize.BackgroundJob{
 			initialize.BackgroundJobBasic,
 			initialize.BackgroundJobSQS,
-			initialize.BackgroundJobAsynq,
 			initialize.BackgroundJobNone,
 		}
 		authentications := []initialize.Authentication{

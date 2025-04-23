@@ -118,14 +118,12 @@ type BackgroundJob string
 const (
 	BackgroundJobBasic BackgroundJob = "basic"
 	BackgroundJobSQS   BackgroundJob = "sqs"
-	BackgroundJobAsynq BackgroundJob = "asynq"
 	BackgroundJobNone  BackgroundJob = "none"
 )
 
 var AllBackgroundJobs = []BackgroundJob{
 	BackgroundJobBasic,
 	BackgroundJobSQS,
-	BackgroundJobAsynq,
 	BackgroundJobNone,
 }
 

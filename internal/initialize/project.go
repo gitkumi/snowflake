@@ -34,7 +34,7 @@ func NewProject(cfg *Config) *Project {
 		AppType:        cfg.AppType,
 		SMTP:           cfg.SMTP,
 		Storage:        cfg.Storage,
-		Redis:          cfg.Redis || cfg.BackgroundJob == BackgroundJobAsynq,
+		Redis:          cfg.Redis,
 		Authentication: cfg.Authentication,
 		OAuthDiscord:   cfg.Authentication != AuthenticationNone && cfg.OAuthDiscord,
 		OAuthFacebook:  cfg.Authentication != AuthenticationNone && cfg.OAuthFacebook,
