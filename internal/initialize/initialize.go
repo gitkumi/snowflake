@@ -95,7 +95,12 @@ func Run(cfg *Config) error {
 	exclusions := createFileExclusions()
 	renames := createFileRenames()
 
-	if err := createFiles(project, outputPath, templateFiles, exclusions, cfg.Quiet); err != nil {
+	databaseFragments, err := initializetemplate.CreateDatabaseFragments(string(project.Database))
+	if err != nil {
+		return err
+	}
+
+	if err := createFiles(project, outputPath, templateFiles, exclusions, databaseFragments, cfg.Quiet); err != nil {
 		return err
 	}
 
@@ -137,64 +142,16 @@ Run your new project:
 }
 
 func createFiles(project *Project, outputPath string, templateFiles fs.FS,
-	exclusions *FileExclusions, quiet bool) error {
+	exclusions *FileExclusions, databaseFragments map[string]string, quiet bool) error {
 
 	if !quiet {
 		fmt.Println("Generating files...")
 	}
 
-	// Use a buffer pool to reduce allocations when processing templates
 	bufPool := sync.Pool{
 		New: func() interface{} {
 			return new(bytes.Buffer)
 		},
-	}
-
-	databaseFragments := make(map[string]string)
-	if project.Database != DatabaseNone {
-		migrationsDir := filepath.Join("fragments/database", string(project.Database), "migrations")
-		err := fs.WalkDir(initializetemplate.DatabaseFragments, migrationsDir, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if d.IsDir() {
-				return nil
-			}
-			content, err := fs.ReadFile(initializetemplate.DatabaseFragments, path)
-			if err != nil {
-				return err
-			}
-
-			basename := filepath.Base(path)
-			templateName := "migration_" + basename
-			databaseFragments[templateName] = string(content)
-			return nil
-		})
-		if err != nil && !os.IsNotExist(err) {
-			return fmt.Errorf("failed to load database migration fragments: %w", err)
-		}
-
-		queriesDir := filepath.Join("fragments/database", string(project.Database), "queries")
-		err = fs.WalkDir(initializetemplate.DatabaseFragments, queriesDir, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return err
-			}
-			if d.IsDir() {
-				return nil
-			}
-			content, err := fs.ReadFile(initializetemplate.DatabaseFragments, path)
-			if err != nil {
-				return err
-			}
-
-			basename := filepath.Base(path)
-			templateName := "query_" + basename
-			databaseFragments[templateName] = string(content)
-			return nil
-		})
-		if err != nil && !os.IsNotExist(err) {
-			return fmt.Errorf("failed to load database query fragments: %w", err)
-		}
 	}
 
 	err := fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
@@ -218,10 +175,8 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 			return err
 		}
 
-		// Create the root template for this file
 		rootTemplate := template.New(filepath.Base(templateFileName))
 
-		// Add all database fragments as defined templates first
 		for name, fragment := range databaseFragments {
 			fragmentTemplate := rootTemplate.New(name)
 			if _, err := fragmentTemplate.Parse(fragment); err != nil {
@@ -229,12 +184,10 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 			}
 		}
 
-		// Then parse the main template file
 		if _, err := rootTemplate.Parse(string(content)); err != nil {
 			return fmt.Errorf("failed to parse template %s: %w", templateFileName, err)
 		}
 
-		// Get a buffer from pool and ensure it's reset
 		buf := bufPool.Get().(*bytes.Buffer)
 		buf.Reset()
 		defer bufPool.Put(buf)

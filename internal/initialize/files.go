@@ -23,6 +23,12 @@ type FileExclusions struct {
 	Database           map[Database][]string
 	BackgroundJob      map[BackgroundJob][]string
 	AuthenticationType map[Authentication][]string
+	ExcludeFuncs       []*ExcludeFunc
+}
+
+type ExcludeFunc struct {
+	FilePath string
+	Check    func(*Project) bool
 }
 
 type FileRenames struct {
@@ -151,6 +157,44 @@ func createFileExclusions() *FileExclusions {
 			"/internal/OAuth/discord_mock.go",
 			"/internal/OAuth/discord_test.go",
 		},
+		ExcludeFuncs: []*ExcludeFunc{
+			{
+				FilePath: "/internal/dto/oauth.go",
+				Check: func(p *Project) bool {
+					return !p.WithOAuth()
+				},
+			},
+			{
+				FilePath: "/internal/application/handler/oauth_handler.go",
+				Check: func(p *Project) bool {
+					return !p.WithOAuth()
+				},
+			},
+			{
+				FilePath: "/internal/application/service/oauth_service.go",
+				Check: func(p *Project) bool {
+					return !p.WithOAuth()
+				},
+			},
+			{
+				FilePath: "/static/sql/migrations/00005_user_oauth.sql",
+				Check: func(p *Project) bool {
+					return !p.WithOAuth()
+				},
+			},
+			{
+				FilePath: "/static/sql/queries/user_oauth.sql",
+				Check: func(p *Project) bool {
+					return !p.WithOAuth()
+				},
+			},
+			{
+				FilePath: "/dev.yaml",
+				Check: func(p *Project) bool {
+					return p.Database == DatabaseSQLite3 && !p.Redis
+				},
+			},
+		},
 	}
 }
 
@@ -167,29 +211,10 @@ func createFileRenames() *FileRenames {
 func shouldExcludeTemplateFile(templateFileName string, project *Project, exclusions *FileExclusions) bool {
 	fileName := strings.TrimSuffix(templateFileName, ".templ")
 
-	// Special case for now.
-	if fileName == "/dev.yaml" && project.Database == DatabaseSQLite3 && !project.Redis {
-		return true
-	}
-
-	if fileName == "/internal/dto/oauth.go" && !project.WithOAuth() {
-		return true
-	}
-
-	if fileName == "/internal/application/handler/oauth_handler.go" && !project.WithOAuth() {
-		return true
-	}
-
-	if fileName == "/internal/application/service/oauth_service.go" && !project.WithOAuth() {
-		return true
-	}
-
-	if fileName == "/static/sql/migrations/00005_user_oauth.sql" && !project.WithOAuth() {
-		return true
-	}
-
-	if fileName == "/static/sql/queries/user_oauth.sql" && !project.WithOAuth() {
-		return true
+	for _, multiExclusion := range exclusions.ExcludeFuncs {
+		if fileName == multiExclusion.FilePath && multiExclusion.Check(project) {
+			return true
+		}
 	}
 
 	if excludedPaths, ok := exclusions.AuthenticationType[project.Authentication]; ok {
