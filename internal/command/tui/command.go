@@ -49,7 +49,7 @@ func Command() *cobra.Command {
 					Options(
 						huh.NewOption("Git", "Git"),
 						huh.NewOption("SMTP", "SMTP"),
-						huh.NewOption("Storage (S3)", "Storage"),
+						huh.NewOption("S3", "Storage"),
 						huh.NewOption("Redis", "Redis"),
 					).
 					Value(&selectedFeatures),
