@@ -50,7 +50,7 @@ func Command() *cobra.Command {
 
 			featuresGroup := huh.NewGroup(
 				huh.NewMultiSelect[string]().
-					Title("Add additional features").
+					Title("Add features").
 					Options(
 						huh.NewOption("Git", "Git"),
 						huh.NewOption("SMTP", "SMTP"),
@@ -62,7 +62,7 @@ func Command() *cobra.Command {
 
 			backgroundJobGroup := huh.NewGroup(
 				huh.NewSelect[initialize.BackgroundJob]().
-					Title("Select Queue").
+					Title("Select queue").
 					Options(
 						huh.NewOption("None", initialize.BackgroundJobNone),
 						huh.NewOption("Basic (sync.WaitGroup)", initialize.BackgroundJobBasic),

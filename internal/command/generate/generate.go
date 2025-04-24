@@ -1,5 +1,7 @@
 package generate
 
-func Generate() {
+import "fmt"
 
+func Generate() {
+	fmt.Println("WIP")
 }
