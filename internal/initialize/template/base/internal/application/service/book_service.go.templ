@@ -32,16 +32,21 @@ func (s *BookService) CreateBook(ctx context.Context, input dto.CreateBook) (rep
 	{{- end }}
 }
 
-func (s *BookService) UpdateBook(ctx context.Context, input dto.UpdateBook, id int64) (repo.Book, error) {
+func (s *BookService) UpdateBook(ctx context.Context, id int64, input dto.UpdateBook) (repo.Book, error) {
+	current, err := s.Query.GetBook(ctx, id)
+	if err != nil {
+	return repo.Book{}, err
+	}
+
 	{{- if eq .Database.String "mysql"}}
-	err := s.Query.UpdateBook(ctx, input.Repo(id))
+	err = s.Query.UpdateBook(ctx, input.Repo(current))
 	if err != nil {
 		return repo.Book{}, err
 	}
 
 	return s.Query.GetBook(ctx, id)
 	{{- else }}
-	return s.Query.UpdateBook(ctx, input.Repo(id))
+	return s.Query.UpdateBook(ctx, input.Repo(current))
 	{{- end }}
 }
 

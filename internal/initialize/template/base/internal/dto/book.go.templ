@@ -29,32 +29,12 @@ type UpdateBook struct {
 	Genre  string `json:"genre"`
 }
 
-func (i UpdateBook) Repo(id int64) repo.UpdateBookParams {
+func (i UpdateBook) Repo(current repo.Book) repo.UpdateBookParams {
 	return repo.UpdateBookParams{
-		ID:     id,
+		ID:     current.id,
 		Title:  i.Title,
 		Author: sql.NullString{String: i.Author, Valid: i.Author != ""},
 		Isbn:   sql.NullString{String: i.ISBN, Valid: i.ISBN != ""},
 		Genre:  sql.NullString{String: i.Genre, Valid: i.Genre != ""},
-	}
-}
-
-type BookResponse struct {
-	Title     string `json:"title"`
-	Author    string `json:"author,omitempty"`
-	Isbn      string `json:"isbn,omitempty"`
-	Genre     string `json:"genre,omitempty"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-}
-
-func NewBookResponse(book repo.Book) BookResponse {
-	return BookResponse{
-		Title:     book.Title,
-		Author:    renderNullString(book.Author),
-		Isbn:      renderNullString(book.Isbn),
-		Genre:     renderNullString(book.Genre),
-		CreatedAt: book.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: book.UpdatedAt.Format(time.RFC3339),
 	}
 }
