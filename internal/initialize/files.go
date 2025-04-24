@@ -9,13 +9,13 @@ import (
 )
 
 type FileExclusions struct {
-	SMTP               []string
-	Storage            []string
-	Redis              []string
-	AppType            map[AppType][]string
-	Database           map[Database][]string
-	BackgroundJob      map[BackgroundJob][]string
-	ExcludeFuncs       []*ExcludeFunc
+	SMTP          []string
+	Storage       []string
+	Redis         []string
+	AppType       map[AppType][]string
+	Database      map[Database][]string
+	BackgroundJob map[BackgroundJob][]string
+	ExcludeFuncs  []*ExcludeFunc
 }
 
 type ExcludeFunc struct {

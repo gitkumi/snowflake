@@ -18,14 +18,14 @@ type Config struct {
 	OutputDir string
 	Git       bool
 
-	Name           string
-	AppType        AppType
-	Database       Database
-	BackgroundJob  BackgroundJob
+	Name          string
+	AppType       AppType
+	Database      Database
+	BackgroundJob BackgroundJob
 
-	SMTP           bool
-	Storage        bool
-	Redis          bool
+	SMTP    bool
+	Storage bool
+	Redis   bool
 }
 
 func Run(cfg *Config) error {

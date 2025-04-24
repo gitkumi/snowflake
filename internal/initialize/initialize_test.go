@@ -12,16 +12,16 @@ func TestGenerateNoDB(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:          true,
-		Name:           "acme",
-		Database:       initialize.DatabaseNone,
-		BackgroundJob:  initialize.BackgroundJobNone,
-		AppType:        initialize.AppTypeAPI,
-		OutputDir:      tmpDir,
-		Git:            false,
-		SMTP:           true,
-		Storage:        true,
-		Redis:          true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseNone,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -37,16 +37,16 @@ func TestGenerateSQLite3(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:          true,
-		Name:           "acme",
-		Database:       initialize.DatabaseSQLite3,
-		BackgroundJob:  initialize.BackgroundJobNone,
-		AppType:        initialize.AppTypeAPI,
-		OutputDir:      tmpDir,
-		Git:            false,
-		SMTP:           true,
-		Storage:        true,
-		Redis:          true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -62,16 +62,16 @@ func TestGeneratePostgres(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:          true,
-		Name:           "acme",
-		Database:       initialize.DatabasePostgres,
-		BackgroundJob:  initialize.BackgroundJobNone,
-		AppType:        initialize.AppTypeAPI,
-		OutputDir:      tmpDir,
-		Git:            false,
-		SMTP:           true,
-		Storage:        true,
-		Redis:          true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabasePostgres,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -87,16 +87,16 @@ func TestGenerateMySQL(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:          true,
-		Name:           "acme",
-		Database:       initialize.DatabaseMySQL,
-		BackgroundJob:  initialize.BackgroundJobNone,
-		AppType:        initialize.AppTypeAPI,
-		OutputDir:      tmpDir,
-		Git:            false,
-		SMTP:           true,
-		Storage:        true,
-		Redis:          true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseMySQL,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -112,16 +112,16 @@ func TestGenerateWebApp(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:          true,
-		Name:           "acme",
-		Database:       initialize.DatabaseSQLite3,
-		BackgroundJob:  initialize.BackgroundJobNone,
-		AppType:        initialize.AppTypeWeb,
-		OutputDir:      tmpDir,
-		Git:            false,
-		SMTP:           true,
-		Storage:        true,
-		Redis:          true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeWeb,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -153,16 +153,16 @@ func TestGenerateNoSMTP(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:          true,
-		Name:           "acme",
-		Database:       initialize.DatabaseSQLite3,
-		BackgroundJob:  initialize.BackgroundJobNone,
-		AppType:        initialize.AppTypeAPI,
-		OutputDir:      tmpDir,
-		Git:            false,
-		SMTP:           false,
-		Storage:        true,
-		Redis:          true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          false,
+		Storage:       true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -178,16 +178,16 @@ func TestGenerateNoStorage(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:          true,
-		Name:           "acme",
-		Database:       initialize.DatabaseSQLite3,
-		BackgroundJob:  initialize.BackgroundJobNone,
-		AppType:        initialize.AppTypeAPI,
-		OutputDir:      tmpDir,
-		Git:            false,
-		SMTP:           true,
-		Storage:        false,
-		Redis:          true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       false,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -203,16 +203,16 @@ func TestGenerateNoRedis(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:          true,
-		Name:           "acme",
-		Database:       initialize.DatabaseSQLite3,
-		BackgroundJob:  initialize.BackgroundJobNone,
-		AppType:        initialize.AppTypeAPI,
-		OutputDir:      tmpDir,
-		Git:            false,
-		SMTP:           true,
-		Storage:        true,
-		Redis:          false,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobNone,
+		AppType:       initialize.AppTypeAPI,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Redis:         false,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -228,16 +228,16 @@ func TestGenerateBackgroundJobBasic(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:          true,
-		Name:           "acme",
-		Database:       initialize.DatabaseSQLite3,
-		BackgroundJob:  initialize.BackgroundJobBasic,
-		AppType:        initialize.AppTypeAPI,
-		OutputDir:      tmpDir,
-		Git:            false,
-		SMTP:           true,
-		Storage:        true,
-		Redis:          true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobBasic,
+		AppType:       initialize.AppTypeAPI,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -253,16 +253,16 @@ func TestGenerateBackgroundJobSQS(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:          true,
-		Name:           "acme",
-		Database:       initialize.DatabaseSQLite3,
-		BackgroundJob:  initialize.BackgroundJobSQS,
-		AppType:        initialize.AppTypeAPI,
-		OutputDir:      tmpDir,
-		Git:            false,
-		SMTP:           true,
-		Storage:        true,
-		Redis:          true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		BackgroundJob: initialize.BackgroundJobSQS,
+		AppType:       initialize.AppTypeAPI,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		Redis:         true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -307,16 +307,16 @@ func FuzzGenerate(f *testing.F) {
 		backgroundJob := backgroundJobs[abs(jobTypeInt)%len(backgroundJobs)]
 
 		err := initialize.Run(&initialize.Config{
-			Git:            false,
-			Quiet:          true,
-			Name:           "acme",
-			OutputDir:      tmpDir,
-			Database:       database,
-			BackgroundJob:  backgroundJob,
-			AppType:        appType,
-			SMTP:           withSMTP,
-			Storage:        withStorage,
-			Redis:          withRedis,
+			Git:           false,
+			Quiet:         true,
+			Name:          "acme",
+			OutputDir:     tmpDir,
+			Database:      database,
+			BackgroundJob: backgroundJob,
+			AppType:       appType,
+			SMTP:          withSMTP,
+			Storage:       withStorage,
+			Redis:         withRedis,
 		})
 		if err != nil {
 			t.Logf("initialize.Run returned error: %v", err)

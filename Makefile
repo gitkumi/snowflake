@@ -10,7 +10,7 @@ audit:
 .PHONY: tidy
 tidy:
 	go mod tidy -v
-	go fmt $(go list ./... | grep -v '^./grammar')
+	go fmt $(go list ./...)
 
 .PHONY: run
 run:

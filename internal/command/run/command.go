@@ -12,15 +12,15 @@ import (
 
 func Command() *cobra.Command {
 	var (
-		quiet          bool
-		database       string
-		backgroundJob  string
-		appType        string
-		outputDir      string
-		git            bool
-		smtp           bool
-		storage        bool
-		redis          bool
+		quiet         bool
+		database      string
+		backgroundJob string
+		appType       string
+		outputDir     string
+		git           bool
+		smtp          bool
+		storage       bool
+		redis         bool
 	)
 
 	cmd := &cobra.Command{
@@ -67,16 +67,16 @@ func Command() *cobra.Command {
 			}
 
 			err := initialize.Run(&initialize.Config{
-				Quiet:          quiet,
-				Name:           args[0],
-				Database:       dbEnum,
-				BackgroundJob:  backgroundJobEnum,
-				AppType:        appTypeEnum,
-				Git:            git,
-				OutputDir:      outputDir,
-				SMTP:           smtp,
-				Storage:        storage,
-				Redis:          redis,
+				Quiet:         quiet,
+				Name:          args[0],
+				Database:      dbEnum,
+				BackgroundJob: backgroundJobEnum,
+				AppType:       appTypeEnum,
+				Git:           git,
+				OutputDir:     outputDir,
+				SMTP:          smtp,
+				Storage:       storage,
+				Redis:         redis,
 			})
 			if err != nil {
 				log.Fatal(err.Error())
