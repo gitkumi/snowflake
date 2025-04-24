@@ -45,7 +45,7 @@ Supports "sqlite3", "postgres", "mysql"
 - [sqlc](https://github.com/sqlc-dev/sqlc)
 - [goose](https://github.com/pressly/goose)
 
-#### Test Runner
+#### Testing
 
 - [gotestum](https://github.com/gotestyourself/gotestsum)
 

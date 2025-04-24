@@ -24,3 +24,7 @@ func NewProject(cfg *Config) *Project {
 
 	return project
 }
+
+func (p *Project) UsesDockerOnDev() bool {
+	return p.Redis || p.Database != DatabaseNone
+}

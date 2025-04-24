@@ -87,8 +87,9 @@ func Init() (*TestApplication, error) {
 	})
 	{{- end }}
 
+	{{- if eq .BackgroundJob "sqs" }}
 	sqs := queue.NewMockQueue()
-
+	{{- end }}
 
 	app, err := application.New(&application.Config{
 		Environment: vars.Environment,
