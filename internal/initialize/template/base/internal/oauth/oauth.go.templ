@@ -1,27 +1,5 @@
 package oauth
 
-import (
-	"context"
-
-	"golang.org/x/oauth2"
-)
-
 // OAuthProvider defines the interface that all OAuth providers must implement
 type OAuthProvider interface {
-	// GenerateState generates a random state string for CSRF protection
-	GenerateState() (string, error)
-	
-	// VerifyState checks if a state is valid and not expired
-	VerifyState(state string) bool
-	
-	// GetLoginURL returns the URL to redirect the user to for authentication
-	GetLoginURL(state string) string
-	
-	// Exchange exchanges an authorization code for an access token
-	Exchange(ctx context.Context, code string) (*oauth2.Token, error)
-	
-	// GetUserInfo retrieves the user information from the OAuth provider
-	// Each implementation will return its own user type, so we use any here
-	// The caller will need to type assert to the correct user type
-	GetUserInfo(ctx context.Context, token *oauth2.Token) (interface{}, error)
 } 

@@ -13,9 +13,6 @@ import (
 	{{- if .Storage }}
 	"{{ .Name }}/internal/storage"
 	{{- end }}
-	{{- if .WithOAuth }}
-	"{{ .Name }}/internal/oauth"
-	{{- end }}
 
 	"github.com/lmittmann/tint"
 	{{- if ne .Database.String "none" }}
@@ -98,66 +95,6 @@ func main() {
 	// })
 	{{- end }}
 
-	{{- if .OAuthGoogle }}
-	googleOAuth := oauth.NewMockGoogleOAuth()
-	// TODO: Uncomment this after setting up your Google OAuth
-	// googleOAuth := oauth.NewGoogleOAuth(
-	// 	vars.GoogleClientID,
-	// 	vars.GoogleClientSecret,
-	// 	vars.BaseURL+"/api/auth/google/callback",
-	// )
-	{{- end }}
-
-	{{- if .OAuthFacebook }}
-	facebookOAuth := oauth.NewMockFacebookOAuth()
-	// TODO: Uncomment this after setting up your Facebook OAuth
-	// facebookOAuth := oauth.NewFacebookOAuth(
-	// 	vars.FacebookClientID,
-	// 	vars.FacebookClientSecret,
-	// 	vars.BaseURL+"/api/auth/facebook/callback",
-	// )
-	{{- end }}
-
-	{{- if .OAuthGitHub }}
-	githubOAuth := oauth.NewMockGitHubOAuth()
-	// TODO: Uncomment this after setting up your GitHub OAuth
-	// githubOAuth := oauth.NewGitHubOAuth(
-	// 	vars.GitHubClientID,
-	// 	vars.GitHubClientSecret,
-	// 	vars.BaseURL+"/api/auth/github/callback",
-	// )
-	{{- end }}
-
-	{{- if .OAuthLinkedIn }}
-	linkedInOAuth := oauth.NewMockLinkedInOAuth()
-	// TODO: Uncomment this after setting up your LinkedIn OAuth
-	// linkedInOAuth := oauth.NewLinkedInOAuth(
-	// 	vars.LinkedInClientID,
-	// 	vars.LinkedInClientSecret,
-	// 	vars.BaseURL+"/api/auth/linkedin/callback",
-	// )
-	{{- end }}
-
-	{{- if .OAuthInstagram }}
-	instagramOAuth := oauth.NewMockInstagramOAuth()
-	// TODO: Uncomment this after setting up your Instagram OAuth
-	// instagramOAuth := oauth.NewInstagramOAuth(
-	// 	vars.InstagramClientID,
-	// 	vars.InstagramClientSecret,
-	// 	vars.BaseURL+"/api/auth/instagram/callback",
-	// )
-	{{- end }}
-
-	{{- if .OAuthDiscord }}
-	discordOAuth := oauth.NewMockDiscordOAuth()
-	// TODO: Uncomment this after setting up your Discord OAuth
-	// discordOAuth := oauth.NewDiscordOAuth(
-	// 	vars.DiscordClientID,
-	// 	vars.DiscordClientSecret,
-	// 	vars.BaseURL+"/api/auth/discord/callback",
-	// )
-	{{- end }}
-
 	app, err := application.New(&application.Config{
 		Environment: vars.Environment,
 		BaseURL: vars.BaseURL,
@@ -179,12 +116,6 @@ func main() {
 		{{- if eq .BackgroundJob "sqs" }}
 		Queue:       sqs,
 		{{- end }}
-		{{- if .OAuthGoogle }}GoogleOAuth:    googleOAuth,{{- end }}
-		{{- if .OAuthFacebook }}FacebookOAuth:  facebookOAuth,{{- end }}
-		{{- if .OAuthGitHub }}GitHubOAuth:    githubOAuth,{{- end }}
-		{{- if .OAuthLinkedIn }}LinkedInOAuth:  linkedInOAuth,{{- end }}
-		{{- if .OAuthInstagram }}InstagramOAuth: instagramOAuth,{{- end }}
-		{{- if .OAuthDiscord }}DiscordOAuth:   discordOAuth,{{- end }}
 	})
 	if err != nil {
 		log.Fatal("failed to create application", err)

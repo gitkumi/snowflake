@@ -3,9 +3,6 @@ package test
 import (
 	"{{ .Name }}/internal/application"
 	"{{ .Name }}/internal/env"
-	{{- if .WithOAuth }}
-	"{{ .Name }}/internal/oauth"
-	{{- end }}
 	{{- if ne .Database.String "none"}}
 	"{{ .Name }}/internal/repo"
 	{{- end }}
@@ -93,31 +90,6 @@ func Init() (*TestApplication, error) {
 	sqs := queue.NewMockQueue()
 
 
-	{{- if .OAuthGoogle }}
-	mockGoogleOAuth := oauth.NewMockGoogleOAuth()
-	mockGoogleOAuth.Config.RedirectURL = vars.BaseURL + "/api/auth/google/callback"
-	{{- end }}
-	{{- if .OAuthFacebook }}
-	mockFacebookOAuth := oauth.NewMockFacebookOAuth()
-	mockFacebookOAuth.Config.RedirectURL = vars.BaseURL + "/api/auth/facebook/callback"
-	{{- end }}
-	{{- if .OAuthGitHub }}
-	mockGitHubOAuth := oauth.NewMockGitHubOAuth()
-	mockGitHubOAuth.Config.RedirectURL = vars.BaseURL + "/api/auth/github/callback"
-	{{- end }}
-	{{- if .OAuthLinkedIn }}
-	mockLinkedInOAuth := oauth.NewMockLinkedInOAuth()
-	mockLinkedInOAuth.Config.RedirectURL = vars.BaseURL + "/api/auth/linkedin/callback"
-	{{- end }}
-	{{- if .OAuthInstagram }}
-	mockInstagramOAuth := oauth.NewMockInstagramOAuth()
-	mockInstagramOAuth.Config.RedirectURL = vars.BaseURL + "/api/auth/instagram/callback"
-	{{- end }}
-	{{- if .OAuthDiscord }}
-	mockDiscordOAuth := oauth.NewMockDiscordOAuth()
-	mockDiscordOAuth.Config.RedirectURL = vars.BaseURL + "/api/auth/discord/callback"
-	{{- end }}
-
 	app, err := application.New(&application.Config{
 		Environment: vars.Environment,
 		BaseURL: vars.BaseURL,
@@ -138,24 +110,6 @@ func Init() (*TestApplication, error) {
 		{{- end }}
 		{{- if eq .BackgroundJob "sqs" }}
 		Queue: sqs,
-		{{- end }}
-		{{- if .OAuthGoogle }}
-		GoogleOAuth:    mockGoogleOAuth,
-		{{- end }}
-		{{- if .OAuthFacebook }}
-		FacebookOAuth:  mockFacebookOAuth,
-		{{- end }}
-		{{- if .OAuthGitHub }}
-		GitHubOAuth:    mockGitHubOAuth,
-		{{- end }}
-		{{- if .OAuthLinkedIn }}
-		LinkedInOAuth:  mockLinkedInOAuth,
-		{{- end }}
-		{{- if .OAuthInstagram }}
-		InstagramOAuth: mockInstagramOAuth,
-		{{- end }}
-		{{- if .OAuthDiscord }}
-		DiscordOAuth:   mockDiscordOAuth,
 		{{- end }}
 	})
 	if err != nil {
