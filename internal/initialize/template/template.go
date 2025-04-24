@@ -37,7 +37,6 @@ func loadFragments(fsys fs.FS, dir string, prefix string) (map[string]string, er
 		return nil
 	})
 
-	// Ignore directory not found errors
 	if err != nil && !os.IsNotExist(err) {
 		return nil, fmt.Errorf("failed to load fragments from directory %s: %w", dir, err)
 	}
@@ -51,26 +50,22 @@ func CreateDatabaseFragments(database string) (map[string]string, error) {
 		return databaseFragments, nil
 	}
 
-	// Load migration fragments
 	migrationsDir := filepath.Join("fragments/database", database, "migrations")
 	migrationFragments, err := loadFragments(DatabaseFragments, migrationsDir, "migration")
 	if err != nil {
 		return nil, err
 	}
 
-	// Add migration fragments to result
 	for k, v := range migrationFragments {
 		databaseFragments[k] = v
 	}
 
-	// Load query fragments
 	queriesDir := filepath.Join("fragments/database", database, "queries")
 	queryFragments, err := loadFragments(DatabaseFragments, queriesDir, "query")
 	if err != nil {
 		return nil, err
 	}
 
-	// Add query fragments to result
 	for k, v := range queryFragments {
 		databaseFragments[k] = v
 	}

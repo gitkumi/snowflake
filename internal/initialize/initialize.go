@@ -31,21 +31,18 @@ type Config struct {
 func Run(cfg *Config) error {
 	project := NewProject(cfg)
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
-
 	templateFiles := initializetemplate.BaseFiles
-	exclusions := NewFileExclusions()
-	renames := NewFileRenames()
-
+	
 	databaseFragments, err := initializetemplate.CreateDatabaseFragments(string(project.Database))
 	if err != nil {
 		return err
 	}
 
-	if err := createFiles(project, outputPath, templateFiles, exclusions, databaseFragments, cfg.Quiet); err != nil {
+	if err := createFiles(project, outputPath, templateFiles, databaseFragments, cfg.Quiet); err != nil {
 		return err
 	}
 
-	if err := RenameFiles(project, outputPath, renames); err != nil {
+	if err := project.RenameFiles(outputPath); err != nil {
 		return err
 	}
 
@@ -92,7 +89,7 @@ func processTemplate(templateContent []byte, templateFileName string,
 }
 
 func createFiles(project *Project, outputPath string, templateFiles fs.FS,
-	exclusions *FileExclusions, databaseFragments map[string]string, quiet bool) error {
+	databaseFragments map[string]string, quiet bool) error {
 
 	if !quiet {
 		fmt.Println("Generating files...")
@@ -117,7 +114,7 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 		templateFileName := strings.TrimPrefix(path, "base")
 		targetPath := filepath.Join(outputPath, templateFileName)
 
-		if ExcludeTemplateFile(templateFileName, project, exclusions) {
+		if project.ExcludeFile(templateFileName) {
 			return nil
 		}
 
