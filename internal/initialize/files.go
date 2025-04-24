@@ -12,17 +12,9 @@ type FileExclusions struct {
 	SMTP               []string
 	Storage            []string
 	Redis              []string
-	Auth               []string
-	OAuthGoogle        []string
-	OAuthFacebook      []string
-	OAuthGithub        []string
-	OAuthLinkedIn      []string
-	OAuthInstagram     []string
-	OAuthDiscord       []string
 	AppType            map[AppType][]string
 	Database           map[Database][]string
 	BackgroundJob      map[BackgroundJob][]string
-	AuthenticationType map[Authentication][]string
 	ExcludeFuncs       []*ExcludeFunc
 }
 
@@ -50,26 +42,6 @@ func NewFileExclusions() *FileExclusions {
 		Redis: []string{
 			"/internal/middleware/rate_limit.go",
 		},
-		AuthenticationType: map[Authentication][]string{
-			AuthenticationNone: []string{
-				"/internal/dto/auth.go",
-				"/internal/password/password.go",
-				"/internal/password/password_test.go",
-				"/internal/middleware/auth.go",
-				"/internal/middleware/auth_test.go",
-				"/internal/application/handler/auth_handler_test.go",
-				"/internal/application/handler/auth_handler.go",
-				"/internal/application/service/auth_service.go",
-				"/static/sql/migrations/00002_organizations.sql",
-				"/static/sql/migrations/00003_users.sql",
-				"/static/sql/migrations/00004_memberships.sql",
-				"/static/sql/migrations/00005_user_auth_tokens.sql",
-				"/static/sql/queries/memberships.sql",
-				"/static/sql/queries/organizations.sql",
-				"/static/sql/queries/user_auth_tokens.sql",
-				"/static/sql/queries/users.sql",
-			},
-		},
 		AppType: map[AppType][]string{
 			AppTypeAPI: {
 				"/internal/html/hello.templ",
@@ -81,27 +53,12 @@ func NewFileExclusions() *FileExclusions {
 				"/sqlc.yaml",
 				"/dev.yaml",
 				"/static/sql/migrations/00001_books.sql",
-				"/static/sql/migrations/00002_organizations.sql",
-				"/static/sql/migrations/00003_users.sql",
-				"/static/sql/migrations/00004_memberships.sql",
-				"/static/sql/migrations/00005_user_auth_tokens.sql",
-				"/static/sql/migrations/00006_user_oauth.sql",
-				"/static/sql/queries/organizations.sql",
-				"/static/sql/queries/memberships.sql",
-				"/static/sql/queries/users.sql",
 				"/static/sql/queries/books.sql",
-				"/static/sql/queries/user_auth_tokens.sql",
-				"/static/sql/queries/user_oauth.sql",
 				"/static/static.go",
 				"/internal/application/db.go",
 				"/test/fixtures.go",
 				"/internal/application/handler/book_handler.go",
 				"/internal/application/handler/book_handler_test.go",
-				"/internal/application/handler/auth_handler.go",
-				"/internal/application/handler/auth_handler_test.go",
-				"/internal/application/handler/auth_handler_types.go",
-				"/internal/application/service/auth_service.go",
-				"/internal/application/service/auth_service_types.go",
 				"/internal/application/service/book_service.go",
 			},
 		},
@@ -121,49 +78,7 @@ func NewFileExclusions() *FileExclusions {
 				"/internal/queue/queue_mock.go",
 			},
 		},
-		OAuthGoogle: []string{
-			"/internal/OAuth/google.go",
-			"/internal/OAuth/google_mock.go",
-			"/internal/OAuth/google_test.go",
-		},
-		OAuthFacebook: []string{
-			"/internal/OAuth/facebook.go",
-			"/internal/OAuth/facebook_mock.go",
-			"/internal/OAuth/facebook_test.go",
-		},
-		OAuthGithub: []string{
-			"/internal/OAuth/github.go",
-			"/internal/OAuth/github_mock.go",
-			"/internal/OAuth/github_test.go",
-		},
-		OAuthLinkedIn: []string{
-			"/internal/OAuth/linkedin.go",
-			"/internal/OAuth/linkedin_mock.go",
-			"/internal/OAuth/linkedin_test.go",
-		},
-		OAuthInstagram: []string{
-			"/internal/OAuth/instagram.go",
-			"/internal/OAuth/instagram_mock.go",
-			"/internal/OAuth/instagram_test.go",
-		},
-		OAuthDiscord: []string{
-			"/internal/OAuth/discord.go",
-			"/internal/OAuth/discord_mock.go",
-			"/internal/OAuth/discord_test.go",
-		},
 		ExcludeFuncs: []*ExcludeFunc{
-			{
-				FilePaths: []string{
-					"/internal/dto/oauth.go",
-					"/internal/application/handler/oauth_handler.go",
-					"/internal/application/service/oauth_service.go",
-					"/static/sql/migrations/00005_user_oauth.sql",
-					"/static/sql/queries/user_oauth.sql",
-				},
-				Check: func(p *Project) bool {
-					return !p.WithOAuth()
-				},
-			},
 			{
 				FilePaths: []string{"/dev.yaml"},
 				Check: func(p *Project) bool {
@@ -202,12 +117,6 @@ func ExcludeTemplateFile(templateFileName string, project *Project, exclusions *
 		{project.Redis, exclusions.Redis},
 		{project.SMTP, exclusions.SMTP},
 		{project.Storage, exclusions.Storage},
-		{project.OAuthGoogle, exclusions.OAuthGoogle},
-		{project.OAuthFacebook, exclusions.OAuthFacebook},
-		{project.OAuthGitHub, exclusions.OAuthGithub},
-		{project.OAuthLinkedIn, exclusions.OAuthLinkedIn},
-		{project.OAuthInstagram, exclusions.OAuthInstagram},
-		{project.OAuthDiscord, exclusions.OAuthDiscord},
 	}
 
 	for _, feature := range featureExclusions {
@@ -220,14 +129,6 @@ func ExcludeTemplateFile(templateFileName string, project *Project, exclusions *
 		}
 	}
 
-	if paths, ok := exclusions.AuthenticationType[project.Authentication]; ok {
-		for _, path := range paths {
-			if fileName == path {
-				return true
-			}
-		}
-
-	}
 	if paths, ok := exclusions.AppType[project.AppType]; ok {
 		for _, path := range paths {
 			if fileName == path {
@@ -235,6 +136,7 @@ func ExcludeTemplateFile(templateFileName string, project *Project, exclusions *
 			}
 		}
 	}
+
 	if paths, ok := exclusions.Database[project.Database]; ok {
 		for _, path := range paths {
 			if fileName == path {
@@ -242,6 +144,7 @@ func ExcludeTemplateFile(templateFileName string, project *Project, exclusions *
 			}
 		}
 	}
+
 	if paths, ok := exclusions.BackgroundJob[project.BackgroundJob]; ok {
 		for _, path := range paths {
 			if fileName == path {

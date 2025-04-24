@@ -51,16 +51,6 @@ func (app *Application) registerRoutes() error {
 	api.POST("/books", app.handlers.book.CreateBook)
 	api.PATCH("/books/:id", app.handlers.book.UpdateBook)
 	api.DELETE("/books/:id", app.handlers.book.DeleteBook)
-		{{- if and .SMTP .WithAuth }}
-	api.POST("/auth/register", app.handlers.auth.Register)
-	api.POST("/auth/login", app.handlers.auth.Login)
-	api.POST("/auth/email-login", app.handlers.auth.CreateMagicLink)
-	api.POST("/auth/email-login/:token", app.handlers.auth.ConsumeMagicLink)
-	api.POST("/auth/confirm-email", app.handlers.auth.CreateConfirmEmail)
-	api.POST("/auth/confirm-email/:token", app.handlers.auth.ConsumeConfirmEmail)
-	api.POST("/auth/reset-password", app.handlers.auth.CreateResetPassword)
-	api.POST("/auth/reset-password/:token", app.handlers.auth.ConsumeResetPassword)
-		{{- end }}
 	{{- end }}
 
 	return nil

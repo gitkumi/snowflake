@@ -19,8 +19,6 @@ func Command() *cobra.Command {
 			database := initialize.AllDatabases[0]
 			backgroundJob := initialize.AllBackgroundJobs[0]
 			selectedFeatures := []string{"Git"}
-			selectedAuthProviders := []string{}
-			authType := initialize.AllAuthentications[0]
 
 			projectNameGroup := huh.NewGroup(
 				huh.NewInput().
@@ -71,31 +69,6 @@ func Command() *cobra.Command {
 					Value(&backgroundJob),
 			)
 
-			authGroup := huh.NewGroup(
-				huh.NewSelect[initialize.Authentication]().
-					Title("Select Authentication").
-					Options(
-						huh.NewOption("None", initialize.AuthenticationNone),
-						huh.NewOption("Email", initialize.AuthenticationEmail),
-						huh.NewOption("Email with Username", initialize.AuthenticationEmailWithUsername),
-					).
-					Value(&authType),
-			)
-
-			oauthProvidersGroup := huh.NewGroup(
-				huh.NewMultiSelect[string]().
-					Title("Add OAuth Provider").
-					Options(
-						huh.NewOption("Google", "OAuthGoogle"),
-						huh.NewOption("Facebook", "OAuthFacebook"),
-						huh.NewOption("GitHub", "OAuthGitHub"),
-						huh.NewOption("Discord", "OAuthDiscord"),
-						huh.NewOption("Instagram", "OAuthInstagram"),
-						huh.NewOption("LinkedIn", "OAuthLinkedIn"),
-					).
-					Value(&selectedAuthProviders),
-			)
-
 			initialForm := huh.NewForm(
 				projectNameGroup,
 				appTypeGroup,
@@ -109,36 +82,9 @@ func Command() *cobra.Command {
 				return
 			}
 
-			// Only ask for authentication if database is not 'none'
-			if database != initialize.DatabaseNone {
-				authForm := huh.NewForm(authGroup)
-				if err := authForm.Run(); err != nil {
-					fmt.Printf("error running auth form: %v\n", err)
-					return
-				}
-
-				// Only ask for OAuth providers if authentication is not 'none'
-				if authType != initialize.AuthenticationNone {
-					oauthForm := huh.NewForm(oauthProvidersGroup)
-					if err := oauthForm.Run(); err != nil {
-						fmt.Printf("error running OAuth form: %v\n", err)
-						return
-					}
-				}
-			}
-
 			featureEnabled := func(name string) bool {
 				for _, f := range selectedFeatures {
 					if f == name {
-						return true
-					}
-				}
-				return false
-			}
-
-			authProviderEnabled := func(name string) bool {
-				for _, p := range selectedAuthProviders {
-					if p == name {
 						return true
 					}
 				}
@@ -149,17 +95,10 @@ func Command() *cobra.Command {
 			cfg.AppType = appType
 			cfg.Database = database
 			cfg.BackgroundJob = backgroundJob
-			cfg.Authentication = authType
 			cfg.Git = featureEnabled("Git")
 			cfg.SMTP = featureEnabled("SMTP")
 			cfg.Storage = featureEnabled("Storage")
 			cfg.Redis = featureEnabled("Redis")
-			cfg.OAuthDiscord = authProviderEnabled("OAuthDiscord")
-			cfg.OAuthFacebook = authProviderEnabled("OAuthFacebook")
-			cfg.OAuthGitHub = authProviderEnabled("OAuthGitHub")
-			cfg.OAuthGoogle = authProviderEnabled("OAuthGoogle")
-			cfg.OAuthInstagram = authProviderEnabled("OAuthInstagram")
-			cfg.OAuthLinkedIn = authProviderEnabled("OAuthLinkedIn")
 
 			if err := initialize.Run(cfg); err != nil {
 				fmt.Printf("error creating project: %v\n", err)

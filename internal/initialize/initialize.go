@@ -22,17 +22,10 @@ type Config struct {
 	AppType        AppType
 	Database       Database
 	BackgroundJob  BackgroundJob
-	Authentication Authentication
 
 	SMTP           bool
 	Storage        bool
 	Redis          bool
-	OAuthDiscord   bool
-	OAuthFacebook  bool
-	OAuthGitHub    bool
-	OAuthGoogle    bool
-	OAuthInstagram bool
-	OAuthLinkedIn  bool
 }
 
 func Run(cfg *Config) error {

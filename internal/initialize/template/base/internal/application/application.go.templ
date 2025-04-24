@@ -39,9 +39,6 @@ import (
 type Handlers struct {
 	{{- if ne .Database.String "none" }}
 	book   *handler.BookHandler
-		{{- if .WithAuth }}
-	auth   *handler.AuthHandler
-		{{- end }}
 	{{- end }}
 	health *handler.HealthHandler
 	{{- if eq .AppType "web"}}
@@ -108,11 +105,6 @@ func New(cfg *Config) (*Application, error) {
 
 	bookService := service.NewBookService(query)
 	bookHandler := handler.NewBookHandler(bookService)
-
-		{{- if .WithAuth }}
-	authService := service.NewAuthService(cfg.BaseURL, query, cfg.Mailer, cfg.DB)
-	authHandler := handler.NewAuthHandler(authService)
-		{{- end }}
 	{{- end }}
 
 	{{- if .Storage }}
@@ -138,9 +130,6 @@ func New(cfg *Config) (*Application, error) {
 	handlers := &Handlers{
 		{{- if ne .Database.String "none" }}
 		book: bookHandler,
-		{{- end }}
-		{{- if .WithAuth }}
-		auth:   authHandler,
 		{{- end }}
 		health: healthHandler,
 		{{- if eq .AppType "web"}}
