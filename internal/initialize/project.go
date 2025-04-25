@@ -17,7 +17,7 @@ type Project struct {
 	SMTP    bool
 	Storage bool
 	Redis   bool
-	
+
 	fileExclusions []*FileExclusion
 	fileRenames    []*FileRename
 }

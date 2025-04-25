@@ -32,7 +32,7 @@ func Run(cfg *Config) error {
 	project := NewProject(cfg)
 	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
 	templateFiles := initializetemplate.BaseFiles
-	
+
 	databaseFragments, err := initializetemplate.CreateDatabaseFragments(string(project.Database))
 	if err != nil {
 		return err
