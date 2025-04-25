@@ -114,13 +114,13 @@ func New(cfg *Config) (*Application, error) {
 	healthService := service.NewHealthService(cfg.Storage)
 		{{- end }}
 	{{- else }}
+
 		{{- if ne .Database.String "none" }}
 	healthService := service.NewHealthService(cfg.DB)
 		{{- else }}
 	healthService := service.NewHealthService()
 		{{- end }}
 	{{- end }}
-
 	healthHandler := handler.NewHealthHandler(healthService)
 
 	{{- if eq .AppType "web"}}

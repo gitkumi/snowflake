@@ -34,8 +34,6 @@ func main() {
 		log.Fatal("failed to read environment variables", err)
 	}
 
-	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug}))
-
 	router := application.NewRouter(&application.RouterConfig{
 		GinMode: vars.GinMode,
 	})
@@ -112,7 +110,7 @@ func main() {
 		{{- if .Redis }}
 		Redis: rdb,
 		{{- end }}
-		Logger:      logger,
+		Logger:      slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug})),
 		{{- if eq .BackgroundJob "sqs" }}
 		Queue:       sqs,
 		{{- end }}

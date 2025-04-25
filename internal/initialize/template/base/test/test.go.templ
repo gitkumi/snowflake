@@ -51,8 +51,6 @@ func Init() (*TestApplication, error) {
 		log.Fatal("failed to read environment variables", err)
 	}
 
-	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug}))
-
 	router := application.NewRouter(&application.RouterConfig{
 		GinMode: vars.GinMode,
 	})
@@ -105,7 +103,7 @@ func Init() (*TestApplication, error) {
 		{{- if .Storage }}
 		Storage: storage,
 		{{- end }}
-		Logger: logger,
+		Logger: slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug})),
 		{{- if .Redis }}
 		Redis: rdb,
 		{{- end }}
