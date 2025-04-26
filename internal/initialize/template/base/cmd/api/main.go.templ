@@ -24,7 +24,7 @@ import (
 	{{- end }}
 
 	{{- if eq .BackgroundJob "sqs" }}
-	"acme/internal/queue"
+	"{{ .Name }}/internal/queue"
 	{{- end }}
 )
 

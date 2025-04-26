@@ -27,7 +27,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	{{- end }}
 	{{- if eq .BackgroundJob "sqs" }}
-	"acme/internal/queue"
+	"{{ .Name }}/internal/queue"
 	{{- end }}
 )
 

@@ -92,6 +92,7 @@ func NewProject(cfg *Config) *Project {
 				"/internal/application/handler/book_handler.go",
 				"/internal/application/handler/book_handler_test.go",
 				"/internal/application/service/book_service.go",
+				"/internal/dto/book.go",
 			},
 			Check: func(p *Project) bool { return p.Database == DatabaseNone },
 		},
