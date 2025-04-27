@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"auth/internal/application/service"
-	"auth/internal/oidc"
+	"{{ .Name }}/internal/application/service"
+	"{{ .Name }}/internal/oidc"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

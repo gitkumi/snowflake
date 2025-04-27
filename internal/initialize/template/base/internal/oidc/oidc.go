@@ -3,7 +3,7 @@ package oidc
 import (
 	"context"
 
-	"auth/internal/oauth"
+	"{{ .Name }}/internal/oauth"
 )
 
 // Provider defines the interface for all OIDC providers

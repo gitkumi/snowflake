@@ -1,8 +1,8 @@
 package service
 
 import (
-	"auth/internal/oauth"
-	"auth/internal/oidc"
+	"{{ .Name }}/internal/oauth"
+	"{{ .Name }}/internal/oidc"
 	"context"
 	"errors"
 	"fmt"

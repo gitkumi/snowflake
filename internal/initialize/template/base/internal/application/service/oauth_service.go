@@ -1,7 +1,7 @@
 package service
 
 import (
-	"auth/internal/oauth"
+	"{{ .Name }}/internal/oauth"
 	"context"
 	"crypto/rand"
 	"encoding/base64"

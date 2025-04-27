@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"auth/internal/application/service"
+	"{{ .Name }}/internal/application/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

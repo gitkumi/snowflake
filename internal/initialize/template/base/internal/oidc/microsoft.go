@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"auth/internal/oauth"
+	"{{ .Name }}/internal/oauth"
 )
 
 const (
