@@ -27,8 +27,13 @@ import (
 	"{{ .Name }}/internal/queue"
 	{{- end }}
 
+	{{- if .HasOAuth }}
 	"{{ .Name }}/internal/oauth"
+	{{- end }}
+
+	{{- if .HashOIDC }}
 	"{{ .Name }}/internal/oidc"
+	{{- end }}
 )
 
 func main() {
@@ -117,8 +122,14 @@ func main() {
 		{{- if eq .BackgroundJob "sqs" }}
 		Queue:       sqs,
 		{{- end }},
-		OAuth: newOAuthRegistry(vars),
-		OIDC: newOIDCRegistry(vars),
+
+		{{- if .HasOAuth }}
+			OAuth: newOAuthRegistry(vars),
+		{{- end }}
+
+		{{- if .HashOIDC }}
+			OIDC: newOIDCRegistry(vars),
+		{{- end }}
 	})
 	if err != nil {
 		log.Fatal("failed to create application", err)
@@ -127,6 +138,8 @@ func main() {
 	app.Run()
 }
 
+
+{{- if .HasOAuth }}
 func newOAuthRegistry(vars *env.EnvironmentVariables) *oauth.OAuth {
 	oauthProviders := []*oauth.ProviderConfig{
 		{
@@ -224,7 +237,9 @@ func newOAuthRegistry(vars *env.EnvironmentVariables) *oauth.OAuth {
 
 	return oauth.NewOAuth(oauthProviders)
 }
+{{- end }}
 
+{{- if .HashOIDC }}
 func newOIDCRegistry(vars *env.EnvironmentVariables) *oidc.OIDC {
 	oidcProviders := []*oauth.ProviderConfig{
 		{
@@ -266,3 +281,4 @@ func newOIDCRegistry(vars *env.EnvironmentVariables) *oidc.OIDC {
 
 	return oidc.NewOIDC(oidcProviders)
 }
+{{- end }}

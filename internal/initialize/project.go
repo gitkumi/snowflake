@@ -42,6 +42,14 @@ type Project struct {
 	fileRenames    []*FileRename
 }
 
+func (p *Project) HasOAuth() bool {
+	return true
+}
+
+func (p *Project) HasOIDC() bool {
+	return true
+}
+
 type FileRename struct {
 	OldPath string
 	NewPath string
