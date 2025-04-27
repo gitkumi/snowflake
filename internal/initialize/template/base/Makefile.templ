@@ -64,7 +64,7 @@ db.up:
 db.down:
 	goose down
 
-	{{- if ne .Database.String "sqlite3"}}
+	{{- if or (ne .Database.String "sqlite3") (eq .Redis) }}
 
 .PHONY: devenv.up
 devenv.up:
@@ -74,11 +74,15 @@ devenv.up:
 devenv.down:
 	docker rm container dev_mysql -f
 	docker compose -f dev.yaml down -v
+	{{- end }}
+
+	{{- if ne .Database.String "sqlite3" }}
 
 .PHONY: db.create
 db.create:
 	docker exec -i dev_mysql \
 		mysql -uroot -pmysql -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};"
+	{{- end }}
 
 .PHONY: db.drop
 db.drop:

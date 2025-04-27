@@ -35,7 +35,7 @@ func RateLimitMiddleware(rdb *redis.Client) (gin.HandlerFunc, error) {
 		limiterCtx, err := lim.Get(ctx, ip)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "Rate limiter failure",
+				"error": "rate limiter failure",
 			})
 			return
 		}
@@ -46,7 +46,7 @@ func RateLimitMiddleware(rdb *redis.Client) (gin.HandlerFunc, error) {
 
 		if limiterCtx.Reached {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"error": "Rate limit exceeded",
+				"error": "rate limit exceeded",
 			})
 			return
 		}
