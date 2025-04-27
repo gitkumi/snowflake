@@ -43,11 +43,27 @@ type Project struct {
 }
 
 func (p *Project) HasOAuth() bool {
-	return true
+	return p.OAuthGoogle || 
+		p.OAuthGithub || 
+		p.OAuthFacebook || 
+		p.OAuthInstagram || 
+		p.OAuthDiscord || 
+		p.OAuthLinkedin || 
+		p.OAuthReddit || 
+		p.OAuthTwitch || 
+		p.OAuthStripe || 
+		p.OAuthX || 
+		p.OAuthMicrosoft || 
+		p.OAuthSlack || 
+		p.OAuthSpotify
 }
 
 func (p *Project) HasOIDC() bool {
-	return true
+	return p.OIDCGoogle || 
+		p.OIDCMicrosoft || 
+		p.OIDCFacebook || 
+		p.OIDCLinkedin || 
+		p.OIDCTwitch
 }
 
 type FileRename struct {
