@@ -1,0 +1,77 @@
+package oauth
+
+import (
+	"context"
+	"fmt"
+
+	"auth/util"
+)
+
+const (
+	discordAuthURL     = "https://discord.com/api/oauth2/authorize"
+	discordTokenURL    = "https://discord.com/api/oauth2/token"
+	discordUserInfoURL = "https://discord.com/api/users/@me"
+)
+
+// DiscordProvider implements the Provider interface for Discord OAuth2
+type DiscordProvider struct {
+	Config *ProviderConfig
+}
+
+// NewDiscordProvider creates a new Discord OAuth2 provider
+func NewDiscordProvider(cfg *ProviderConfig) *DiscordProvider {
+	return &DiscordProvider{
+		Config: cfg,
+	}
+}
+
+// Name returns the provider name
+func (p *DiscordProvider) Name() string {
+	return "discord"
+}
+
+// GetAuthURL returns the Discord OAuth2 authorization URL
+func (p *DiscordProvider) GetAuthURL(state string) string {
+	return BuildAuthURL(discordAuthURL, *p.Config, state, nil)
+}
+
+// Exchange exchanges the authorization code for an access token
+func (p *DiscordProvider) Exchange(ctx context.Context, code string) (*Token, error) {
+	return ExchangeToken(ctx, discordTokenURL, *p.Config, code)
+}
+
+// GetUserInfo retrieves the user's information using the access token
+func (p *DiscordProvider) GetUserInfo(ctx context.Context, token *Token) (*UserInfo, error) {
+	var userResp struct {
+		ID            string `json:"id"`
+		Username      string `json:"username"`
+		Discriminator string `json:"discriminator"`
+		Avatar        string `json:"avatar"`
+		Email         string `json:"email"`
+		Verified      bool   `json:"verified"`
+		Locale        string `json:"locale"`
+	}
+
+	if err := util.MakeAuthenticatedRequest(ctx, "GET", discordUserInfoURL, token.AccessToken, &userResp); err != nil {
+		return nil, fmt.Errorf("failed to get Discord user info: %w", err)
+	}
+
+	// Discord avatar URL
+	avatarURL := ""
+	if userResp.Avatar != "" {
+		avatarURL = fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", userResp.ID, userResp.Avatar)
+	}
+
+	return &UserInfo{
+		ID:            userResp.ID,
+		Email:         userResp.Email,
+		VerifiedEmail: userResp.Verified,
+		Name:          fmt.Sprintf("%s#%s", userResp.Username, userResp.Discriminator),
+		Picture:       avatarURL,
+		Locale:        userResp.Locale,
+		ProviderName:  p.Name(),
+		// Discord doesn't directly provide these fields
+		GivenName:  "",
+		FamilyName: "",
+	}, nil
+}

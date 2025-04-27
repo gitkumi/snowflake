@@ -1,0 +1,74 @@
+package oauth
+
+import (
+	"context"
+	"fmt"
+
+	"auth/util"
+)
+
+const (
+	instagramAuthURL     = "https://api.instagram.com/oauth/authorize"
+	instagramTokenURL    = "https://api.instagram.com/oauth/access_token"
+	instagramUserInfoURL = "https://graph.instagram.com/me"
+)
+
+// InstagramProvider implements the Provider interface for Instagram OAuth2
+type InstagramProvider struct {
+	Config *ProviderConfig
+}
+
+// NewInstagramProvider creates a new Instagram OAuth2 provider
+func NewInstagramProvider(cfg *ProviderConfig) *InstagramProvider {
+	return &InstagramProvider{
+		Config: cfg,
+	}
+}
+
+// Name returns the provider name
+func (p *InstagramProvider) Name() string {
+	return "instagram"
+}
+
+// GetAuthURL returns the Instagram OAuth2 authorization URL
+func (p *InstagramProvider) GetAuthURL(state string) string {
+	return BuildAuthURL(instagramAuthURL, *p.Config, state, nil)
+}
+
+// Exchange exchanges the authorization code for an access token
+func (p *InstagramProvider) Exchange(ctx context.Context, code string) (*Token, error) {
+	return ExchangeToken(ctx, instagramTokenURL, *p.Config, code)
+}
+
+// GetUserInfo retrieves the user's information using the access token
+func (p *InstagramProvider) GetUserInfo(ctx context.Context, token *Token) (*UserInfo, error) {
+	// Instagram Graph API requires fields parameter
+	fields := "id,username"
+
+	reqURL := fmt.Sprintf("%s?fields=%s&access_token=%s",
+		instagramUserInfoURL, fields, token.AccessToken)
+
+	var userResp struct {
+		ID       string `json:"id"`
+		Username string `json:"username"`
+	}
+
+	if err := util.MakeJSONRequest(ctx, "GET", reqURL, nil, &userResp); err != nil {
+		return nil, fmt.Errorf("failed to get Instagram user info: %w", err)
+	}
+
+	// Instagram Basic Display API doesn't provide much user info
+	// Need additional permissions and API calls for more details
+	return &UserInfo{
+		ID:           userResp.ID,
+		Name:         userResp.Username,
+		ProviderName: p.Name(),
+		// Instagram Basic Display API doesn't provide these fields with basic permissions
+		Email:         "",
+		VerifiedEmail: false,
+		GivenName:     "",
+		FamilyName:    "",
+		Picture:       "",
+		Locale:        "",
+	}, nil
+}

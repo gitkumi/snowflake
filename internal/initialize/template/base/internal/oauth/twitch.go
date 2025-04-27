@@ -1,0 +1,114 @@
+package oauth
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+
+	"auth/util"
+)
+
+const (
+	twitchAuthURL     = "https://id.twitch.tv/oauth2/authorize"
+	twitchTokenURL    = "https://id.twitch.tv/oauth2/token"
+	twitchUserInfoURL = "https://api.twitch.tv/helix/users"
+)
+
+// TwitchProvider implements the Provider interface for Twitch OAuth2
+type TwitchProvider struct {
+	Config *ProviderConfig
+}
+
+// NewTwitchProvider creates a new Twitch OAuth2 provider
+func NewTwitchProvider(cfg *ProviderConfig) *TwitchProvider {
+	return &TwitchProvider{
+		Config: cfg,
+	}
+}
+
+// Name returns the provider name
+func (p *TwitchProvider) Name() string {
+	return "twitch"
+}
+
+// GetAuthURL returns the Twitch OAuth2 authorization URL
+func (p *TwitchProvider) GetAuthURL(state string) string {
+	additionalParams := map[string]string{
+		"force_verify": "true", // Force re-approval for login
+	}
+	return BuildAuthURL(twitchAuthURL, *p.Config, state, additionalParams)
+}
+
+// Exchange exchanges the authorization code for an access token
+func (p *TwitchProvider) Exchange(ctx context.Context, code string) (*Token, error) {
+	return ExchangeToken(ctx, twitchTokenURL, *p.Config, code)
+}
+
+// GetUserInfo retrieves the user's information using the access token
+func (p *TwitchProvider) GetUserInfo(ctx context.Context, token *Token) (*UserInfo, error) {
+	// Twitch requires the Client-ID header in addition to the Authorization header
+	// We'll need to make the request manually
+	req, err := http.NewRequestWithContext(ctx, "GET", twitchUserInfoURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Twitch user info request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.AccessToken))
+	req.Header.Set("Client-ID", p.Config.ClientID) // Twitch requires Client-ID header
+
+	client := util.DefaultHTTPClient()
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to perform Twitch user info request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read Twitch user info response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get Twitch user info: %s", body)
+	}
+
+	var userResp struct {
+		Data []struct {
+			ID              string `json:"id"`
+			Login           string `json:"login"`
+			DisplayName     string `json:"display_name"`
+			Type            string `json:"type"`
+			BroadcasterType string `json:"broadcaster_type"`
+			Description     string `json:"description"`
+			ProfileImageURL string `json:"profile_image_url"`
+			OfflineImageURL string `json:"offline_image_url"`
+			Email           string `json:"email"`
+			InsertedAt      string `json:"inserted_at"`
+		} `json:"data"`
+	}
+
+	if err := json.Unmarshal(body, &userResp); err != nil {
+		return nil, fmt.Errorf("failed to parse Twitch user info response: %w", err)
+	}
+
+	if len(userResp.Data) == 0 {
+		return nil, fmt.Errorf("no user data returned from Twitch API")
+	}
+
+	user := userResp.Data[0]
+
+	return &UserInfo{
+		ID:           user.ID,
+		Email:        user.Email,
+		Name:         user.DisplayName,
+		Picture:      user.ProfileImageURL,
+		ProviderName: p.Name(),
+		// Twitch API doesn't provide these specific fields
+		VerifiedEmail: true, // Twitch requires verified emails
+		GivenName:     "",
+		FamilyName:    "",
+		Locale:        "",
+	}, nil
+}

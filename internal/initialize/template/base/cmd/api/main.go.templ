@@ -26,6 +26,9 @@ import (
 	{{- if eq .BackgroundJob "sqs" }}
 	"{{ .Name }}/internal/queue"
 	{{- end }}
+
+	"{{ .Name }}/internal/oauth"
+	"{{ .Name }}/internal/oidc"
 )
 
 func main() {
@@ -113,11 +116,153 @@ func main() {
 		Logger:      slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug})),
 		{{- if eq .BackgroundJob "sqs" }}
 		Queue:       sqs,
-		{{- end }}
+		{{- end }},
+		OAuth: newOAuthRegistry(vars),
+		OIDC: newOIDCRegistry(vars),
 	})
 	if err != nil {
 		log.Fatal("failed to create application", err)
 	}
 
 	app.Run()
+}
+
+func newOAuthRegistry(vars *env.EnvironmentVariables) *oauth.OAuth {
+	oauthProviders := []*oauth.ProviderConfig{
+		{
+			Name:         "google",
+			ClientID:     vars.OAuthGoogleClientID,
+			ClientSecret: vars.OAuthGoogleClientSecret,
+			RedirectURL:  vars.OAuthGoogleRedirectURL,
+			Scopes:       []string{},
+		},
+		{
+			Name:         "github",
+			ClientID:     vars.OAuthGitHubClientID,
+			ClientSecret: vars.OAuthGitHubClientSecret,
+			RedirectURL:  vars.OAuthGitHubRedirectURL,
+			Scopes:       []string{},
+		},
+		{
+			Name:         "facebook",
+			ClientID:     vars.OAuthFacebookClientID,
+			ClientSecret: vars.OAuthFacebookClientSecret,
+			RedirectURL:  vars.OAuthFacebookRedirectURL,
+			Scopes:       []string{},
+		},
+		{
+			Name:         "instagram",
+			ClientID:     vars.OAuthInstagramClientID,
+			ClientSecret: vars.OAuthInstagramClientSecret,
+			RedirectURL:  vars.OAuthInstagramRedirectURL,
+			Scopes:       []string{},
+		},
+		{
+			Name:         "discord",
+			ClientID:     vars.OAuthDiscordClientID,
+			ClientSecret: vars.OAuthDiscordClientSecret,
+			RedirectURL:  vars.OAuthDiscordRedirectURL,
+			Scopes:       []string{},
+		},
+		{
+			Name:         "linkedin",
+			ClientID:     vars.OAuthLinkedInClientID,
+			ClientSecret: vars.OAuthLinkedInClientSecret,
+			RedirectURL:  vars.OAuthLinkedInRedirectURL,
+			Scopes:       []string{},
+		},
+		{
+			Name:         "reddit",
+			ClientID:     vars.OAuthRedditClientID,
+			ClientSecret: vars.OAuthRedditClientSecret,
+			RedirectURL:  vars.OAuthRedditRedirectURL,
+			Scopes:       []string{},
+		},
+		{
+			Name:         "twitch",
+			ClientID:     vars.OAuthTwitchClientID,
+			ClientSecret: vars.OAuthTwitchClientSecret,
+			RedirectURL:  vars.OAuthTwitchRedirectURL,
+			Scopes:       []string{},
+		},
+		{
+			Name:         "stripe",
+			ClientID:     vars.OAuthStripeClientID,
+			ClientSecret: vars.OAuthStripeClientSecret,
+			RedirectURL:  vars.OAuthStripeRedirectURL,
+			Scopes:       []string{},
+		},
+		{
+			Name:         "x",
+			ClientID:     vars.OAuthXClientID,
+			ClientSecret: vars.OAuthXClientSecret,
+			RedirectURL:  vars.OAuthXRedirectURL,
+			Scopes:       []string{},
+		},
+		{
+			Name:         "microsoft",
+			ClientID:     vars.OAuthMicrosoftClientID,
+			ClientSecret: vars.OAuthMicrosoftClientSecret,
+			RedirectURL:  vars.OAuthMicrosoftRedirectURL,
+			Scopes:       []string{},
+		},
+		{
+			Name:         "slack",
+			ClientID:     vars.OAuthSlackClientID,
+			ClientSecret: vars.OAuthSlackClientSecret,
+			RedirectURL:  vars.OAuthSlackRedirectURL,
+			Scopes:       []string{},
+		},
+		{
+			Name:         "spotify",
+			ClientID:     vars.OAuthSpotifyClientID,
+			ClientSecret: vars.OAuthSpotifyClientSecret,
+			RedirectURL:  vars.OAuthSpotifyRedirectURL,
+			Scopes:       []string{},
+		},
+	}
+
+	return oauth.NewOAuth(oauthProviders)
+}
+
+func newOIDCRegistry(vars *env.EnvironmentVariables) *oidc.OIDC {
+	oidcProviders := []*oauth.ProviderConfig{
+		{
+			Name:         "google",
+			ClientID:     vars.OAuthGoogleClientID,
+			ClientSecret: vars.OAuthGoogleClientSecret,
+			RedirectURL:  vars.OIDCGoogleRedirectURL,
+			Scopes:       []string{"openid", "profile", "email"},
+		},
+		{
+			Name:         "microsoft",
+			ClientID:     vars.OAuthMicrosoftClientID,
+			ClientSecret: vars.OAuthMicrosoftClientSecret,
+			RedirectURL:  vars.OIDCMicrosoftRedirectURL,
+			Scopes:       []string{"openid", "profile", "email"},
+		},
+		{
+			Name:         "facebook",
+			ClientID:     vars.OAuthFacebookClientID,
+			ClientSecret: vars.OAuthFacebookClientSecret,
+			RedirectURL:  vars.OIDCFacebookRedirectURL,
+			Scopes:       []string{"openid", "profile", "email"},
+		},
+		{
+			Name:         "linkedin",
+			ClientID:     vars.OAuthLinkedInClientID,
+			ClientSecret: vars.OAuthLinkedInClientSecret,
+			RedirectURL:  vars.OIDCLinkedInRedirectURL,
+			Scopes:       []string{"openid", "profile", "email"},
+		},
+		{
+			Name:         "twitch",
+			ClientID:     vars.OAuthTwitchClientID,
+			ClientSecret: vars.OAuthTwitchClientSecret,
+			RedirectURL:  vars.OIDCTwitchRedirectURL,
+			Scopes:       []string{"openid", "profile", "email"},
+		},
+	}
+
+	return oidc.NewOIDC(oidcProviders)
 }

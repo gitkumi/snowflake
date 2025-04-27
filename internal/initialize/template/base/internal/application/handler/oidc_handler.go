@@ -1,0 +1,113 @@
+package handler
+
+import (
+	"auth/internal/application/service"
+	"auth/internal/oidc"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+type OIDCHandler struct {
+	Service *service.OIDCService
+}
+
+func NewOIDCHandler(s *service.OIDCService) *OIDCHandler {
+	return &OIDCHandler{Service: s}
+}
+
+// ListProviders returns a list of configured OIDC providers
+func (h *OIDCHandler) ListProviders(c *gin.Context) {
+	providers := h.Service.ListProviders()
+	c.JSON(http.StatusOK, gin.H{
+		"providers": providers,
+	})
+}
+
+// Authorize initiates the OIDC flow for a specific provider
+func (h *OIDCHandler) Authorize(c *gin.Context) {
+	providerName := c.Param("provider")
+
+	// Get the authorization URL for the provider
+	authURL, state, nonce, err := h.Service.GetAuthURL(providerName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Set state and nonce in cookies for validation later
+	c.SetCookie("oidc_state", state, 3600, "/", "", false, true)
+	c.SetCookie("oidc_nonce", nonce, 3600, "/", "", false, true)
+
+	// Redirect to the provider's authorization page
+	c.Redirect(http.StatusTemporaryRedirect, authURL)
+}
+
+// Callback handles the OIDC callback from the provider
+func (h *OIDCHandler) Callback(c *gin.Context) {
+	providerName := c.Param("provider")
+	code := c.Query("code")
+	state := c.Query("state")
+
+	// Get state and nonce from cookies for validation
+	cookieState, _ := c.Cookie("oidc_state")
+	cookieNonce, _ := c.Cookie("oidc_nonce")
+
+	// Validate state
+	if state == "" || state != cookieState {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid state parameter",
+		})
+		return
+	}
+
+	// Exchange the code for a token
+	token, err := h.Service.Exchange(c, providerName, code, state)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Verify the ID token if present
+	var claims *oidc.IDTokenClaims
+	if token.IDToken != "" {
+		claims, err = h.Service.VerifyIDToken(c, providerName, token.IDToken, cookieNonce)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "ID token verification failed: " + err.Error(),
+			})
+			return
+		}
+	}
+
+	// Get user info
+	userInfo, err := h.Service.GetUserInfo(c, providerName, token)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// In a real application, you would:
+	// 1. Check if the user exists in your database
+	// 2. Create the user if they don't exist
+	// 3. Generate a session or JWT token
+	// 4. Redirect to your application with the token
+
+	// For now, just return the user info, token, and claims
+	response := gin.H{
+		"user":  userInfo,
+		"token": token,
+	}
+
+	if claims != nil {
+		response["id_token_claims"] = claims
+	}
+
+	c.JSON(http.StatusOK, response)
+}

@@ -1,0 +1,225 @@
+package oauth
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+
+	"auth/util"
+)
+
+const (
+	githubAuthURL     = "https://github.com/login/oauth/authorize"
+	githubTokenURL    = "https://github.com/login/oauth/access_token"
+	githubUserInfoURL = "https://api.github.com/user"
+	githubEmailURL    = "https://api.github.com/user/emails"
+)
+
+// GitHubProvider implements the Provider interface for GitHub OAuth2
+type GitHubProvider struct {
+	Config *ProviderConfig
+}
+
+// NewGitHubProvider creates a new GitHub OAuth2 provider
+func NewGitHubProvider(cfg *ProviderConfig) *GitHubProvider {
+	return &GitHubProvider{
+		Config: cfg,
+	}
+}
+
+// Name returns the provider name
+func (p *GitHubProvider) Name() string {
+	return "github"
+}
+
+// GetAuthURL returns the GitHub OAuth2 authorization URL
+func (p *GitHubProvider) GetAuthURL(state string) string {
+	return BuildAuthURL(githubAuthURL, *p.Config, state, nil)
+}
+
+// Exchange exchanges the authorization code for an access token
+func (p *GitHubProvider) Exchange(ctx context.Context, code string) (*Token, error) {
+	// GitHub needs a POST with JSON body
+	data := map[string]string{
+		"code":          code,
+		"client_id":     p.Config.ClientID,
+		"client_secret": p.Config.ClientSecret,
+		"redirect_uri":  p.Config.RedirectURL,
+	}
+
+	var tokenResp struct {
+		AccessToken string `json:"access_token"`
+		TokenType   string `json:"token_type"`
+		Scope       string `json:"scope"`
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", githubTokenURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create token request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	// Use form data instead of JSON for GitHub
+	form := util.MakeFormFromMap(data)
+	req.Body = io.NopCloser(form)
+
+	client := util.DefaultHTTPClient()
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to perform token request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read token response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("github oauth token exchange failed: %s", body)
+	}
+
+	if err := json.Unmarshal(body, &tokenResp); err != nil {
+		return nil, fmt.Errorf("failed to parse token response: %w", err)
+	}
+
+	return &Token{
+		AccessToken: tokenResp.AccessToken,
+		TokenType:   tokenResp.TokenType,
+		// GitHub doesn't provide refresh tokens or expiry time in the standard OAuth flow
+	}, nil
+}
+
+// GetUserInfo retrieves the user's information using the access token
+func (p *GitHubProvider) GetUserInfo(ctx context.Context, token *Token) (*UserInfo, error) {
+	// First get the user profile
+	userInfo, err := p.getUserProfile(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+
+	// If we don't have an email from the profile, fetch emails separately
+	// GitHub may not include email if it's set to private
+	if userInfo.Email == "" {
+		if err := p.enrichWithEmail(ctx, token, userInfo); err != nil {
+			return nil, err
+		}
+	}
+
+	return userInfo, nil
+}
+
+// getUserProfile fetches the GitHub user profile
+func (p *GitHubProvider) getUserProfile(ctx context.Context, token *Token) (*UserInfo, error) {
+	var userResp struct {
+		ID        int    `json:"id"`
+		Login     string `json:"login"`
+		Name      string `json:"name"`
+		Email     string `json:"email"`
+		AvatarURL string `json:"avatar_url"`
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", githubUserInfoURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create user info request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", token.AccessToken))
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+
+	client := util.DefaultHTTPClient()
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to perform user info request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read user info response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get user info: %s", body)
+	}
+
+	if err := json.Unmarshal(body, &userResp); err != nil {
+		return nil, fmt.Errorf("failed to parse user info response: %w", err)
+	}
+
+	return &UserInfo{
+		ID:           fmt.Sprintf("%d", userResp.ID),
+		Email:        userResp.Email,
+		Name:         userResp.Name,
+		Picture:      userResp.AvatarURL,
+		ProviderName: p.Name(),
+		// GitHub doesn't directly provide these fields
+		VerifiedEmail: false, // Will be updated if we fetch emails
+		GivenName:     "",
+		FamilyName:    "",
+		Locale:        "",
+	}, nil
+}
+
+// enrichWithEmail fetches the user's verified email addresses
+func (p *GitHubProvider) enrichWithEmail(ctx context.Context, token *Token, userInfo *UserInfo) error {
+	req, err := http.NewRequestWithContext(ctx, "GET", githubEmailURL, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create email request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", token.AccessToken))
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+
+	client := util.DefaultHTTPClient()
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to perform email request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read email response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to get user emails: %s", body)
+	}
+
+	var emails []struct {
+		Email    string `json:"email"`
+		Primary  bool   `json:"primary"`
+		Verified bool   `json:"verified"`
+	}
+
+	if err := json.Unmarshal(body, &emails); err != nil {
+		return fmt.Errorf("failed to parse email response: %w", err)
+	}
+
+	// Look for primary and verified email
+	for _, email := range emails {
+		if email.Primary && email.Verified {
+			userInfo.Email = email.Email
+			userInfo.VerifiedEmail = true
+			break
+		}
+	}
+
+	// If no primary email found, use the first verified email
+	if userInfo.Email == "" {
+		for _, email := range emails {
+			if email.Verified {
+				userInfo.Email = email.Email
+				userInfo.VerifiedEmail = true
+				break
+			}
+		}
+	}
+
+	return nil
+}

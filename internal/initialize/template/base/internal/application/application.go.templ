@@ -14,6 +14,8 @@ import (
 	{{- if .Storage }}
 	"{{ .Name }}/internal/storage"
 	{{- end }}
+	"{{ .Name }}/internal/oauth"
+	"{{ .Name }}/internal/oidc"
 	{{- if .Redis }}
 	"github.com/redis/go-redis/v9"
 	{{- end }}
@@ -44,6 +46,8 @@ type Handlers struct {
 	{{- if eq .AppType "web"}}
 	html   *handler.HTMLHandler
 	{{- end }}
+	oauth  *handler.OAuthHandler
+	oidc   *handler.OIDCHandler
 }
 
 type Application struct {
@@ -86,6 +90,8 @@ type Config struct {
 	{{- if eq .BackgroundJob "sqs" }}
 	Queue   queue.Queue
 	{{- end }}
+	OAuth       *oauth.OAuth
+	OIDC        *oidc.OIDC
 }
 
 func New(cfg *Config) (*Application, error) {
@@ -126,6 +132,12 @@ func New(cfg *Config) (*Application, error) {
 	{{- if eq .AppType "web"}}
 	htmlHandler := handler.NewHTMLHandler()
 	{{- end }}
+
+	oauthService := service.NewOAuthService(cfg.OAuth, cfg.Redis)
+	oauthHandler := handler.NewOAuthHandler(oauthService)
+
+	oidcService := service.NewOIDCService(cfg.OIDC, cfg.Redis)
+	oidcHandler := handler.NewOIDCHandler(oidcService)
 
 	handlers := &Handlers{
 		{{- if ne .Database.String "none" }}
