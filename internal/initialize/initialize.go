@@ -29,23 +29,24 @@ type Config struct {
 
 	OAuthGoogle    bool
 	OAuthDiscord   bool
-	OAuthGithub    bool
+	OAuthGitHub    bool
 	OAuthInstagram bool
 	OAuthMicrosoft bool
 	OAuthReddit    bool
 	OAuthSpotify   bool
 	OAuthTwitch    bool
 	OAuthFacebook  bool
-	OAuthLinkedin  bool
+	OAuthLinkedIn  bool
 	OAuthSlack     bool
 	OAuthStripe    bool
 	OAuthX         bool
 
 	OIDCFacebook  bool
 	OIDCGoogle    bool
-	OIDCLinkedin  bool
+	OIDCLinkedIn  bool
 	OIDCMicrosoft bool
 	OIDCTwitch    bool
+	OIDCDiscord   bool
 }
 
 func Run(cfg *Config) error {

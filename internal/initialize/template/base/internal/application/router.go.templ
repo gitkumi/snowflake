@@ -42,12 +42,18 @@ func (app *Application) registerRoutes() error {
 	{{- if eq .AppType "web"}}
 	app.Router.GET("/", app.handlers.html.TopPage)
 
+	{{- if .HasOAuth }}
+
 	app.Router.GET("/oauth/providers", app.handlers.oauth.ListProviders)
 	app.Router.GET("/oauth/:provider", app.handlers.oauth.Authorize)
 	app.Router.GET("/oauth/:provider/callback", app.handlers.oauth.Callback)
+	{{- end }}
+	{{- if .HasOIDC }}
+
 	app.Router.GET("/oidc/providers", app.handlers.oidc.ListProviders)
 	app.Router.GET("/oidc/:provider", app.handlers.oidc.Authorize)
 	app.Router.GET("/oidc/:provider/callback", app.handlers.oidc.Callback)
+	{{- end }}
 
 	{{- end }}
 	api := app.Router.Group("/api")

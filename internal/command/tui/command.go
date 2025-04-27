@@ -77,14 +77,14 @@ func Command() *cobra.Command {
 					Options(
 						huh.NewOption("Google", "Google"),
 						huh.NewOption("Discord", "Discord"),
-						huh.NewOption("Github", "Github"),
+						huh.NewOption("GitHub", "GitHub"),
 						huh.NewOption("Instagram", "Instagram"),
 						huh.NewOption("Microsoft", "Microsoft"),
 						huh.NewOption("Reddit", "Reddit"),
 						huh.NewOption("Spotify", "Spotify"),
 						huh.NewOption("Twitch", "Twitch"),
 						huh.NewOption("Facebook", "Facebook"),
-						huh.NewOption("Linkedin", "Linkedin"),
+						huh.NewOption("LinkedIn", "LinkedIn"),
 						huh.NewOption("Slack", "Slack"),
 						huh.NewOption("Stripe", "Stripe"),
 						huh.NewOption("X", "X"),
@@ -98,9 +98,10 @@ func Command() *cobra.Command {
 					Options(
 						huh.NewOption("Facebook", "Facebook"),
 						huh.NewOption("Google", "Google"),
-						huh.NewOption("Linkedin", "Linkedin"),
+						huh.NewOption("LinkedIn", "LinkedIn"),
 						huh.NewOption("Microsoft", "Microsoft"),
 						huh.NewOption("Twitch", "Twitch"),
+						huh.NewOption("Discord", "Discord"),
 					).
 					Value(&selectedOIDC),
 			)
@@ -141,23 +142,24 @@ func Command() *cobra.Command {
 			// Set OAuth providers
 			cfg.OAuthGoogle = contains(selectedOAuth, "Google")
 			cfg.OAuthDiscord = contains(selectedOAuth, "Discord")
-			cfg.OAuthGithub = contains(selectedOAuth, "Github")
+			cfg.OAuthGitHub = contains(selectedOAuth, "GitHub")
 			cfg.OAuthInstagram = contains(selectedOAuth, "Instagram")
 			cfg.OAuthMicrosoft = contains(selectedOAuth, "Microsoft")
 			cfg.OAuthReddit = contains(selectedOAuth, "Reddit")
 			cfg.OAuthSpotify = contains(selectedOAuth, "Spotify")
 			cfg.OAuthTwitch = contains(selectedOAuth, "Twitch")
 			cfg.OAuthFacebook = contains(selectedOAuth, "Facebook")
-			cfg.OAuthLinkedin = contains(selectedOAuth, "Linkedin")
+			cfg.OAuthLinkedIn = contains(selectedOAuth, "LinkedIn")
 			cfg.OAuthSlack = contains(selectedOAuth, "Slack")
 			cfg.OAuthStripe = contains(selectedOAuth, "Stripe")
 			cfg.OAuthX = contains(selectedOAuth, "X")
 
 			cfg.OIDCFacebook = contains(selectedOIDC, "Facebook")
 			cfg.OIDCGoogle = contains(selectedOIDC, "Google")
-			cfg.OIDCLinkedin = contains(selectedOIDC, "Linkedin")
+			cfg.OIDCLinkedIn = contains(selectedOIDC, "LinkedIn")
 			cfg.OIDCMicrosoft = contains(selectedOIDC, "Microsoft")
 			cfg.OIDCTwitch = contains(selectedOIDC, "Twitch")
+			cfg.OIDCDiscord = contains(selectedOIDC, "Discord")
 
 			if err := initialize.Run(cfg); err != nil {
 				fmt.Printf("error creating project: %v\n", err)
