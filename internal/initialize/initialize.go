@@ -18,10 +18,10 @@ type Config struct {
 	OutputDir string
 	Git       bool
 
-	Name          string
-	AppType       AppType
-	Database      Database
-	BackgroundJob BackgroundJob
+	Name     string
+	AppType  AppType
+	Database Database
+	Queue    Queue
 
 	SMTP    bool
 	Storage bool
@@ -82,10 +82,23 @@ func Run(cfg *Config) error {
 	return nil
 }
 
+func createTemplateFuncs() template.FuncMap {
+	return template.FuncMap{
+		"lower":     strings.ToLower,
+		"upper":     strings.ToUpper,
+		"trim":      strings.TrimSpace,
+		"replace":   strings.ReplaceAll,
+		"contains":  strings.Contains,
+		"hasPrefix": strings.HasPrefix,
+		"hasSuffix": strings.HasSuffix,
+		"join":      strings.Join,
+	}
+}
+
 func processTemplate(templateContent []byte, templateFileName string,
 	databaseFragments map[string]string, project *Project, buf *bytes.Buffer) ([]byte, error) {
 
-	rootTemplate := template.New(filepath.Base(templateFileName))
+	rootTemplate := template.New(filepath.Base(templateFileName)).Funcs(createTemplateFuncs())
 
 	// Add database fragments as sub-templates
 	for name, fragment := range databaseFragments {

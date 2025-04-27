@@ -50,24 +50,24 @@ func CreateDatabaseFragments(database string) (map[string]string, error) {
 		return databaseFragments, nil
 	}
 
-	migrationsDir := filepath.Join("fragments/database", database, "migrations")
-	migrationFragments, err := loadFragments(DatabaseFragments, migrationsDir, "migration")
-	if err != nil {
-		return nil, err
+	fragmentTypes := []struct {
+		subDir string
+		prefix string
+	}{
+		{"migrations", "migration"},
+		{"queries", "query"},
 	}
 
-	for k, v := range migrationFragments {
-		databaseFragments[k] = v
-	}
+	for _, ft := range fragmentTypes {
+		dir := filepath.Join("fragments/database", database, ft.subDir)
+		fragments, err := loadFragments(DatabaseFragments, dir, ft.prefix)
+		if err != nil {
+			return nil, err
+		}
 
-	queriesDir := filepath.Join("fragments/database", database, "queries")
-	queryFragments, err := loadFragments(DatabaseFragments, queriesDir, "query")
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range queryFragments {
-		databaseFragments[k] = v
+		for k, v := range fragments {
+			databaseFragments[k] = v
+		}
 	}
 
 	return databaseFragments, nil

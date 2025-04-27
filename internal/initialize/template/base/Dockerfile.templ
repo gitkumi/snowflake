@@ -32,7 +32,6 @@ ARG PORT
 {{- if ne .Database.String "none" }}
 ARG DATABASE_CONN_STRING
 {{- end }}
-
 {{- if .SMTP }}
 ARG SMTP_HOST
 ARG SMTP_PORT
@@ -49,27 +48,27 @@ ARG S3_BUCKET
 {{- end }}
 
 ENV ENVIRONMENT=production \
-	{{- if .SMTP }}
-	SMTP_HOST=${SMTP_HOST} \
-	SMTP_PORT=${SMTP_PORT} \
-	SMTP_USERNAME=${SMTP_USERNAME} \
-	SMTP_PASSWORD=${SMTP_PASSWORD} \
-	SMTP_FROM=${SMTP_FROM} \
-	{{- end }}
-	{{- if .Storage }}
-	S3_ACCESS_KEY=${S3_ACCESS_KEY} \
-	S3_SECRET_KEY=${S3_SECRET_KEY} \
-	S3_ENDPOINT_URL=${S3_ENDPOINT_URL} \
-	S3_REGION=${S3_REGION} \
-	S3_BUCKET=${S3_BUCKET} \
-	{{- end }}
-	{{- if ne .Database.String "none" }}
-	DATABASE_CONN_STRING=${DATABASE_CONN_STRING} \
-	{{- end }}
-	BASE_URL=${BASE_URL} \
-	PORT=${PORT} \
-	GIN_MODE=release \
-	MIGRATE_DATABASE=true
+    BASE_URL=${BASE_URL} \
+    PORT=${PORT} \
+    GIN_MODE=release \
+    MIGRATE_DATABASE=true
+{{- if ne .Database.String "none" }}
+ENV DATABASE_CONN_STRING=${DATABASE_CONN_STRING}
+{{- end }}
+{{- if .SMTP }}
+ENV SMTP_HOST=${SMTP_HOST} \
+    SMTP_PORT=${SMTP_PORT} \
+    SMTP_USERNAME=${SMTP_USERNAME} \
+    SMTP_PASSWORD=${SMTP_PASSWORD} \
+    SMTP_FROM=${SMTP_FROM}
+{{- end }}
+{{- if .Storage }}
+ENV S3_ACCESS_KEY=${S3_ACCESS_KEY} \
+    S3_SECRET_KEY=${S3_SECRET_KEY} \
+    S3_ENDPOINT_URL=${S3_ENDPOINT_URL} \
+    S3_REGION=${S3_REGION} \
+    S3_BUCKET=${S3_BUCKET}
+{{- end }}
 
 WORKDIR /app
 

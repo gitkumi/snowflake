@@ -1,48 +1,49 @@
 package service
 
 import (
+	{{- if ne .Database.String "none" }}
+	"database/sql"
+	{{- end }}
 	{{- if .Storage }}
 	"{{ .Name }}/internal/storage"
 	{{- end }}
-	{{- if ne .Database.String "none" }}
-	"database/sql"
+	{{- if .Redis }}
+	"github.com/redis/go-redis/v9"
 	{{- end }}
 )
 
 type HealthService struct {
 	{{- if ne .Database.String "none" }}
-	DB      *sql.DB
+	DB *sql.DB
 	{{- end }}
 	{{- if .Storage }}
 	Storage storage.Storage
 	{{- end }}
+	{{- if .Redis }}
+	Redis *redis.Client
+	{{- end }}
 }
 
-{{- if .Storage }}
+func NewHealthService(
 	{{- if ne .Database.String "none" }}
-func NewHealthService(db *sql.DB, storage storage.Storage) *HealthService {
-	return &HealthService{
-		DB:      db,
-		Storage: storage,
-	}
-}
-	{{- else }}
-func NewHealthService(storage storage.Storage) *HealthService {
-	return &HealthService{
-		Storage: storage,
-	}
-}
+	db *sql.DB,
 	{{- end }}
-{{- else }}
-	{{- if ne .Database.String "none" }}
-func NewHealthService(db *sql.DB) *HealthService {
+	{{- if .Storage }}
+	storage storage.Storage,
+	{{- end }}
+	{{- if .Redis }}
+	redisClient *redis.Client,
+	{{- end }}
+) *HealthService {
 	return &HealthService{
+		{{- if ne .Database.String "none" }}
 		DB: db,
+		{{- end }}
+		{{- if .Storage }}
+		Storage: storage,
+		{{- end }}
+		{{- if .Redis }}
+		Redis: redisClient,
+		{{- end }}
 	}
 }
-	{{- else }}
-func NewHealthService() *HealthService {
-	return &HealthService{}
-}
-	{{- end }}
-{{- end }}

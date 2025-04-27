@@ -1,0 +1,49 @@
+package oidc
+
+import (
+	"context"
+
+	"{{ .Name }}/internal/oauth"
+)
+
+const (
+	discordIssuer   = "https://discord.com/api/oauth2"
+	discordTokenURL = "https://discord.com/api/oauth2/token"
+)
+
+// DiscordOIDCProvider implements the Provider interface for Discord OIDC
+type DiscordOIDCProvider struct {
+	oauthProvider *oauth.DiscordProvider
+}
+
+// NewDiscordOIDCProvider creates a new Discord OIDC provider
+func NewDiscordOIDCProvider(oauthProvider *oauth.DiscordProvider) *DiscordOIDCProvider {
+	return &DiscordOIDCProvider{
+		oauthProvider: oauthProvider,
+	}
+}
+
+// GetAuthURL returns the URL for authentication with Discord OIDC
+func (p *DiscordOIDCProvider) GetAuthURL(state string, nonce string) string {
+	additionalParams := map[string]string{
+		"prompt": "consent", // Always ask for consent
+		"nonce":  nonce,     // Add nonce parameter for OIDC
+	}
+
+	return oauth.BuildAuthURL("https://discord.com/api/oauth2/authorize", *p.oauthProvider.Config, state, additionalParams)
+}
+
+// Exchange exchanges the authorization code for an ID token
+func (p *DiscordOIDCProvider) Exchange(ctx context.Context, code string) (*oauth.Token, error) {
+	return oauth.ExchangeToken(ctx, discordTokenURL, *p.oauthProvider.Config, code)
+}
+
+// VerifyIDToken verifies the ID token's signature and claims for Discord
+func (p *DiscordOIDCProvider) VerifyIDToken(ctx context.Context, idToken string) (*IDTokenClaims, error) {
+	return verifyIDToken(ctx, idToken, discordIssuer, p.oauthProvider.Config.ClientID)
+}
+
+// GetUserInfo retrieves user information using the access token
+func (p *DiscordOIDCProvider) GetUserInfo(ctx context.Context, token *oauth.Token) (*oauth.UserInfo, error) {
+	return p.oauthProvider.GetUserInfo(ctx, token)
+} 

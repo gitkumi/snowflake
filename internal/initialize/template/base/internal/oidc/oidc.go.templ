@@ -70,24 +70,36 @@ func NewOIDC(configs []*oauth.ProviderConfig) *OIDC {
 	}
 
 	for _, config := range configs {
-		providerName := config.Name
-
-		switch providerName {
+		switch config.Name {
+		{{- if .OIDCGoogle }}
 		case "google":
-			googleProvider := oauth.NewGoogleProvider(config)
-			registry.providers[providerName] = NewGoogleOIDCProvider(googleProvider)
+			registry.providers[config.Name] = NewGoogleOIDCProvider(oauth.NewGoogleProvider(config))
+		{{- end }}
+		
+		{{- if .OIDCMicrosoft }}
 		case "microsoft":
-			microsoftProvider := oauth.NewMicrosoftProvider(config)
-			registry.providers[providerName] = NewMicrosoftOIDCProvider(microsoftProvider)
+			registry.providers[config.Name] = NewMicrosoftOIDCProvider(oauth.NewMicrosoftProvider(config))
+		{{- end }}
+		
+		{{- if .OIDCFacebook }}
 		case "facebook":
-			facebookProvider := oauth.NewFacebookProvider(config)
-			registry.providers[providerName] = NewFacebookOIDCProvider(facebookProvider)
+			registry.providers[config.Name] = NewFacebookOIDCProvider(oauth.NewFacebookProvider(config))
+		{{- end }}
+		
+		{{- if .OIDCLinkedIn }}
 		case "linkedin":
-			linkedinProvider := oauth.NewLinkedInProvider(config)
-			registry.providers[providerName] = NewLinkedInOIDCProvider(linkedinProvider)
+			registry.providers[config.Name] = NewLinkedInOIDCProvider(oauth.NewLinkedInProvider(config))
+		{{- end }}
+		
+		{{- if .OIDCDiscord }}
+		case "discord":
+			registry.providers[config.Name] = NewDiscordOIDCProvider(oauth.NewDiscordProvider(config))
+		{{- end }}
+		
+		{{- if .OIDCTwitch }}
 		case "twitch":
-			twitchProvider := oauth.NewTwitchProvider(config)
-			registry.providers[providerName] = NewTwitchOIDCProvider(twitchProvider)
+			registry.providers[config.Name] = NewTwitchOIDCProvider(oauth.NewTwitchProvider(config))
+		{{- end }}
 		}
 	}
 

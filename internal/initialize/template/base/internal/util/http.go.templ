@@ -23,8 +23,8 @@ func DefaultHTTPClient() HTTPClient {
 	return &http.Client{Timeout: 10 * time.Second}
 }
 
-// MakeFormRequest performs a form POST request to the specified URL
-func MakeFormRequest(ctx context.Context, url string, form url.Values, result interface{}) error {
+// SendFormRequest performs a form POST request to the specified URL
+func SendFormRequest(ctx context.Context, url string, form url.Values, result interface{}) error {
 	req, err := http.NewRequestWithContext(ctx, "POST", url, strings.NewReader(form.Encode()))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -55,8 +55,8 @@ func MakeFormRequest(ctx context.Context, url string, form url.Values, result in
 	return nil
 }
 
-// MakeJSONRequest performs a JSON request to the specified URL
-func MakeJSONRequest(ctx context.Context, method, url string, payload, result interface{}) error {
+// SendJSONRequest performs a JSON request to the specified URL
+func SendJSONRequest(ctx context.Context, method, url string, payload, result interface{}) error {
 	var body io.Reader
 
 	if payload != nil {
@@ -101,8 +101,8 @@ func MakeJSONRequest(ctx context.Context, method, url string, payload, result in
 	return nil
 }
 
-// MakeAuthenticatedRequest performs a request with Authorization header
-func MakeAuthenticatedRequest(ctx context.Context, method, url, token string, result interface{}) error {
+// SendAuthenticatedRequest performs a request with Authorization header
+func SendAuthenticatedRequest(ctx context.Context, method, url, token string, result interface{}) error {
 	req, err := http.NewRequestWithContext(ctx, method, url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -133,8 +133,8 @@ func MakeAuthenticatedRequest(ctx context.Context, method, url, token string, re
 	return nil
 }
 
-// MakeFormFromMap creates a form reader from a map of key-value pairs
-func MakeFormFromMap(data map[string]string) io.Reader {
+// CreateFormFromMap creates a form reader from a map of key-value pairs
+func CreateFormFromMap(data map[string]string) io.Reader {
 	content := ""
 	for k, v := range data {
 		if content != "" {
@@ -145,8 +145,8 @@ func MakeFormFromMap(data map[string]string) io.Reader {
 	return strings.NewReader(content)
 }
 
-// MakeBasicAuthRequest performs a request with Basic Authentication
-func MakeBasicAuthRequest(ctx context.Context, method, url string, username, password string, form url.Values, result interface{}) error {
+// SendBasicAuthRequest performs a request with Basic Authentication
+func SendBasicAuthRequest(ctx context.Context, method, url string, username, password string, form url.Values, result interface{}) error {
 	req, err := http.NewRequestWithContext(ctx, method, url, strings.NewReader(form.Encode()))
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)

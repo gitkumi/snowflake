@@ -110,22 +110,22 @@ func (d Database) Import() string {
 	}
 }
 
-type BackgroundJob string
+type Queue string
 
 const (
-	BackgroundJobNone  BackgroundJob = "none"
-	BackgroundJobBasic BackgroundJob = "basic"
-	BackgroundJobSQS   BackgroundJob = "sqs"
+	QueueNone  Queue = "none"
+	QueueBasic Queue = "basic"
+	QueueSQS   Queue = "sqs"
 )
 
-var AllBackgroundJobs = []BackgroundJob{
-	BackgroundJobNone,
-	BackgroundJobBasic,
-	BackgroundJobSQS,
+var AllQueues = []Queue{
+	QueueNone,
+	QueueBasic,
+	QueueSQS,
 }
 
-func (t BackgroundJob) IsValid() bool {
-	for _, bg := range AllBackgroundJobs {
+func (t Queue) IsValid() bool {
+	for _, bg := range AllQueues {
 		if bg == t {
 			return true
 		}
@@ -133,6 +133,6 @@ func (t BackgroundJob) IsValid() bool {
 	return false
 }
 
-func (t BackgroundJob) String() string {
+func (t Queue) String() string {
 	return string(t)
 }

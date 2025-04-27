@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"auth/util"
+	"{{ .Name }}/internal/util"
 )
 
 const (
@@ -57,7 +57,7 @@ func (p *GoogleProvider) GetUserInfo(ctx context.Context, token *Token) (*UserIn
 		Locale        string `json:"locale"`
 	}
 
-	if err := util.MakeAuthenticatedRequest(ctx, "GET", googleUserInfoURL, token.AccessToken, &userInfoResp); err != nil {
+	if err := util.SendAuthenticatedRequest(ctx, "GET", googleUserInfoURL, token.AccessToken, &userInfoResp); err != nil {
 		return nil, fmt.Errorf("failed to get Google user info: %w", err)
 	}
 

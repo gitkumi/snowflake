@@ -3,32 +3,30 @@ package test
 import (
 	"{{ .Name }}/internal/application"
 	"{{ .Name }}/internal/env"
-	{{- if ne .Database.String "none"}}
-	"{{ .Name }}/internal/repo"
-	{{- end }}
-	{{- if .SMTP }}
-	"{{ .Name }}/internal/smtp"
-	{{- end }}
-	{{- if .Storage }}
-	"{{ .Name }}/internal/storage"
-	{{- end }}
-	{{- if eq .Database.String "sqlite3" }}
-	"path/filepath"
-	{{- end }}
 	"log"
 	"log/slog"
 	"os"
 
 	"github.com/lmittmann/tint"
-	{{- if ne .Database.String "none" }}
+{{- if ne .Database.String "none"}}
+	"{{ .Name }}/internal/repo"
 	_ "{{ .Database.Import }}"
+	{{- if eq .Database.String "sqlite3" }}
+	"path/filepath"
 	{{- end }}
-	{{- if .Redis }}
+{{- end }}
+{{- if .SMTP }}
+	"{{ .Name }}/internal/smtp"
+{{- end }}
+{{- if .Storage }}
+	"{{ .Name }}/internal/storage"
+{{- end }}
+{{- if .Redis }}
 	"github.com/redis/go-redis/v9"
-	{{- end }}
-	{{- if eq .BackgroundJob "sqs" }}
+{{- end }}
+{{- if eq .Queue "sqs" }}
 	"{{ .Name }}/internal/queue"
-	{{- end }}
+{{- end }}
 )
 
 type TestApplication struct {
@@ -39,13 +37,6 @@ type TestApplication struct {
 }
 
 func Init() (*TestApplication, error) {
-	{{- if eq .Database.String "sqlite3" }}
-	rootPath, err := env.FindFilePath("go.mod")
-	if err != nil {
-		log.Fatal("failed to read environment variables", err)
-	}
-	{{- end }}
-
 	vars, err := env.Read(".env.test")
 	if err != nil {
 		log.Fatal("failed to read environment variables", err)
@@ -56,12 +47,17 @@ func Init() (*TestApplication, error) {
 	})
 
 	{{- if ne .Database.String "none" }}
+	dbConnString := vars.DatabaseConnString
+	{{- if eq .Database.String "sqlite3" }}
+	rootPath, err := env.FindFilePath("go.mod")
+	if err != nil {
+		log.Fatal("failed to find go.mod", err)
+	}
+	dbConnString = filepath.Join(rootPath, "..", vars.DatabaseConnString)
+	{{- end }}
+	
 	db, err := application.NewDB(&application.DBConfig{
-		{{- if eq .Database.String "sqlite3" }}
-		DatabaseConnString: filepath.Join(rootPath, "..", vars.DatabaseConnString),
-		{{- else }}
-		DatabaseConnString: vars.DatabaseConnString,
-		{{- end }}
+		DatabaseConnString: dbConnString,
 		MigrateDatabase:    vars.MigrateDatabase,
 	})
 	if err != nil {
@@ -85,30 +81,30 @@ func Init() (*TestApplication, error) {
 	})
 	{{- end }}
 
-	{{- if eq .BackgroundJob "sqs" }}
+	{{- if eq .Queue "sqs" }}
 	sqs := queue.NewMockQueue()
 	{{- end }}
 
 	app, err := application.New(&application.Config{
 		Environment: vars.Environment,
-		BaseURL: vars.BaseURL,
-		Port:    vars.Port,
+		BaseURL:     vars.BaseURL,
+		Port:        vars.Port,
+		Router:      router,
+		Logger:      slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug})),
 		{{- if ne .Database.String "none" }}
-		DB:      db,
+		DB:          db,
 		{{- end }}
-		Router:  router,
 		{{- if .SMTP }}
-		Mailer:  mailer,
+		Mailer:      mailer,
 		{{- end }}
 		{{- if .Storage }}
-		Storage: storage,
+		Storage:     storage,
 		{{- end }}
-		Logger: slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug})),
 		{{- if .Redis }}
-		Redis: rdb,
+		Redis:       rdb,
 		{{- end }}
-		{{- if eq .BackgroundJob "sqs" }}
-		Queue: sqs,
+		{{- if eq .Queue "sqs" }}
+		Queue:       sqs,
 		{{- end }}
 	})
 	if err != nil {

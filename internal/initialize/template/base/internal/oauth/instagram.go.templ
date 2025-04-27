@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"auth/util"
+	"{{ .Name }}/internal/util"
 )
 
 const (
@@ -53,7 +53,7 @@ func (p *InstagramProvider) GetUserInfo(ctx context.Context, token *Token) (*Use
 		Username string `json:"username"`
 	}
 
-	if err := util.MakeJSONRequest(ctx, "GET", reqURL, nil, &userResp); err != nil {
+	if err := util.SendJSONRequest(ctx, "GET", reqURL, nil, &userResp); err != nil {
 		return nil, fmt.Errorf("failed to get Instagram user info: %w", err)
 	}
 

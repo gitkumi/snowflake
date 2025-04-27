@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"auth/util"
+	"{{ .Name }}/internal/util"
 )
 
 const (
@@ -61,7 +61,7 @@ func (p *FacebookProvider) GetUserInfo(ctx context.Context, token *Token) (*User
 		} `json:"picture"`
 	}
 
-	if err := util.MakeJSONRequest(ctx, "GET", reqURL, nil, &userResp); err != nil {
+	if err := util.SendJSONRequest(ctx, "GET", reqURL, nil, &userResp); err != nil {
 		return nil, fmt.Errorf("failed to get Facebook user info: %w", err)
 	}
 

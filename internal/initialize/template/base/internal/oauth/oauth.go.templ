@@ -1,7 +1,7 @@
 package oauth
 
 import (
-	"auth/util"
+	"{{ .Name }}/internal/util"
 	"context"
 	"fmt"
 	"net/url"
@@ -67,35 +67,60 @@ func NewOAuth(configs []*ProviderConfig) *OAuth {
 		providers: make(map[string]Provider),
 	}
 
-	// Register each provider
 	for _, config := range configs {
 		switch config.Name {
+		{{- if .OAuthGoogle }}
 		case "google":
 			registry.providers[config.Name] = NewGoogleProvider(config)
+		{{- end }}
+		{{- if .OAuthGitHub }}
 		case "github":
 			registry.providers[config.Name] = NewGitHubProvider(config)
+		{{- end }}
+		{{- if .OAuthFacebook }}
 		case "facebook":
 			registry.providers[config.Name] = NewFacebookProvider(config)
+		{{- end }}
+		{{- if .OAuthInstagram }}
 		case "instagram":
 			registry.providers[config.Name] = NewInstagramProvider(config)
+		{{- end }}
+		{{- if .OAuthDiscord }}
 		case "discord":
 			registry.providers[config.Name] = NewDiscordProvider(config)
+		{{- end }}
+		{{- if .OAuthLinkedIn }}
 		case "linkedin":
 			registry.providers[config.Name] = NewLinkedInProvider(config)
+		{{- end }}
+		{{- if .OAuthReddit }}
 		case "reddit":
 			registry.providers[config.Name] = NewRedditProvider(config)
+		{{- end }}
+		{{- if .OAuthTwitch }}
 		case "twitch":
 			registry.providers[config.Name] = NewTwitchProvider(config)
+		{{- end }}
+		{{- if .OAuthStripe }}
 		case "stripe":
 			registry.providers[config.Name] = NewStripeProvider(config)
+		{{- end }}
+		{{- if .OAuthX }}
 		case "x":
 			registry.providers[config.Name] = NewXProvider(config)
+		{{- end }}
+		{{- if .OAuthMicrosoft }}
 		case "microsoft":
 			registry.providers[config.Name] = NewMicrosoftProvider(config)
+		{{- end }}
+		{{- if .OAuthSlack }}
 		case "slack":
 			registry.providers[config.Name] = NewSlackProvider(config)
+		{{- end }}
+		{{- if .OAuthSpotify }}
 		case "spotify":
 			registry.providers[config.Name] = NewSpotifyProvider(config)
+		{{- end }}
 		}
 	}
 
@@ -150,7 +175,7 @@ func ExchangeToken(ctx context.Context, tokenURL string, config ProviderConfig, 
 		IDToken      string `json:"id_token"`
 	}
 
-	if err := util.MakeFormRequest(ctx, tokenURL, form, &tokenResp); err != nil {
+	if err := util.SendFormRequest(ctx, tokenURL, form, &tokenResp); err != nil {
 		return nil, fmt.Errorf("oauth token exchange failed: %w", err)
 	}
 
@@ -181,7 +206,7 @@ func ExchangeTokenWithBasicAuth(ctx context.Context, tokenURL string, config Pro
 		Scope        string `json:"scope,omitempty"`
 	}
 
-	if err := util.MakeBasicAuthRequest(ctx, "POST", tokenURL, config.ClientID, config.ClientSecret, form, &tokenResp); err != nil {
+	if err := util.SendBasicAuthRequest(ctx, "POST", tokenURL, config.ClientID, config.ClientSecret, form, &tokenResp); err != nil {
 		return nil, fmt.Errorf("oauth token exchange failed: %w", err)
 	}
 

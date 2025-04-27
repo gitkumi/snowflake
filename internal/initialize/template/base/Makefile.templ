@@ -47,7 +47,6 @@ build:
 {{- end }}
 
 {{- if ne .Database.String "none" }}
-
 .PHONY: db
 db:
 	goose status
@@ -63,32 +62,29 @@ db.up:
 .PHONY: db.down
 db.down:
 	goose down
+{{- end }}
 
-	{{- if or (ne .Database.String "sqlite3") (eq .Redis) }}
-
+{{- if or (ne .Database.String "sqlite3") .Redis }}
 .PHONY: devenv.up
 devenv.up:
 	docker compose -f dev.yaml up -d
 
 .PHONY: devenv.down
 devenv.down:
-	docker rm container dev_mysql -f
 	docker compose -f dev.yaml down -v
-	{{- end }}
+{{- end }}
 
-	{{- if ne .Database.String "sqlite3" }}
-
+{{- if eq .Database.String "mysql" }}
 .PHONY: db.create
 db.create:
 	docker exec -i dev_mysql \
 		mysql -uroot -pmysql -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};"
-	{{- end }}
 
 .PHONY: db.drop
 db.drop:
 	docker exec -i dev_mysql \
 		mysql -uroot -pmysql -e "DROP DATABASE IF EXISTS {{ .Name }};"
-	{{- end }}
 {{- end }}
+
 %:
 	@:

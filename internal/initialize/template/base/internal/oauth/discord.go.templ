@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"auth/util"
+	"{{ .Name}}/internal/util"
 )
 
 const (
@@ -52,7 +52,7 @@ func (p *DiscordProvider) GetUserInfo(ctx context.Context, token *Token) (*UserI
 		Locale        string `json:"locale"`
 	}
 
-	if err := util.MakeAuthenticatedRequest(ctx, "GET", discordUserInfoURL, token.AccessToken, &userResp); err != nil {
+	if err := util.SendAuthenticatedRequest(ctx, "GET", discordUserInfoURL, token.AccessToken, &userResp); err != nil {
 		return nil, fmt.Errorf("failed to get Discord user info: %w", err)
 	}
 

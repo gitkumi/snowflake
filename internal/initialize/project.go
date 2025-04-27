@@ -9,10 +9,10 @@ import (
 )
 
 type Project struct {
-	Name          string
-	AppType       AppType
-	Database      Database
-	BackgroundJob BackgroundJob
+	Name     string
+	AppType  AppType
+	Database Database
+	Queue    Queue
 
 	SMTP    bool
 	Storage bool
@@ -83,7 +83,7 @@ func NewProject(cfg *Config) *Project {
 	project := &Project{
 		Name:           cfg.Name,
 		Database:       cfg.Database,
-		BackgroundJob:  cfg.BackgroundJob,
+		Queue:          cfg.Queue,
 		AppType:        cfg.AppType,
 		SMTP:           cfg.SMTP,
 		Storage:        cfg.Storage,
@@ -101,11 +101,35 @@ func NewProject(cfg *Config) *Project {
 		OAuthSlack:     cfg.OAuthSlack,
 		OAuthStripe:    cfg.OAuthStripe,
 		OAuthX:         cfg.OAuthX,
-		OIDCFacebook:   cfg.OIDCFacebook,
 		OIDCGoogle:     cfg.OIDCGoogle,
+		OIDCFacebook:   cfg.OIDCFacebook,
 		OIDCLinkedIn:   cfg.OIDCLinkedIn,
 		OIDCMicrosoft:  cfg.OIDCMicrosoft,
 		OIDCTwitch:     cfg.OIDCTwitch,
+		OIDCDiscord:    cfg.OIDCDiscord,
+	}
+
+	if project.OIDCGoogle {
+		project.OAuthGoogle = true
+	}
+	if project.OIDCFacebook {
+		project.OAuthFacebook = true
+	}
+	if project.OIDCLinkedIn {
+		project.OAuthLinkedIn = true
+	}
+	if project.OIDCMicrosoft {
+		project.OAuthMicrosoft = true
+	}
+	if project.OIDCTwitch {
+		project.OAuthTwitch = true
+	}
+	if project.OIDCDiscord {
+		project.OAuthDiscord = true
+	}
+
+	if project.HasOAuth() || project.HasOIDC() {
+		project.Redis = true
 	}
 
 	project.fileExclusions = []*FileExclusion{
@@ -166,13 +190,13 @@ func NewProject(cfg *Config) *Project {
 				"/internal/queue/queue_sqs.go",
 				"/internal/queue/queue_mock.go",
 			},
-			Check: func(p *Project) bool { return p.BackgroundJob == BackgroundJobBasic },
+			Check: func(p *Project) bool { return p.Queue == QueueBasic },
 		},
 		{
 			FilePaths: []string{
 				"/internal/application/task.go",
 			},
-			Check: func(p *Project) bool { return p.BackgroundJob == BackgroundJobSQS },
+			Check: func(p *Project) bool { return p.Queue == QueueSQS },
 		},
 		{
 			FilePaths: []string{
@@ -181,11 +205,11 @@ func NewProject(cfg *Config) *Project {
 				"/internal/queue/queue_sqs.go",
 				"/internal/queue/queue_mock.go",
 			},
-			Check: func(p *Project) bool { return p.BackgroundJob == BackgroundJobNone },
+			Check: func(p *Project) bool { return p.Queue == QueueNone },
 		},
-		// Handler files exclusions
 		{
 			FilePaths: []string{
+				"/internal/util/http.go",
 				"/internal/application/handler/oauth_handler.go",
 				"/internal/application/service/oauth_service.go",
 			},
@@ -198,7 +222,6 @@ func NewProject(cfg *Config) *Project {
 			},
 			Check: func(p *Project) bool { return !p.HasOIDC() },
 		},
-		// OAuth file exclusions
 		{
 			FilePaths: []string{
 				"/internal/oauth/google.go",
@@ -283,7 +306,6 @@ func NewProject(cfg *Config) *Project {
 			},
 			Check: func(p *Project) bool { return !p.HasOAuth() },
 		},
-		// OIDC file exclusions
 		{
 			FilePaths: []string{
 				"/internal/oidc/google.go",
@@ -313,6 +335,12 @@ func NewProject(cfg *Config) *Project {
 				"/internal/oidc/twitch.go",
 			},
 			Check: func(p *Project) bool { return !p.OIDCTwitch },
+		},
+		{
+			FilePaths: []string{
+				"/internal/oidc/discord.go",
+			},
+			Check: func(p *Project) bool { return !p.OIDCDiscord },
 		},
 		{
 			FilePaths: []string{

@@ -14,7 +14,7 @@ func Command() *cobra.Command {
 	var (
 		quiet          bool
 		database       string
-		backgroundJob  string
+		queue          string
 		appType        string
 		outputDir      string
 		git            bool
@@ -80,22 +80,22 @@ func Command() *cobra.Command {
 				log.Fatalf("Invalid app type: %s. Must be one of: %v", appType, initialize.AllAppTypes)
 			}
 
-			backgroundJobEnum := initialize.BackgroundJob(backgroundJob)
-			if !backgroundJobEnum.IsValid() {
-				log.Fatalf("Invalid app type: %s. Must be one of: %v", backgroundJob, initialize.AllBackgroundJobs)
+			queueEnum := initialize.Queue(queue)
+			if !queueEnum.IsValid() {
+				log.Fatalf("Invalid app type: %s. Must be one of: %v", queue, initialize.AllQueues)
 			}
 
 			err := initialize.Run(&initialize.Config{
-				Quiet:         quiet,
-				Name:          args[0],
-				Database:      dbEnum,
-				BackgroundJob: backgroundJobEnum,
-				AppType:       appTypeEnum,
-				Git:           git,
-				OutputDir:     outputDir,
-				SMTP:          smtp,
-				Storage:       storage,
-				Redis:         redis,
+				Quiet:     quiet,
+				Name:      args[0],
+				Database:  dbEnum,
+				Queue:     queueEnum,
+				AppType:   appTypeEnum,
+				Git:       git,
+				OutputDir: outputDir,
+				SMTP:      smtp,
+				Storage:   storage,
+				Redis:     redis,
 			})
 			if err != nil {
 				log.Fatal(err.Error())
@@ -105,7 +105,7 @@ func Command() *cobra.Command {
 
 	cmd.Flags().StringVarP(&appType, "app-type", "t", "api", fmt.Sprintf("App type %v", initialize.AllAppTypes))
 	cmd.Flags().StringVarP(&database, "database", "d", "none", fmt.Sprintf("Database type %v", initialize.AllDatabases))
-	cmd.Flags().StringVarP(&backgroundJob, "background-job", "b", "none", fmt.Sprintf("Background Job type %v", initialize.AllBackgroundJobs))
+	cmd.Flags().StringVarP(&queue, "queue", "q", "none", fmt.Sprintf("Queue type %v", initialize.AllQueues))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "Disable project generation messages")
 	cmd.Flags().BoolVar(&git, "git", true, "Initialize git")

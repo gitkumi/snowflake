@@ -4,26 +4,6 @@ import (
 	"{{ .Name }}/internal/application/handler"
 	"{{ .Name }}/internal/application/service"
 	"{{ .Name }}/internal/env"
-	{{- if ne .Database.String "none" }}
-	"database/sql"
-	"{{ .Name }}/internal/repo"
-	{{- end }}
-	{{- if .SMTP }}
-	"{{ .Name }}/internal/smtp"
-	{{- end }}
-	{{- if .Storage }}
-	"{{ .Name }}/internal/storage"
-	{{- end }}
-	"{{ .Name }}/internal/oauth"
-	"{{ .Name }}/internal/oidc"
-	{{- if .Redis }}
-	"github.com/redis/go-redis/v9"
-	{{- end }}
-	{{- if eq .BackgroundJob "sqs" }}
-	"{{ .Name }}/internal/queue"
-	{{- else if eq .BackgroundJob "basic" }}
-	"sync"
-	{{- end }}
 	"context"
 	"errors"
 	"fmt"
@@ -36,62 +16,92 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	{{- if ne .Database.String "none" }}
+	"database/sql"
+	"{{ .Name }}/internal/repo"
+	{{- end }}
+	{{- if .SMTP }}
+	"{{ .Name }}/internal/smtp"
+	{{- end }}
+	{{- if .Storage }}
+	"{{ .Name }}/internal/storage"
+	{{- end }}
+	{{- if .Redis }}
+	"github.com/redis/go-redis/v9"
+	{{- end }}
+	{{- if eq .Queue "sqs" }}
+	"{{ .Name }}/internal/queue"
+	{{- else if eq .Queue "basic" }}
+	"sync"
+	{{- end }}
+
+	{{- if .HasOAuth }}
+	"{{ .Name }}/internal/oauth"
+	{{- end }}
+
+	{{- if .HasOIDC }}
+	"{{ .Name }}/internal/oidc"
+	{{- end }}
 )
 
 type Handlers struct {
+	health *handler.HealthHandler
 	{{- if ne .Database.String "none" }}
 	book   *handler.BookHandler
 	{{- end }}
-	health *handler.HealthHandler
 	{{- if eq .AppType "web"}}
 	html   *handler.HTMLHandler
 	{{- end }}
+
+	{{- if .HasOAuth }}
 	oauth  *handler.OAuthHandler
+	{{- end }}
+
+	{{- if .HasOIDC }}
 	oidc   *handler.OIDCHandler
+	{{- end }}
 }
 
 type Application struct {
 	Environment env.Environment
 	baseURL  string
 	port     int
-	{{- if eq .BackgroundJob "basic" }}
+	{{- if eq .Queue "basic" }}
 	wg       sync.WaitGroup
 	{{- end }}
 	handlers *Handlers
 
 	Logger  *slog.Logger
 	Router  *gin.Engine
-	{{- if .SMTP }}
-	Mailer  smtp.Mailer
-	{{- end }}
-	{{- if .Storage }}
-	Storage storage.Storage
-	{{- end }}
 }
 
 type Config struct {
 	BaseURL string
 	Port    int
 	Router  *gin.Engine
-	{{- if ne .Database.String "none" }}
-	DB      *sql.DB
-	{{- end }}
-	{{- if .SMTP }}
-	Mailer  smtp.Mailer
-	{{- end }}
-	{{- if .Storage }}
-	Storage storage.Storage
-	{{- end }}
-	Logger      *slog.Logger
+	Logger  *slog.Logger
 	Environment env.Environment
-	{{- if .Redis }}
-	Redis *redis.Client
-	{{- end }}
-	{{- if eq .BackgroundJob "sqs" }}
+{{- if ne .Database.String "none" }}
+	DB      *sql.DB
+{{- end }}
+{{- if .SMTP }}
+	Mailer  smtp.Mailer
+{{- end }}
+{{- if .Storage }}
+	Storage storage.Storage
+{{- end }}
+{{- if .Redis }}
+	Redis   *redis.Client
+{{- end }}
+{{- if eq .Queue "sqs" }}
 	Queue   queue.Queue
-	{{- end }}
-	OAuth       *oauth.OAuth
-	OIDC        *oidc.OIDC
+{{- end }}
+{{- if .HasOAuth }}
+	OAuth   *oauth.OAuth
+{{- end }}
+{{- if .HasOIDC }}
+	OIDC    *oidc.OIDC
+{{- end }}
 }
 
 func New(cfg *Config) (*Application, error) {
@@ -102,7 +112,7 @@ func New(cfg *Config) (*Application, error) {
 	{{- if .Redis }}
 	// cfg.Redis
 	{{- end }}
-	{{- if eq .BackgroundJob "sqs" }}
+	{{- if eq .Queue "sqs" }}
 	// cfg.Queue
 	{{- end }}
 
@@ -113,39 +123,40 @@ func New(cfg *Config) (*Application, error) {
 	bookHandler := handler.NewBookHandler(bookService)
 	{{- end }}
 
-	{{- if .Storage }}
-		{{- if ne .Database.String "none" }}
-	healthService := service.NewHealthService(cfg.DB, cfg.Storage)
-		{{- else }}
-	healthService := service.NewHealthService(cfg.Storage)
-		{{- end }}
-	{{- else }}
-
-		{{- if ne .Database.String "none" }}
-	healthService := service.NewHealthService(cfg.DB)
-		{{- else }}
-	healthService := service.NewHealthService()
-		{{- end }}
-	{{- end }}
+	healthService := service.NewHealthService(
+		{{- if ne .Database.String "none" }}cfg.DB,{{- end }}
+		{{- if .Storage }}cfg.Storage,{{- end }}
+		{{- if .Redis }}cfg.Redis,{{- end }}
+	)
 	healthHandler := handler.NewHealthHandler(healthService)
 
 	{{- if eq .AppType "web"}}
 	htmlHandler := handler.NewHTMLHandler()
 	{{- end }}
 
+	{{- if .HasOAuth }}
 	oauthService := service.NewOAuthService(cfg.OAuth, cfg.Redis)
 	oauthHandler := handler.NewOAuthHandler(oauthService)
+	{{- end }}
 
+	{{- if .HasOIDC }}
 	oidcService := service.NewOIDCService(cfg.OIDC, cfg.Redis)
 	oidcHandler := handler.NewOIDCHandler(oidcService)
+	{{- end }}
 
 	handlers := &Handlers{
+		health: healthHandler,
 		{{- if ne .Database.String "none" }}
 		book: bookHandler,
 		{{- end }}
-		health: healthHandler,
 		{{- if eq .AppType "web"}}
-		html:   htmlHandler,
+		html: htmlHandler,
+		{{- end }}
+		{{- if .HasOAuth }}
+		oauth: oauthHandler,
+		{{- end }}
+		{{- if .HasOIDC }}
+		oidc: oidcHandler,
 		{{- end }}
 	}
 
@@ -195,7 +206,7 @@ func (app *Application) Run() {
 		log.Println("listen and serve error: ", err)
 	}
 
-	{{- if eq .BackgroundJob "basic" }}
+	{{- if eq .Queue "basic" }}
 	app.wg.Wait()
 	{{- end }}
 }

@@ -7,33 +7,28 @@ import (
 
 	"{{ .Name }}/internal/application"
 	"{{ .Name }}/internal/env"
-	{{- if .SMTP }}
-	"{{ .Name }}/internal/smtp"
-	{{- end }}
-	{{- if .Storage }}
-	"{{ .Name }}/internal/storage"
-	{{- end }}
-
 	"github.com/lmittmann/tint"
-	{{- if ne .Database.String "none" }}
+{{- if ne .Database.String "none" }}
 	_ "{{.Database.Import}}"
-	{{- end }}
-
-	{{- if .Redis }}
+{{- end }}
+{{- if .SMTP }}
+	"{{ .Name }}/internal/smtp"
+{{- end }}
+{{- if .Storage }}
+	"{{ .Name }}/internal/storage"
+{{- end }}
+{{- if .Redis }}
 	"github.com/redis/go-redis/v9"
-	{{- end }}
-
-	{{- if eq .BackgroundJob "sqs" }}
+{{- end }}
+{{- if eq .Queue "sqs" }}
 	"{{ .Name }}/internal/queue"
-	{{- end }}
-
-	{{- if .HasOAuth }}
+{{- end }}
+{{- if .HasOAuth }}
 	"{{ .Name }}/internal/oauth"
-	{{- end }}
-
-	{{- if .HashOIDC }}
+{{- end }}
+{{- if .HasOIDC }}
 	"{{ .Name }}/internal/oidc"
-	{{- end }}
+{{- end }}
 )
 
 func main() {
@@ -90,7 +85,7 @@ func main() {
 		DB:       vars.RedisDB,
 	})
 	{{- end }}
-	{{- if eq .BackgroundJob "sqs" }}
+	{{- if eq .Queue "sqs" }}
 	sqs := queue.NewMockQueue()
 	// TODO: Uncomment this after setting up your SQS 
 	// sqs := queue.NewSQSQueue(&queue.SQSQueueConfig{
@@ -119,16 +114,16 @@ func main() {
 		Redis: rdb,
 		{{- end }}
 		Logger:      slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.LevelDebug})),
-		{{- if eq .BackgroundJob "sqs" }}
+		{{- if eq .Queue "sqs" }}
 		Queue:       sqs,
-		{{- end }},
-
-		{{- if .HasOAuth }}
-			OAuth: newOAuthRegistry(vars),
 		{{- end }}
 
-		{{- if .HashOIDC }}
-			OIDC: newOIDCRegistry(vars),
+		{{- if .HasOAuth }}
+		OAuth: newOAuthRegistry(vars),
+		{{- end }}
+
+		{{- if .HasOIDC }}
+		OIDC: newOIDCRegistry(vars),
 		{{- end }}
 	})
 	if err != nil {
@@ -321,16 +316,6 @@ func newOIDCRegistry(vars *env.EnvironmentVariables) *oidc.OIDC {
 	})
 	{{- end }}
 
-	{{- if .OIDCTwitch }}
-	oidcProviders = append(oidcProviders, &oauth.ProviderConfig{
-		Name:         "twitch",
-		ClientID:     vars.OAuthTwitchClientID,
-		ClientSecret: vars.OAuthTwitchClientSecret,
-		RedirectURL:  vars.OIDCTwitchRedirectURL,
-		Scopes:       []string{"openid", "profile", "email"},
-	})
-	{{- end }}
-
 	{{- if .OIDCDiscord }}
 	oidcProviders = append(oidcProviders, &oauth.ProviderConfig{
 		Name:         "discord",
@@ -341,12 +326,12 @@ func newOIDCRegistry(vars *env.EnvironmentVariables) *oidc.OIDC {
 	})
 	{{- end }}
 
-	{{- if .OIDCSlack }}
+	{{- if .OIDCTwitch }}
 	oidcProviders = append(oidcProviders, &oauth.ProviderConfig{
-		Name:         "slack",
-		ClientID:     vars.OAuthSlackClientID,
-		ClientSecret: vars.OAuthSlackClientSecret,
-		RedirectURL:  vars.OIDCSlackRedirectURL,
+		Name:         "twitch",
+		ClientID:     vars.OAuthTwitchClientID,
+		ClientSecret: vars.OAuthTwitchClientSecret,
+		RedirectURL:  vars.OIDCTwitchRedirectURL,
 		Scopes:       []string{"openid", "profile", "email"},
 	})
 	{{- end }}

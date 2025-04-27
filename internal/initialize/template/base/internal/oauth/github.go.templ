@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"auth/util"
+	"{{ .Name }}/internal/util"
 )
 
 const (
@@ -64,7 +64,7 @@ func (p *GitHubProvider) Exchange(ctx context.Context, code string) (*Token, err
 	req.Header.Set("Accept", "application/json")
 
 	// Use form data instead of JSON for GitHub
-	form := util.MakeFormFromMap(data)
+	form := util.CreateFormFromMap(data)
 	req.Body = io.NopCloser(form)
 
 	client := util.DefaultHTTPClient()
