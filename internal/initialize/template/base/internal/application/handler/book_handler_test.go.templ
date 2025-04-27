@@ -12,25 +12,14 @@ import (
 	"testing"
 )
 
-var testServer *test.TestApplication
-
-func TestMain(m *testing.M) {
-	ts, err := test.Init()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	testServer = ts
-	m.Run()
-}
-
 func TestListBook(t *testing.T) {
-	_ = testServer.CreateBookFixture(repo.CreateBookParams{})
-	_ = testServer.CreateBookFixture(repo.CreateBookParams{})
+	ts, _ := test.Init()
+	_ = ts.CreateBookFixture(repo.CreateBookParams{})
+	_ = ts.CreateBookFixture(repo.CreateBookParams{})
 
 	rr := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/books", nil)
-	testServer.Application.Router.ServeHTTP(rr, req)
+	ts.Application.Router.ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Fatalf("Expected status %d, got %d", http.StatusOK, rr.Code)
@@ -49,11 +38,12 @@ func TestListBook(t *testing.T) {
 }
 
 func TestGetBook(t *testing.T) {
-	book := testServer.CreateBookFixture(repo.CreateBookParams{})
+	ts, _ := test.Init()
+	book := ts.CreateBookFixture(repo.CreateBookParams{})
 
 	rr := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/books/"+strconv.FormatInt(book.ID, 10), nil)
-	testServer.Application.Router.ServeHTTP(rr, req)
+	ts.Application.Router.ServeHTTP(rr, req)
 
 	if rr.Code != http.StatusOK {
 		t.Fatalf("Expected status %d, got %d", http.StatusOK, rr.Code)
@@ -73,6 +63,8 @@ func TestGetBook(t *testing.T) {
 }
 
 func TestCreateBook(t *testing.T) {
+	ts, _ := test.Init()
+
 	testCases := []struct {
 		name       string
 		input      dto.CreateBook
@@ -107,7 +99,7 @@ func TestCreateBook(t *testing.T) {
 			req, _ := http.NewRequest("POST", "/api/books", bytes.NewBuffer(jsonValue))
 			req.Header.Set("Content-Type", "application/json")
 
-			testServer.Application.Router.ServeHTTP(rr, req)
+			ts.Application.Router.ServeHTTP(rr, req)
 
 			if rr.Code != tc.statusCode {
 				t.Fatalf("Expected %d got %d", tc.statusCode, rr.Code)
@@ -124,7 +116,8 @@ func TestCreateBook(t *testing.T) {
 }
 
 func TestUpdateBook(t *testing.T) {
-	book := testServer.CreateBookFixture(repo.CreateBookParams{})
+	ts, _ := test.Init()
+	book := ts.CreateBookFixture(repo.CreateBookParams{})
 
 	testCases := []struct {
 		name         string
@@ -153,7 +146,7 @@ func TestUpdateBook(t *testing.T) {
 			req, _ := http.NewRequest("PATCH", "/api/books/"+strconv.FormatInt(tc.bookID, 10), bytes.NewBuffer(jsonValue))
 			req.Header.Set("Content-Type", "application/json")
 
-			testServer.Application.Router.ServeHTTP(rr, req)
+			ts.Application.Router.ServeHTTP(rr, req)
 			if tc.expectedCode != rr.Code {
 				t.Fatalf("Expected %d got %d", tc.expectedCode, rr.Code)
 			}
@@ -162,7 +155,8 @@ func TestUpdateBook(t *testing.T) {
 }
 
 func TestDeleteBook(t *testing.T) {
-	book := testServer.CreateBookFixture(repo.CreateBookParams{})
+	ts, _ := test.Init()
+	book := ts.CreateBookFixture(repo.CreateBookParams{})
 
 	testCases := []struct {
 		name         string
@@ -181,7 +175,7 @@ func TestDeleteBook(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, _ := http.NewRequest("DELETE", "/api/books/"+strconv.FormatInt(tc.bookID, 10), nil)
 
-			testServer.Application.Router.ServeHTTP(rr, req)
+			ts.Application.Router.ServeHTTP(rr, req)
 
 			if tc.expectedCode != rr.Code {
 				t.Fatalf("Expected %d got %d", tc.expectedCode, rr.Code)
@@ -190,7 +184,7 @@ func TestDeleteBook(t *testing.T) {
 			if tc.expectedCode == http.StatusOK {
 				rr := httptest.NewRecorder()
 				req, _ := http.NewRequest("GET", "/api/books/"+strconv.FormatInt(tc.bookID, 10), nil)
-				testServer.Application.Router.ServeHTTP(rr, req)
+				ts.Application.Router.ServeHTTP(rr, req)
 
 				if rr.Code != http.StatusNotFound {
 					t.Fatalf("Expected %d got %d", http.StatusNotFound, rr.Code)
