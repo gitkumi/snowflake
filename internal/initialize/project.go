@@ -18,6 +18,26 @@ type Project struct {
 	Storage bool
 	Redis   bool
 
+	OAuthGoogle    bool
+	OAuthDiscord   bool
+	OAuthGithub    bool
+	OAuthInstagram bool
+	OAuthMicrosoft bool
+	OAuthReddit    bool
+	OAuthSpotify   bool
+	OAuthTwitch    bool
+	OAuthFacebook  bool
+	OAuthLinkedin  bool
+	OAuthSlack     bool
+	OAuthStripe    bool
+	OAuthX         bool
+
+	OIDCFacebook  bool
+	OIDCGoogle    bool
+	OIDCLinkedin  bool
+	OIDCMicrosoft bool
+	OIDCTwitch    bool
+
 	fileExclusions []*FileExclusion
 	fileRenames    []*FileRename
 }
@@ -35,13 +55,31 @@ type FileExclusion struct {
 
 func NewProject(cfg *Config) *Project {
 	project := &Project{
-		Name:          cfg.Name,
-		Database:      cfg.Database,
-		BackgroundJob: cfg.BackgroundJob,
-		AppType:       cfg.AppType,
-		SMTP:          cfg.SMTP,
-		Storage:       cfg.Storage,
-		Redis:         cfg.Redis,
+		Name:           cfg.Name,
+		Database:       cfg.Database,
+		BackgroundJob:  cfg.BackgroundJob,
+		AppType:        cfg.AppType,
+		SMTP:           cfg.SMTP,
+		Storage:        cfg.Storage,
+		Redis:          cfg.Redis,
+		OAuthGoogle:    cfg.OAuthGoogle,
+		OAuthDiscord:   cfg.OAuthDiscord,
+		OAuthGithub:    cfg.OAuthGithub,
+		OAuthInstagram: cfg.OAuthInstagram,
+		OAuthMicrosoft: cfg.OAuthMicrosoft,
+		OAuthReddit:    cfg.OAuthReddit,
+		OAuthSpotify:   cfg.OAuthSpotify,
+		OAuthTwitch:    cfg.OAuthTwitch,
+		OAuthFacebook:  cfg.OAuthFacebook,
+		OAuthLinkedin:  cfg.OAuthLinkedin,
+		OAuthSlack:     cfg.OAuthSlack,
+		OAuthStripe:    cfg.OAuthStripe,
+		OAuthX:         cfg.OAuthX,
+		OIDCFacebook:  cfg.OIDCFacebook,
+		OIDCGoogle:    cfg.OIDCGoogle,
+		OIDCLinkedin:  cfg.OIDCLinkedin,
+		OIDCMicrosoft: cfg.OIDCMicrosoft,
+		OIDCTwitch:    cfg.OIDCTwitch,
 	}
 
 	project.fileExclusions = []*FileExclusion{

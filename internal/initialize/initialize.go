@@ -26,6 +26,26 @@ type Config struct {
 	SMTP    bool
 	Storage bool
 	Redis   bool
+
+	OAuthGoogle    bool
+	OAuthDiscord   bool
+	OAuthGithub    bool
+	OAuthInstagram bool
+	OAuthMicrosoft bool
+	OAuthReddit    bool
+	OAuthSpotify   bool
+	OAuthTwitch    bool
+	OAuthFacebook  bool
+	OAuthLinkedin  bool
+	OAuthSlack     bool
+	OAuthStripe    bool
+	OAuthX         bool
+
+	OIDCFacebook  bool
+	OIDCGoogle    bool
+	OIDCLinkedin  bool
+	OIDCMicrosoft bool
+	OIDCTwitch    bool
 }
 
 func Run(cfg *Config) error {
