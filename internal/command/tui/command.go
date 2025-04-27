@@ -19,6 +19,8 @@ func Command() *cobra.Command {
 			database := initialize.AllDatabases[0]
 			backgroundJob := initialize.AllBackgroundJobs[0]
 			selectedFeatures := []string{"Git"}
+			selectedOAuth := []string{}
+			selectedOIDC := []string{}
 
 			projectNameGroup := huh.NewGroup(
 				huh.NewInput().
@@ -69,12 +71,48 @@ func Command() *cobra.Command {
 					Value(&backgroundJob),
 			)
 
+			oauthGroup := huh.NewGroup(
+				huh.NewMultiSelect[string]().
+					Title("Add OAuth providers").
+					Options(
+						huh.NewOption("Google", "Google"),
+						huh.NewOption("Discord", "Discord"),
+						huh.NewOption("Github", "Github"),
+						huh.NewOption("Instagram", "Instagram"),
+						huh.NewOption("Microsoft", "Microsoft"),
+						huh.NewOption("Reddit", "Reddit"),
+						huh.NewOption("Spotify", "Spotify"),
+						huh.NewOption("Twitch", "Twitch"),
+						huh.NewOption("Facebook", "Facebook"),
+						huh.NewOption("Linkedin", "Linkedin"),
+						huh.NewOption("Slack", "Slack"),
+						huh.NewOption("Stripe", "Stripe"),
+						huh.NewOption("X", "X"),
+					).
+					Value(&selectedOAuth),
+			)
+
+			oidcGroup := huh.NewGroup(
+				huh.NewMultiSelect[string]().
+					Title("Add OIDC providers").
+					Options(
+						huh.NewOption("Facebook", "Facebook"),
+						huh.NewOption("Google", "Google"),
+						huh.NewOption("Linkedin", "Linkedin"),
+						huh.NewOption("Microsoft", "Microsoft"),
+						huh.NewOption("Twitch", "Twitch"),
+					).
+					Value(&selectedOIDC),
+			)
+
 			initialForm := huh.NewForm(
 				projectNameGroup,
 				appTypeGroup,
 				databaseGroup,
 				featuresGroup,
 				backgroundJobGroup,
+				oauthGroup,
+				oidcGroup,
 			)
 
 			if err := initialForm.Run(); err != nil {
@@ -99,6 +137,27 @@ func Command() *cobra.Command {
 			cfg.SMTP = featureEnabled("SMTP")
 			cfg.Storage = featureEnabled("Storage")
 			cfg.Redis = featureEnabled("Redis")
+
+			// Set OAuth providers
+			cfg.OAuthGoogle = contains(selectedOAuth, "Google")
+			cfg.OAuthDiscord = contains(selectedOAuth, "Discord")
+			cfg.OAuthGithub = contains(selectedOAuth, "Github")
+			cfg.OAuthInstagram = contains(selectedOAuth, "Instagram")
+			cfg.OAuthMicrosoft = contains(selectedOAuth, "Microsoft")
+			cfg.OAuthReddit = contains(selectedOAuth, "Reddit")
+			cfg.OAuthSpotify = contains(selectedOAuth, "Spotify")
+			cfg.OAuthTwitch = contains(selectedOAuth, "Twitch")
+			cfg.OAuthFacebook = contains(selectedOAuth, "Facebook")
+			cfg.OAuthLinkedin = contains(selectedOAuth, "Linkedin")
+			cfg.OAuthSlack = contains(selectedOAuth, "Slack")
+			cfg.OAuthStripe = contains(selectedOAuth, "Stripe")
+			cfg.OAuthX = contains(selectedOAuth, "X")
+
+			cfg.OIDCFacebook = contains(selectedOIDC, "Facebook")
+			cfg.OIDCGoogle = contains(selectedOIDC, "Google")
+			cfg.OIDCLinkedin = contains(selectedOIDC, "Linkedin")
+			cfg.OIDCMicrosoft = contains(selectedOIDC, "Microsoft")
+			cfg.OIDCTwitch = contains(selectedOIDC, "Twitch")
 
 			if err := initialize.Run(cfg); err != nil {
 				fmt.Printf("error creating project: %v\n", err)
