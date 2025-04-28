@@ -12,15 +12,34 @@ import (
 
 func Command() *cobra.Command {
 	var (
-		quiet         bool
-		database      string
-		backgroundJob string
-		appType       string
-		outputDir     string
-		git           bool
-		smtp          bool
-		storage       bool
-		redis         bool
+		quiet          bool
+		database       string
+		queue          string
+		appType        string
+		outputDir      string
+		git            bool
+		smtp           bool
+		storage        bool
+		redis          bool
+		oauthGoogle    bool
+		oauthDiscord   bool
+		oauthGitHub    bool
+		oauthInstagram bool
+		oauthMicrosoft bool
+		oauthReddit    bool
+		oauthSpotify   bool
+		oauthTwitch    bool
+		oauthFacebook  bool
+		oauthLinkedIn  bool
+		oauthSlack     bool
+		oauthStripe    bool
+		oauthX         bool
+		oidcFacebook   bool
+		oidcGoogle     bool
+		oidcLinkedIn   bool
+		oidcMicrosoft  bool
+		oidcTwitch     bool
+		oidcDiscord    bool
 	)
 
 	cmd := &cobra.Command{
@@ -61,22 +80,22 @@ func Command() *cobra.Command {
 				log.Fatalf("Invalid app type: %s. Must be one of: %v", appType, initialize.AllAppTypes)
 			}
 
-			backgroundJobEnum := initialize.BackgroundJob(backgroundJob)
-			if !backgroundJobEnum.IsValid() {
-				log.Fatalf("Invalid app type: %s. Must be one of: %v", backgroundJob, initialize.AllBackgroundJobs)
+			queueEnum := initialize.Queue(queue)
+			if !queueEnum.IsValid() {
+				log.Fatalf("Invalid app type: %s. Must be one of: %v", queue, initialize.AllQueues)
 			}
 
 			err := initialize.Run(&initialize.Config{
-				Quiet:         quiet,
-				Name:          args[0],
-				Database:      dbEnum,
-				BackgroundJob: backgroundJobEnum,
-				AppType:       appTypeEnum,
-				Git:           git,
-				OutputDir:     outputDir,
-				SMTP:          smtp,
-				Storage:       storage,
-				Redis:         redis,
+				Quiet:     quiet,
+				Name:      args[0],
+				Database:  dbEnum,
+				Queue:     queueEnum,
+				AppType:   appTypeEnum,
+				Git:       git,
+				OutputDir: outputDir,
+				SMTP:      smtp,
+				Storage:   storage,
+				Redis:     redis,
 			})
 			if err != nil {
 				log.Fatal(err.Error())
@@ -86,13 +105,33 @@ func Command() *cobra.Command {
 
 	cmd.Flags().StringVarP(&appType, "app-type", "t", "api", fmt.Sprintf("App type %v", initialize.AllAppTypes))
 	cmd.Flags().StringVarP(&database, "database", "d", "none", fmt.Sprintf("Database type %v", initialize.AllDatabases))
-	cmd.Flags().StringVarP(&backgroundJob, "background-job", "b", "none", fmt.Sprintf("Background Job type %v", initialize.AllBackgroundJobs))
+	cmd.Flags().StringVarP(&queue, "queue", "q", "none", fmt.Sprintf("Queue type %v", initialize.AllQueues))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "Disable project generation messages")
 	cmd.Flags().BoolVar(&git, "git", true, "Initialize git")
 	cmd.Flags().BoolVar(&smtp, "smtp", false, "Add SMTP")
 	cmd.Flags().BoolVar(&storage, "storage", false, "Add Storage (S3)")
 	cmd.Flags().BoolVar(&redis, "redis", false, "Add Redis (comes with ratelimit middleware)")
+
+	cmd.Flags().BoolVar(&oauthGoogle, "oauth-google", false, "Add Google OAuth")
+	cmd.Flags().BoolVar(&oauthDiscord, "oauth-discord", false, "Add Discord OAuth")
+	cmd.Flags().BoolVar(&oauthGitHub, "oauth-github", false, "Add GitHub OAuth")
+	cmd.Flags().BoolVar(&oauthInstagram, "oauth-instagram", false, "Add Instagram OAuth")
+	cmd.Flags().BoolVar(&oauthMicrosoft, "oauth-microsoft", false, "Add Microsoft OAuth")
+	cmd.Flags().BoolVar(&oauthReddit, "oauth-reddit", false, "Add Reddit OAuth")
+	cmd.Flags().BoolVar(&oauthSpotify, "oauth-spotify", false, "Add Spotify OAuth")
+	cmd.Flags().BoolVar(&oauthTwitch, "oauth-twitch", false, "Add Twitch OAuth")
+	cmd.Flags().BoolVar(&oauthFacebook, "oauth-facebook", false, "Add Facebook OAuth")
+	cmd.Flags().BoolVar(&oauthLinkedIn, "oauth-linkedin", false, "Add LinkedIn OAuth")
+	cmd.Flags().BoolVar(&oauthSlack, "oauth-slack", false, "Add Slack OAuth")
+	cmd.Flags().BoolVar(&oauthStripe, "oauth-stripe", false, "Add Stripe OAuth")
+	cmd.Flags().BoolVar(&oauthX, "oauth-x", false, "Add X OAuth")
+	cmd.Flags().BoolVar(&oidcFacebook, "oidc-facebook", false, "Add Facebook OIDC")
+	cmd.Flags().BoolVar(&oidcGoogle, "oidc-google", false, "Add Google OIDC")
+	cmd.Flags().BoolVar(&oidcLinkedIn, "oidc-linkedin", false, "Add LinkedIn OIDC")
+	cmd.Flags().BoolVar(&oidcMicrosoft, "oidc-microsoft", false, "Add Microsoft OIDC")
+	cmd.Flags().BoolVar(&oidcTwitch, "oidc-twitch", false, "Add Twitch OIDC")
+	cmd.Flags().BoolVar(&oidcDiscord, "oidc-discord", false, "Add Discord OIDC")
 
 	return cmd
 }

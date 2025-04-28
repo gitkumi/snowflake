@@ -17,8 +17,10 @@ func Command() *cobra.Command {
 			projectName := ""
 			appType := initialize.AllAppTypes[0]
 			database := initialize.AllDatabases[0]
-			backgroundJob := initialize.AllBackgroundJobs[0]
+			queue := initialize.AllQueues[0]
 			selectedFeatures := []string{"Git"}
+			selectedOAuth := []string{}
+			selectedOIDC := []string{}
 
 			projectNameGroup := huh.NewGroup(
 				huh.NewInput().
@@ -58,15 +60,36 @@ func Command() *cobra.Command {
 					Value(&selectedFeatures),
 			)
 
-			backgroundJobGroup := huh.NewGroup(
-				huh.NewSelect[initialize.BackgroundJob]().
+			queueGroup := huh.NewGroup(
+				huh.NewSelect[initialize.Queue]().
 					Title("Select queue").
 					Options(
-						huh.NewOption("None", initialize.BackgroundJobNone),
-						huh.NewOption("Basic (sync.WaitGroup)", initialize.BackgroundJobBasic),
-						huh.NewOption("SQS", initialize.BackgroundJobSQS),
+						huh.NewOption("None", initialize.QueueNone),
+						huh.NewOption("Basic (sync.WaitGroup)", initialize.QueueBasic),
+						huh.NewOption("SQS", initialize.QueueSQS),
 					).
-					Value(&backgroundJob),
+					Value(&queue),
+			)
+
+			oauthGroup := huh.NewGroup(
+				huh.NewMultiSelect[string]().
+					Title("Add OAuth providers (requires Redis)").
+					Options(
+						huh.NewOption("Google", "Google"),
+						huh.NewOption("Discord", "Discord"),
+						huh.NewOption("GitHub", "GitHub"),
+						huh.NewOption("Instagram", "Instagram"),
+						huh.NewOption("Microsoft", "Microsoft"),
+						huh.NewOption("Reddit", "Reddit"),
+						huh.NewOption("Spotify", "Spotify"),
+						huh.NewOption("Twitch", "Twitch"),
+						huh.NewOption("Facebook", "Facebook"),
+						huh.NewOption("LinkedIn", "LinkedIn"),
+						huh.NewOption("Slack", "Slack"),
+						huh.NewOption("Stripe", "Stripe"),
+						huh.NewOption("X", "X"),
+					).
+					Value(&selectedOAuth),
 			)
 
 			initialForm := huh.NewForm(
@@ -74,31 +97,70 @@ func Command() *cobra.Command {
 				appTypeGroup,
 				databaseGroup,
 				featuresGroup,
-				backgroundJobGroup,
+				queueGroup,
+				oauthGroup,
 			)
 
 			if err := initialForm.Run(); err != nil {
-				fmt.Printf("error running form: %v\n", err)
+				fmt.Printf("error running initial form: %v\n", err)
 				return
 			}
 
-			featureEnabled := func(name string) bool {
-				for _, f := range selectedFeatures {
-					if f == name {
-						return true
-					}
+			oidcProviders := []string{"Facebook", "Google", "LinkedIn", "Microsoft", "Twitch", "Discord"}
+			var oidcOptions []huh.Option[string]
+
+			for _, provider := range oidcProviders {
+				if contains(selectedOAuth, provider) {
+					oidcOptions = append(oidcOptions, huh.NewOption(provider, provider))
 				}
-				return false
+			}
+
+			if len(oidcOptions) > 0 {
+				oidcForm := huh.NewForm(
+					huh.NewGroup(
+						huh.NewMultiSelect[string]().
+							Title("Add OIDC providers").
+							Options(oidcOptions...).
+							Value(&selectedOIDC),
+					),
+				)
+
+				if err := oidcForm.Run(); err != nil {
+					fmt.Printf("error running OIDC form: %v\n", err)
+					return
+				}
 			}
 
 			cfg.Name = projectName
 			cfg.AppType = appType
 			cfg.Database = database
-			cfg.BackgroundJob = backgroundJob
-			cfg.Git = featureEnabled("Git")
-			cfg.SMTP = featureEnabled("SMTP")
-			cfg.Storage = featureEnabled("Storage")
-			cfg.Redis = featureEnabled("Redis")
+			cfg.Queue = queue
+
+			cfg.Git = contains(selectedFeatures, "Git")
+			cfg.SMTP = contains(selectedFeatures, "SMTP")
+			cfg.Storage = contains(selectedFeatures, "Storage")
+			cfg.Redis = contains(selectedFeatures, "Redis")
+
+			cfg.OAuthGoogle = contains(selectedOAuth, "Google")
+			cfg.OAuthDiscord = contains(selectedOAuth, "Discord")
+			cfg.OAuthGitHub = contains(selectedOAuth, "GitHub")
+			cfg.OAuthInstagram = contains(selectedOAuth, "Instagram")
+			cfg.OAuthMicrosoft = contains(selectedOAuth, "Microsoft")
+			cfg.OAuthReddit = contains(selectedOAuth, "Reddit")
+			cfg.OAuthSpotify = contains(selectedOAuth, "Spotify")
+			cfg.OAuthTwitch = contains(selectedOAuth, "Twitch")
+			cfg.OAuthFacebook = contains(selectedOAuth, "Facebook")
+			cfg.OAuthLinkedIn = contains(selectedOAuth, "LinkedIn")
+			cfg.OAuthSlack = contains(selectedOAuth, "Slack")
+			cfg.OAuthStripe = contains(selectedOAuth, "Stripe")
+			cfg.OAuthX = contains(selectedOAuth, "X")
+
+			cfg.OIDCFacebook = contains(selectedOIDC, "Facebook")
+			cfg.OIDCGoogle = contains(selectedOIDC, "Google")
+			cfg.OIDCLinkedIn = contains(selectedOIDC, "LinkedIn")
+			cfg.OIDCMicrosoft = contains(selectedOIDC, "Microsoft")
+			cfg.OIDCTwitch = contains(selectedOIDC, "Twitch")
+			cfg.OIDCDiscord = contains(selectedOIDC, "Discord")
 
 			if err := initialize.Run(cfg); err != nil {
 				fmt.Printf("error creating project: %v\n", err)

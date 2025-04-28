@@ -54,7 +54,6 @@ func (t TestApplication) CreateBookFixture(custom repo.CreateBookParams) repo.Bo
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	return book
 	{{- else }}
 	return res

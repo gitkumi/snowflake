@@ -1,14 +1,14 @@
 package application
 
 import (
-	{{- if .Redis }}
-	"fmt"
-	"github.com/redis/go-redis/v9"
-	{{- end }}
 	"{{ .Name }}/internal/env"
 	"{{ .Name }}/internal/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+{{- if .Redis }}
+	"fmt"
+	"github.com/redis/go-redis/v9"
+{{- end }}
 )
 
 type RouterConfig struct {
@@ -24,27 +24,40 @@ func NewRouter(cfg *RouterConfig) *gin.Engine {
 	return router
 }
 
-{{- if .Redis }}
-func (app *Application) registerRoutes(redis *redis.Client) error {
+func (app *Application) registerRoutes({{- if .Redis }}redis *redis.Client {{- end }}) error {
+	{{- if .Redis }}
 	rateLimit, err := middleware.RateLimitMiddleware(redis)
 	if err != nil {
 		return fmt.Errorf("failed to init rate limit middleware: %v", err)
 	}
-{{- else }}
-func (app *Application) registerRoutes() error {
-{{- end }}
+	{{- end }}
+
 	if app.Environment == env.Production {
 		{{- if .Redis }}
 		app.Router.Use(rateLimit)
 		{{- end }}
 		app.Router.Use(middleware.LoggingMiddleware(app.Logger))
 	}
+	
 	{{- if eq .AppType "web"}}
 	app.Router.GET("/", app.handlers.html.TopPage)
 
+	{{- if .HasOAuth }}
+	app.Router.GET("/oauth/providers", app.handlers.oauth.ListProviders)
+	app.Router.GET("/oauth/:provider", app.handlers.oauth.Authorize)
+	app.Router.GET("/oauth/:provider/callback", app.handlers.oauth.Callback)
 	{{- end }}
+	
+	{{- if .HasOIDC }}
+	app.Router.GET("/oidc/providers", app.handlers.oidc.ListProviders)
+	app.Router.GET("/oidc/:provider", app.handlers.oidc.Authorize)
+	app.Router.GET("/oidc/:provider/callback", app.handlers.oidc.Callback)
+	{{- end }}
+	{{- end }}
+
 	api := app.Router.Group("/api")
 	api.GET("/health", app.handlers.health.Health)
+	
 	{{- if ne .Database.String "none" }}
 	api.GET("/books", app.handlers.book.ListBook)
 	api.GET("/books/:id", app.handlers.book.GetBook)

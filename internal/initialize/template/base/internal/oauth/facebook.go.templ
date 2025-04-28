@@ -1,0 +1,80 @@
+package oauth
+
+import (
+	"context"
+	"fmt"
+
+	"{{ .Name }}/internal/util"
+)
+
+const (
+	facebookAuthURL     = "https://www.facebook.com/v15.0/dialog/oauth"
+	facebookTokenURL    = "https://graph.facebook.com/v15.0/oauth/access_token"
+	facebookUserInfoURL = "https://graph.facebook.com/v15.0/me"
+)
+
+// FacebookProvider implements the Provider interface for Facebook OAuth2
+type FacebookProvider struct {
+	Config *ProviderConfig
+}
+
+// NewFacebookProvider creates a new Facebook OAuth2 provider
+func NewFacebookProvider(cfg *ProviderConfig) *FacebookProvider {
+	return &FacebookProvider{
+		Config: cfg,
+	}
+}
+
+// Name returns the provider name
+func (p *FacebookProvider) Name() string {
+	return "facebook"
+}
+
+// GetAuthURL returns the Facebook OAuth2 authorization URL
+func (p *FacebookProvider) GetAuthURL(state string) string {
+	return BuildAuthURL(facebookAuthURL, *p.Config, state, nil)
+}
+
+// Exchange exchanges the authorization code for an access token
+func (p *FacebookProvider) Exchange(ctx context.Context, code string) (*Token, error) {
+	return ExchangeToken(ctx, facebookTokenURL, *p.Config, code)
+}
+
+// GetUserInfo retrieves the user's information using the access token
+func (p *FacebookProvider) GetUserInfo(ctx context.Context, token *Token) (*UserInfo, error) {
+	// Facebook requires specifying fields we want to retrieve
+	fields := "id,email,name,first_name,last_name,picture.type(large)"
+
+	reqURL := fmt.Sprintf("%s?fields=%s&access_token=%s",
+		facebookUserInfoURL, fields, token.AccessToken)
+
+	var userResp struct {
+		ID        string `json:"id"`
+		Email     string `json:"email"`
+		Name      string `json:"name"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Picture   struct {
+			Data struct {
+				URL string `json:"url"`
+			} `json:"data"`
+		} `json:"picture"`
+	}
+
+	if err := util.SendJSONRequest(ctx, "GET", reqURL, nil, &userResp); err != nil {
+		return nil, fmt.Errorf("failed to get Facebook user info: %w", err)
+	}
+
+	return &UserInfo{
+		ID:           userResp.ID,
+		Email:        userResp.Email,
+		Name:         userResp.Name,
+		GivenName:    userResp.FirstName,
+		FamilyName:   userResp.LastName,
+		Picture:      userResp.Picture.Data.URL,
+		ProviderName: p.Name(),
+		// Facebook doesn't provide these fields
+		VerifiedEmail: true, // Facebook requires verified emails
+		Locale:        "",
+	}, nil
+}
