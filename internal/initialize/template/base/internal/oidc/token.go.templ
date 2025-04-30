@@ -38,6 +38,13 @@ func ParseIDToken(idToken string) (*IDTokenClaims, error) {
 	// Store the raw token
 	claims.RawToken = idToken
 
+	// Store the raw audience value for later validation
+	var rawMap map[string]interface{}
+	if err := json.Unmarshal(payloadJSON, &rawMap); err != nil {
+		return nil, fmt.Errorf("failed to parse token claims for raw audience: %w", err)
+	}
+	claims.AudienceRaw = rawMap["aud"]
+
 	return &claims, nil
 }
 
@@ -57,8 +64,23 @@ func ValidateBasicClaims(claims *IDTokenClaims, expectedIssuer, expectedAudience
 	if expectedAudience != "" {
 		// Audience can be a string or an array
 		if claims.Audience != expectedAudience {
-			// TODO: Handle audience as array if needed
-			return ErrInvalidAudience
+			// Handle audience as array if needed
+			audienceArray, ok := claims.AudienceRaw.([]interface{})
+			if !ok {
+				return ErrInvalidAudience
+			}
+			
+			found := false
+			for _, aud := range audienceArray {
+				if audStr, ok := aud.(string); ok && audStr == expectedAudience {
+					found = true
+					break
+				}
+			}
+			
+			if !found {
+				return ErrInvalidAudience
+			}
 		}
 	}
 
