@@ -191,7 +191,7 @@ Run your new project:
 
 	if database == DatabasePostgres || database == DatabaseMySQL || redis {
 		successMessage += `
-  $ make devenv # Initialize the docker dev environment
+  $ make devenv.up # Initialize the docker dev environment
   $ make dev`
 	} else {
 		successMessage += `

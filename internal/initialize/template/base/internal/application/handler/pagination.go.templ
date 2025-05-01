@@ -37,3 +37,11 @@ func getPaginationSettings(c *gin.Context) *PaginationSettings {
 		Offset:  offset,
 	}
 }
+
+func calculateLastPage(total, perPage int) int {
+	lastPage := total / perPage
+	if total%perPage > 0 {
+		lastPage++
+	}
+	return lastPage
+}
