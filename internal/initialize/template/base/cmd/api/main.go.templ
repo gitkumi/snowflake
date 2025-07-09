@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"os"
 
-	"{{ .Name }}/internal/application"
 	"{{ .Name }}/internal/env"
 	"github.com/lmittmann/tint"
 {{- if ne .Database.String "none" }}
@@ -37,12 +36,12 @@ func main() {
 		log.Fatal("failed to read environment variables", err)
 	}
 
-	router := application.NewRouter(&application.RouterConfig{
+	router := NewRouter(&RouterConfig{
 		GinMode: vars.GinMode,
 	})
 
 	{{- if ne .Database.String "none" }}
-	db, err := application.NewDB(&application.DBConfig{
+	db, err := NewDB(&DBConfig{
 		DatabaseConnString: vars.DatabaseConnString,
 		MigrateDatabase:    vars.MigrateDatabase,
 	})
@@ -96,7 +95,7 @@ func main() {
 	// })
 	{{- end }}
 
-	app, err := application.New(&application.Config{
+	app, err := NewApplication(&Config{
 		Environment: vars.Environment,
 		BaseURL: vars.BaseURL,
 		Port:    vars.Port,

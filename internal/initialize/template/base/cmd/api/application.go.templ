@@ -1,8 +1,8 @@
-package application
+package main
 
 import (
-	"{{ .Name }}/internal/application/handler"
-	"{{ .Name }}/internal/application/service"
+	"{{ .Name }}/cmd/api/handler"
+	"{{ .Name }}/cmd/api/service"
 	"{{ .Name }}/internal/env"
 	"context"
 	"errors"
@@ -104,7 +104,7 @@ type Config struct {
 {{- end }}
 }
 
-func New(cfg *Config) (*Application, error) {
+func NewApplication(cfg *Config) (*Application, error) {
 	// Inject these to service when needed:
 	{{- if ne .Database "none" }}
 	// cfg.DB
