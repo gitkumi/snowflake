@@ -476,6 +476,13 @@ func (p *Project) RenameFiles(outputPath string) error {
 		fullOldPath := filepath.Join(outputPath, rename.OldPath)
 		fullNewPath := filepath.Join(outputPath, rename.NewPath)
 
+		// Files can be excluded, skip renaming
+		if _, err := os.Stat(fullOldPath); os.IsNotExist(err) {
+			continue
+		} else if err != nil {
+			return fmt.Errorf("failed to check if file exists %s: %v", fullOldPath, err)
+		}
+
 		targetDir := filepath.Dir(fullNewPath)
 		if err := os.MkdirAll(targetDir, 0777); err != nil {
 			return fmt.Errorf("failed to create directory %s: %v", targetDir, err)
