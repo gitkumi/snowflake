@@ -1,7 +1,11 @@
 package handler_test
 
 import (
-	"{{ .Name }}/internal/dto"
+	{{- if eq .AppType "web"}}
+	"{{ .Name }}/cmd/web/dto"
+	{{- else }}
+	"{{ .Name }}/cmd/api/dto"
+	{{- end }}
 	"{{ .Name }}/internal/repo"
 	"{{ .Name }}/test"
 	"bytes"

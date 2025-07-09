@@ -1,8 +1,13 @@
 package handler
 
 import (
+	{{- if eq .AppType "web"}}
+	"{{ .Name }}/cmd/web/service"
+	"{{ .Name }}/cmd/web/dto"
+	{{- else }}
 	"{{ .Name }}/cmd/api/service"
-	"{{ .Name }}/internal/dto"
+	"{{ .Name }}/cmd/api/dto"
+	{{- end }}
 	"{{ .Name }}/internal/repo"
 	"database/sql"
 	"net/http"

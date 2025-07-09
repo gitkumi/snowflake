@@ -1,8 +1,13 @@
-package main
+package application
 
 import (
-	"{{ .Name }}/cmd/api/handler"
+	{{- if eq .AppType "web"}}
+	"{{ .Name }}/cmd/web/service"
+	"{{ .Name }}/cmd/web/handler"
+	{{- else }}
 	"{{ .Name }}/cmd/api/service"
+	"{{ .Name }}/cmd/api/handler"
+	{{- end }}
 	"{{ .Name }}/internal/env"
 	"context"
 	"errors"
@@ -170,9 +175,9 @@ func NewApplication(cfg *Config) (*Application, error) {
 	}
 
 	{{- if .Redis }}
-	err := s.registerRoutes(cfg.Redis)
+	err := s.RegisterRoutes(cfg.Redis)
 	{{- else }}
-	err := s.registerRoutes()
+	err := s.RegisterRoutes()
 	{{- end }}
 	if err != nil {
 		return nil, err

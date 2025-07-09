@@ -1,7 +1,11 @@
-package test
+package application_test
 
 import (
-	"{{ .Name }}/cmd/api"
+	{{- if eq .AppType "web"}}
+	"{{ .Name }}/cmd/web/application"
+	{{- else }}
+	"{{ .Name }}/cmd/api/application"
+	{{- end }}
 	"{{ .Name }}/internal/env"
 	"log"
 	"log/slog"
@@ -85,7 +89,7 @@ func Init() (*TestApplication, error) {
 	sqs := queue.NewMockQueue()
 	{{- end }}
 
-	app, err := application.New(&application.Config{
+	app, err := application.NewApplication(&application.Config{
 		Environment: vars.Environment,
 		BaseURL:     vars.BaseURL,
 		Port:        vars.Port,

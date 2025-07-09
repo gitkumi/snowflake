@@ -163,7 +163,7 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/internal/html/hello.templ",
+				"/cmd/web/html/hello.templ",
 				"/cmd/api/handler/html_handler.go",
 			},
 			Check: func(p *Project) bool { return p.AppType == AppTypeAPI },
@@ -175,12 +175,13 @@ func NewProject(cfg *Config) *Project {
 				"/static/sql/migrations/00001_books.sql",
 				"/static/sql/queries/books.sql",
 				"/static/static.go",
-				"/cmd/api/db.go",
+				"/cmd/api/application/db.go",
 				"/test/fixtures.go",
 				"/cmd/api/handler/book_handler.go",
 				"/cmd/api/handler/book_handler_test.go",
 				"/cmd/api/service/book_service.go",
-				"/internal/dto/book.go",
+				"/cmd/api/dto/book.go",
+				"/cmd/api/dto/dto.go",
 			},
 			Check: func(p *Project) bool { return p.Database == DatabaseNone },
 		},
@@ -194,13 +195,13 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/cmd/api/task.go",
+				"/cmd/api/application/task.go",
 			},
 			Check: func(p *Project) bool { return p.Queue == QueueSQS },
 		},
 		{
 			FilePaths: []string{
-				"/cmd/api/task.go",
+				"/cmd/api/application/task.go",
 				"/internal/queue/queue.go",
 				"/internal/queue/queue_sqs.go",
 				"/internal/queue/queue_mock.go",
@@ -358,23 +359,28 @@ func NewProject(cfg *Config) *Project {
 			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
 		},
 		{
-			OldPath: "/cmd/api/application.go",
-			NewPath: "/cmd/web/application.go",
+			OldPath: "/cmd/api/application/application.go",
+			NewPath: "/cmd/web/application/application.go",
 			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
 		},
 		{
-			OldPath: "/cmd/api/task.go",
-			NewPath: "/cmd/web/task.go",
+			OldPath: "/cmd/api/application/application_test.go",
+			NewPath: "/cmd/web/application/application_test.go",
 			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
 		},
 		{
-			OldPath: "/cmd/api/router.go",
-			NewPath: "/cmd/web/router.go",
+			OldPath: "/cmd/api/application/task.go",
+			NewPath: "/cmd/web/application/task.go",
 			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
 		},
 		{
-			OldPath: "/cmd/api/db.go",
-			NewPath: "/cmd/web/db.go",
+			OldPath: "/cmd/api/application/router.go",
+			NewPath: "/cmd/web/application/router.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/application/db.go",
+			NewPath: "/cmd/web/application/db.go",
 			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
 		},
 		{
@@ -442,6 +448,17 @@ func NewProject(cfg *Config) *Project {
 			NewPath: "/cmd/web/handler/book_handler_test.go",
 			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
 		},
+
+		{
+			OldPath: "/cmd/api/dto/dto.go",
+			NewPath: "/cmd/web/dto/dto.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/dto/book.go",
+			NewPath: "/cmd/web/dto/book.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
 	}
 
 	return project
@@ -476,25 +493,24 @@ func (p *Project) RenameFiles(outputPath string) error {
 		fullOldPath := filepath.Join(outputPath, rename.OldPath)
 		fullNewPath := filepath.Join(outputPath, rename.NewPath)
 
-		// Files can be excluded, skip renaming
+		// Track the old directory for potential removal if empty later
+		oldDir := path.Dir(fullOldPath)
+		oldDirs[oldDir] = true
+
+		// Check if source file exists, skip if it doesn't (could be excluded)
 		if _, err := os.Stat(fullOldPath); os.IsNotExist(err) {
 			continue
 		} else if err != nil {
 			return fmt.Errorf("failed to check if file exists %s: %v", fullOldPath, err)
 		}
 
-		targetDir := filepath.Dir(fullNewPath)
-		if err := os.MkdirAll(targetDir, 0777); err != nil {
-			return fmt.Errorf("failed to create directory %s: %v", targetDir, err)
+		if err := os.MkdirAll(filepath.Dir(fullNewPath), 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %v", filepath.Dir(fullNewPath), err)
 		}
 
 		if err := os.Rename(fullOldPath, fullNewPath); err != nil {
 			return fmt.Errorf("failed to rename file %s to %s: %v", fullOldPath, fullNewPath, err)
 		}
-
-		// Track the old directory for potential removal if empty later
-		oldDir := path.Dir(fullOldPath)
-		oldDirs[oldDir] = true
 	}
 
 	return RemoveEmptyDirs(oldDirs)
