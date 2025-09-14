@@ -108,6 +108,47 @@ func TestGenerateMySQL(t *testing.T) {
 	}
 }
 
+func TestGenerateAPIApp(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := initialize.Run(&initialize.Config{
+		Quiet:     true,
+		Name:      "acme",
+		Database:  initialize.DatabaseSQLite3,
+		Queue:     initialize.QueueNone,
+		AppType:   initialize.AppTypeAPI,
+		OutputDir: tmpDir,
+		Git:       false,
+		SMTP:      true,
+		Storage:   true,
+		Redis:     true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+		t.Fatal("project directory not created")
+	}
+
+	apiMainPath := filepath.Join(projectDir, "cmd", "api")
+	webMainPath := filepath.Join(projectDir, "cmd", "web")
+	htmlDirPath := filepath.Join(projectDir, "cmd", "web", "html")
+
+	if _, err := os.Stat(apiMainPath); os.IsNotExist(err) {
+		t.Fatal("API directory was not created")
+	}
+
+	if _, err := os.Stat(webMainPath); err == nil {
+		t.Fatal("Web directory should not exist for API app type")
+	}
+
+	if _, err := os.Stat(htmlDirPath); err == nil {
+		t.Fatal("HTML directory should not exist for API app type")
+	}
+}
+
 func TestGenerateWebApp(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -134,7 +175,7 @@ func TestGenerateWebApp(t *testing.T) {
 
 	apiMainPath := filepath.Join(projectDir, "cmd", "api")
 	webMainPath := filepath.Join(projectDir, "cmd", "web")
-	htmlDirPath := filepath.Join(projectDir, "internal", "html")
+	htmlDirPath := filepath.Join(projectDir, "cmd", "web", "html")
 
 	if _, err := os.Stat(webMainPath); os.IsNotExist(err) {
 		t.Fatal("Web directory was not created")
@@ -145,7 +186,7 @@ func TestGenerateWebApp(t *testing.T) {
 	}
 
 	if _, err := os.Stat(htmlDirPath); os.IsNotExist(err) {
-		t.Fatal("HTML directory created for web app type")
+		t.Fatal("HTML directory was not created for Web app type")
 	}
 }
 

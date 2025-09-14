@@ -5,7 +5,11 @@ import (
 	"log/slog"
 	"os"
 
-	"{{ .Name }}/internal/application"
+	{{- if eq .AppType "web"}}
+	"{{ .Name }}/cmd/web/application"
+	{{- else }}
+	"{{ .Name }}/cmd/api/application"
+	{{- end }}
 	"{{ .Name }}/internal/env"
 	"github.com/lmittmann/tint"
 {{- if ne .Database.String "none" }}
@@ -96,7 +100,7 @@ func main() {
 	// })
 	{{- end }}
 
-	app, err := application.New(&application.Config{
+	app, err := application.NewApplication(&application.Config{
 		Environment: vars.Environment,
 		BaseURL: vars.BaseURL,
 		Port:    vars.Port,

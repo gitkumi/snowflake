@@ -1,8 +1,13 @@
 package application
 
 import (
-	"{{ .Name }}/internal/application/handler"
-	"{{ .Name }}/internal/application/service"
+	{{- if eq .AppType "web"}}
+	"{{ .Name }}/cmd/web/service"
+	"{{ .Name }}/cmd/web/handler"
+	{{- else }}
+	"{{ .Name }}/cmd/api/service"
+	"{{ .Name }}/cmd/api/handler"
+	{{- end }}
 	"{{ .Name }}/internal/env"
 	"context"
 	"errors"
@@ -104,7 +109,7 @@ type Config struct {
 {{- end }}
 }
 
-func New(cfg *Config) (*Application, error) {
+func NewApplication(cfg *Config) (*Application, error) {
 	// Inject these to service when needed:
 	{{- if ne .Database "none" }}
 	// cfg.DB
@@ -170,9 +175,9 @@ func New(cfg *Config) (*Application, error) {
 	}
 
 	{{- if .Redis }}
-	err := s.registerRoutes(cfg.Redis)
+	err := s.RegisterRoutes(cfg.Redis)
 	{{- else }}
-	err := s.registerRoutes()
+	err := s.RegisterRoutes()
 	{{- end }}
 	if err != nil {
 		return nil, err

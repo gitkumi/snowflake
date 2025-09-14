@@ -1,7 +1,11 @@
 package handler
 
 import (
-	"{{ .Name }}/internal/application/service"
+	{{- if eq .AppType "web"}}
+	"{{ .Name }}/cmd/web/service"
+	{{- else }}
+	"{{ .Name }}/cmd/api/service"
+	{{- end }}
 	"{{ .Name }}/internal/oidc"
 	"net/http"
 

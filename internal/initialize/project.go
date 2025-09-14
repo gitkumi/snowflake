@@ -163,8 +163,8 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/internal/html/hello.templ",
-				"/internal/application/handler/html_handler.go",
+				"/cmd/web/html/hello.templ",
+				"/cmd/api/handler/html_handler.go",
 			},
 			Check: func(p *Project) bool { return p.AppType == AppTypeAPI },
 		},
@@ -175,12 +175,13 @@ func NewProject(cfg *Config) *Project {
 				"/static/sql/migrations/00001_books.sql",
 				"/static/sql/queries/books.sql",
 				"/static/static.go",
-				"/internal/application/db.go",
+				"/cmd/api/application/db.go",
 				"/test/fixtures.go",
-				"/internal/application/handler/book_handler.go",
-				"/internal/application/handler/book_handler_test.go",
-				"/internal/application/service/book_service.go",
-				"/internal/dto/book.go",
+				"/cmd/api/handler/book_handler.go",
+				"/cmd/api/handler/book_handler_test.go",
+				"/cmd/api/service/book_service.go",
+				"/cmd/api/dto/book.go",
+				"/cmd/api/dto/dto.go",
 			},
 			Check: func(p *Project) bool { return p.Database == DatabaseNone },
 		},
@@ -194,13 +195,13 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/internal/application/task.go",
+				"/cmd/api/application/task.go",
 			},
 			Check: func(p *Project) bool { return p.Queue == QueueSQS },
 		},
 		{
 			FilePaths: []string{
-				"/internal/application/task.go",
+				"/cmd/api/application/task.go",
 				"/internal/queue/queue.go",
 				"/internal/queue/queue_sqs.go",
 				"/internal/queue/queue_mock.go",
@@ -210,15 +211,15 @@ func NewProject(cfg *Config) *Project {
 		{
 			FilePaths: []string{
 				"/internal/util/http.go",
-				"/internal/application/handler/oauth_handler.go",
-				"/internal/application/service/oauth_service.go",
+				"/cmd/api/handler/oauth_handler.go",
+				"/cmd/api/service/oauth_service.go",
 			},
 			Check: func(p *Project) bool { return !p.HasOAuth() },
 		},
 		{
 			FilePaths: []string{
-				"/internal/application/handler/oidc_handler.go",
-				"/internal/application/service/oidc_service.go",
+				"/cmd/api/handler/oidc_handler.go",
+				"/cmd/api/service/oidc_service.go",
 			},
 			Check: func(p *Project) bool { return !p.HasOIDC() },
 		},
@@ -357,6 +358,107 @@ func NewProject(cfg *Config) *Project {
 			NewPath: "/cmd/web/main.go",
 			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
 		},
+		{
+			OldPath: "/cmd/api/application/application.go",
+			NewPath: "/cmd/web/application/application.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/application/application_test.go",
+			NewPath: "/cmd/web/application/application_test.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/application/task.go",
+			NewPath: "/cmd/web/application/task.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/application/router.go",
+			NewPath: "/cmd/web/application/router.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/application/db.go",
+			NewPath: "/cmd/web/application/db.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/service/health_service.go",
+			NewPath: "/cmd/web/service/health_service.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/service/oauth_service.go",
+			NewPath: "/cmd/web/service/oauth_service.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/service/oidc_service.go",
+			NewPath: "/cmd/web/service/oidc_service.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/service/book_service.go",
+			NewPath: "/cmd/web/service/book_service.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/handler/book_handler.go",
+			NewPath: "/cmd/web/handler/book_handler.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/handler/health_handler.go",
+			NewPath: "/cmd/web/handler/health_handler.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/handler/oauth_handler.go",
+			NewPath: "/cmd/web/handler/oauth_handler.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/handler/oidc_handler.go",
+			NewPath: "/cmd/web/handler/oidc_handler.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/handler/pagination.go",
+			NewPath: "/cmd/web/handler/pagination.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/handler/validator.go",
+			NewPath: "/cmd/web/handler/validator.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/handler/response.go",
+			NewPath: "/cmd/web/handler/response.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/handler/html_handler.go",
+			NewPath: "/cmd/web/handler/html_handler.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/handler/book_handler_test.go",
+			NewPath: "/cmd/web/handler/book_handler_test.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+
+		{
+			OldPath: "/cmd/api/dto/dto.go",
+			NewPath: "/cmd/web/dto/dto.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
+		{
+			OldPath: "/cmd/api/dto/book.go",
+			NewPath: "/cmd/web/dto/book.go",
+			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
+		},
 	}
 
 	return project
@@ -391,18 +493,24 @@ func (p *Project) RenameFiles(outputPath string) error {
 		fullOldPath := filepath.Join(outputPath, rename.OldPath)
 		fullNewPath := filepath.Join(outputPath, rename.NewPath)
 
-		targetDir := filepath.Dir(fullNewPath)
-		if err := os.MkdirAll(targetDir, 0777); err != nil {
-			return fmt.Errorf("failed to create directory %s: %v", targetDir, err)
+		// Track the old directory for potential removal if empty later
+		oldDir := path.Dir(fullOldPath)
+		oldDirs[oldDir] = true
+
+		// Check if source file exists, skip if it doesn't (could be excluded)
+		if _, err := os.Stat(fullOldPath); os.IsNotExist(err) {
+			continue
+		} else if err != nil {
+			return fmt.Errorf("failed to check if file exists %s: %v", fullOldPath, err)
+		}
+
+		if err := os.MkdirAll(filepath.Dir(fullNewPath), 0755); err != nil {
+			return fmt.Errorf("failed to create directory %s: %v", filepath.Dir(fullNewPath), err)
 		}
 
 		if err := os.Rename(fullOldPath, fullNewPath); err != nil {
 			return fmt.Errorf("failed to rename file %s to %s: %v", fullOldPath, fullNewPath, err)
 		}
-
-		// Track the old directory for potential removal if empty later
-		oldDir := path.Dir(fullOldPath)
-		oldDirs[oldDir] = true
 	}
 
 	return RemoveEmptyDirs(oldDirs)

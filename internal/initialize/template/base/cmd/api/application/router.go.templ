@@ -24,7 +24,7 @@ func NewRouter(cfg *RouterConfig) *gin.Engine {
 	return router
 }
 
-func (app *Application) registerRoutes({{- if .Redis }}redis *redis.Client {{- end }}) error {
+func (app *Application) RegisterRoutes({{- if .Redis }}redis *redis.Client {{- end }}) error {
 	{{- if .Redis }}
 	rateLimit, err := middleware.RateLimitMiddleware(redis)
 	if err != nil {
