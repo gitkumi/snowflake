@@ -10,13 +10,13 @@ import (
 
 type Project struct {
 	Name     string
-	AppType  AppType
 	Database Database
 	Queue    Queue
 
-	SMTP    bool
-	Storage bool
-	Redis   bool
+	SMTP      bool
+	Storage   bool
+	Redis     bool
+	ServeHTML bool
 
 	OAuthGoogle    bool
 	OAuthDiscord   bool
@@ -84,10 +84,10 @@ func NewProject(cfg *Config) *Project {
 		Name:           cfg.Name,
 		Database:       cfg.Database,
 		Queue:          cfg.Queue,
-		AppType:        cfg.AppType,
 		SMTP:           cfg.SMTP,
 		Storage:        cfg.Storage,
 		Redis:          cfg.Redis,
+		ServeHTML:      cfg.ServeHTML,
 		OAuthGoogle:    cfg.OAuthGoogle,
 		OAuthDiscord:   cfg.OAuthDiscord,
 		OAuthGitHub:    cfg.OAuthGitHub,
@@ -167,10 +167,10 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/cmd/web/html/hello.templ",
 				"/cmd/api/handler/html_handler.go",
+				"/cmd/api/html/hello.templ",
 			},
-			Check: func(p *Project) bool { return true }, // Always exclude for monorepo
+			Check: func(p *Project) bool { return !p.ServeHTML },
 		},
 		{
 			FilePaths: []string{
@@ -360,9 +360,6 @@ func NewProject(cfg *Config) *Project {
 			Check: func(p *Project) bool { return !p.HasOIDC() },
 		},
 	}
-
-	// No file renames needed for monorepo structure
-	project.fileRenames = []*FileRename{}
 
 	return project
 }

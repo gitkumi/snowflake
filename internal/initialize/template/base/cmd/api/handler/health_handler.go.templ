@@ -1,11 +1,7 @@
 package handler
 
 import (
-	{{- if eq .AppType "web"}}
-	"{{ .Name }}/cmd/web/service"
-	{{- else }}
 	"{{ .Name }}/cmd/api/service"
-	{{- end }}
 	"net/http"
 
 	"github.com/gin-gonic/gin"

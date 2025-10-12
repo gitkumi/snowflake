@@ -4,31 +4,6 @@ import (
 	"fmt"
 )
 
-type AppType string
-
-const (
-	AppTypeAPI AppType = "api"
-	AppTypeWeb AppType = "web"
-)
-
-var AllAppTypes = []AppType{
-	AppTypeAPI,
-	AppTypeWeb,
-}
-
-func (t AppType) IsValid() bool {
-	for _, appType := range AllAppTypes {
-		if appType == t {
-			return true
-		}
-	}
-	return false
-}
-
-func (t AppType) String() string {
-	return string(t)
-}
-
 type Database string
 
 const (

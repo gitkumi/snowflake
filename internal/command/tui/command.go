@@ -15,7 +15,6 @@ func Command() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := &initialize.Config{}
 			projectName := ""
-			appType := initialize.AllAppTypes[0]
 			database := initialize.AllDatabases[0]
 			queue := initialize.AllQueues[0]
 			selectedFeatures := []string{"Git"}
@@ -27,13 +26,6 @@ func Command() *cobra.Command {
 					Title("Enter project name").
 					Placeholder("acme").
 					Value(&projectName),
-			)
-
-			appTypeGroup := huh.NewGroup(
-				huh.NewSelect[initialize.AppType]().
-					Title("Select application type").
-					Options(huh.NewOptions(initialize.AllAppTypes...)...).
-					Value(&appType),
 			)
 
 			databaseGroup := huh.NewGroup(
@@ -56,6 +48,7 @@ func Command() *cobra.Command {
 						huh.NewOption("SMTP", "SMTP"),
 						huh.NewOption("S3", "Storage"),
 						huh.NewOption("Redis", "Redis"),
+						huh.NewOption("HTML", "HTML"),
 					).
 					Value(&selectedFeatures),
 			)
@@ -94,7 +87,6 @@ func Command() *cobra.Command {
 
 			initialForm := huh.NewForm(
 				projectNameGroup,
-				appTypeGroup,
 				databaseGroup,
 				featuresGroup,
 				queueGroup,
@@ -132,7 +124,6 @@ func Command() *cobra.Command {
 			}
 
 			cfg.Name = projectName
-			cfg.AppType = appType
 			cfg.Database = database
 			cfg.Queue = queue
 
@@ -140,6 +131,7 @@ func Command() *cobra.Command {
 			cfg.SMTP = contains(selectedFeatures, "SMTP")
 			cfg.Storage = contains(selectedFeatures, "Storage")
 			cfg.Redis = contains(selectedFeatures, "Redis")
+			cfg.ServeHTML = contains(selectedFeatures, "HTML")
 
 			cfg.OAuthGoogle = contains(selectedOAuth, "Google")
 			cfg.OAuthDiscord = contains(selectedOAuth, "Discord")

@@ -18,7 +18,7 @@ run:
 
 .PHONY: test
 test:
-	gotestsum -f testname
+	go test -v ./...
 
 .PHONY: build
 build:

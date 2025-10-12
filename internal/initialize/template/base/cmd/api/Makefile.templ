@@ -20,6 +20,9 @@ build:
 {{- if ne .Database.String "none" }}
 	sqlc generate
 {{- end }}
+{{- if .ServeHTML }}
+	templ generate
+{{- end }}
 	go build -o $(BUILD_DIR)/$(APP_NAME) .
 
 .PHONY: test

@@ -39,8 +39,9 @@ func (app *Application) RegisterRoutes({{- if .Redis }}redis *redis.Client {{- e
 		app.Router.Use(middleware.LoggingMiddleware(app.Logger))
 	}
 	
-	{{- if eq .AppType "web"}}
+	{{- if .ServeHTML }}
 	app.Router.GET("/", app.handlers.html.TopPage)
+	{{- end }}
 
 	{{- if .HasOAuth }}
 	app.Router.GET("/oauth/providers", app.handlers.oauth.ListProviders)
@@ -52,7 +53,6 @@ func (app *Application) RegisterRoutes({{- if .Redis }}redis *redis.Client {{- e
 	app.Router.GET("/oidc/providers", app.handlers.oidc.ListProviders)
 	app.Router.GET("/oidc/:provider", app.handlers.oidc.Authorize)
 	app.Router.GET("/oidc/:provider/callback", app.handlers.oidc.Callback)
-	{{- end }}
 	{{- end }}
 
 	api := app.Router.Group("/api")

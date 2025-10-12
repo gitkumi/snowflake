@@ -1,11 +1,7 @@
 package application_test
 
 import (
-	{{- if eq .AppType "web"}}
-	"{{ .Name }}/cmd/web/application"
-	{{- else }}
 	"{{ .Name }}/cmd/api/application"
-	{{- end }}
 	"{{ .Name }}/internal/env"
 	"log"
 	"log/slog"

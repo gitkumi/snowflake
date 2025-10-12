@@ -16,7 +16,6 @@ func TestGenerateNoDB(t *testing.T) {
 		Name:      "acme",
 		Database:  initialize.DatabaseNone,
 		Queue:     initialize.QueueNone,
-		AppType:   initialize.AppTypeAPI,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -41,7 +40,6 @@ func TestGenerateSQLite3(t *testing.T) {
 		Name:      "acme",
 		Database:  initialize.DatabaseSQLite3,
 		Queue:     initialize.QueueNone,
-		AppType:   initialize.AppTypeAPI,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -66,7 +64,6 @@ func TestGeneratePostgres(t *testing.T) {
 		Name:      "acme",
 		Database:  initialize.DatabasePostgres,
 		Queue:     initialize.QueueNone,
-		AppType:   initialize.AppTypeAPI,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -91,7 +88,6 @@ func TestGenerateMySQL(t *testing.T) {
 		Name:      "acme",
 		Database:  initialize.DatabaseMySQL,
 		Queue:     initialize.QueueNone,
-		AppType:   initialize.AppTypeAPI,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -108,7 +104,7 @@ func TestGenerateMySQL(t *testing.T) {
 	}
 }
 
-func TestGenerateAPIApp(t *testing.T) {
+func TestGenerateWithHTML(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
@@ -116,12 +112,12 @@ func TestGenerateAPIApp(t *testing.T) {
 		Name:      "acme",
 		Database:  initialize.DatabaseSQLite3,
 		Queue:     initialize.QueueNone,
-		AppType:   initialize.AppTypeAPI,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
 		Storage:   true,
 		Redis:     true,
+		ServeHTML: true,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -132,61 +128,9 @@ func TestGenerateAPIApp(t *testing.T) {
 		t.Fatal("project directory not created")
 	}
 
-	apiMainPath := filepath.Join(projectDir, "cmd", "api")
-	webMainPath := filepath.Join(projectDir, "cmd", "web")
-	htmlDirPath := filepath.Join(projectDir, "cmd", "web", "html")
-
-	if _, err := os.Stat(apiMainPath); os.IsNotExist(err) {
-		t.Fatal("API directory was not created")
-	}
-
-	if _, err := os.Stat(webMainPath); err == nil {
-		t.Fatal("Web directory should not exist for API app type")
-	}
-
-	if _, err := os.Stat(htmlDirPath); err == nil {
-		t.Fatal("HTML directory should not exist for API app type")
-	}
-}
-
-func TestGenerateWebApp(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseSQLite3,
-		Queue:     initialize.QueueNone,
-		AppType:   initialize.AppTypeWeb,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
-		Redis:     true,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-
-	apiMainPath := filepath.Join(projectDir, "cmd", "api")
-	webMainPath := filepath.Join(projectDir, "cmd", "web")
-	htmlDirPath := filepath.Join(projectDir, "cmd", "web", "html")
-
-	if _, err := os.Stat(webMainPath); os.IsNotExist(err) {
-		t.Fatal("Web directory was not created")
-	}
-
-	if _, err := os.Stat(apiMainPath); err == nil {
-		t.Fatal("API directory should not exist for Web app type")
-	}
-
-	if _, err := os.Stat(htmlDirPath); os.IsNotExist(err) {
-		t.Fatal("HTML directory was not created for Web app type")
+	htmlHandlerPath := filepath.Join(projectDir, "cmd", "api", "handler", "html_handler.go")
+	if _, err := os.Stat(htmlHandlerPath); os.IsNotExist(err) {
+		t.Fatal("HTML handler was not created when ServeHTML is true")
 	}
 }
 
@@ -198,7 +142,6 @@ func TestGenerateNoSMTP(t *testing.T) {
 		Name:      "acme",
 		Database:  initialize.DatabaseSQLite3,
 		Queue:     initialize.QueueNone,
-		AppType:   initialize.AppTypeAPI,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      false,
@@ -223,7 +166,6 @@ func TestGenerateNoStorage(t *testing.T) {
 		Name:      "acme",
 		Database:  initialize.DatabaseSQLite3,
 		Queue:     initialize.QueueNone,
-		AppType:   initialize.AppTypeAPI,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -248,7 +190,6 @@ func TestGenerateNoRedis(t *testing.T) {
 		Name:      "acme",
 		Database:  initialize.DatabaseSQLite3,
 		Queue:     initialize.QueueNone,
-		AppType:   initialize.AppTypeAPI,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -273,7 +214,6 @@ func TestGenerateQueueBasic(t *testing.T) {
 		Name:      "acme",
 		Database:  initialize.DatabaseSQLite3,
 		Queue:     initialize.QueueBasic,
-		AppType:   initialize.AppTypeAPI,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -298,7 +238,6 @@ func TestGenerateQueueSQS(t *testing.T) {
 		Name:      "acme",
 		Database:  initialize.DatabaseSQLite3,
 		Queue:     initialize.QueueSQS,
-		AppType:   initialize.AppTypeAPI,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -323,7 +262,6 @@ func TestGenerateWithAuthProviders(t *testing.T) {
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
 		Queue:         initialize.QueueNone,
-		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		Git:           false,
 		SMTP:          true,
@@ -347,8 +285,8 @@ func TestGenerateWithAuthProviders(t *testing.T) {
 
 func FuzzGenerate(f *testing.F) {
 	f.Add(
-		true, true, true,
-		0, 0, 0,
+		true, true, true, true,
+		0, 0,
 		// OAuth providers
 		false, false, false, false, false, false, false, false, false, false, false, false, false,
 		// OIDC providers
@@ -356,8 +294,8 @@ func FuzzGenerate(f *testing.F) {
 	)
 
 	f.Fuzz(func(t *testing.T,
-		withSMTP, withStorage, withRedis bool,
-		appTypeInt, dbTypeInt, jobTypeInt int,
+		withSMTP, withStorage, withRedis, withServeHTML bool,
+		dbTypeInt, jobTypeInt int,
 		// OAuth providers
 		withOAuthGoogle, withOAuthDiscord, withOAuthGitHub, withOAuthInstagram, withOAuthMicrosoft,
 		withOAuthReddit, withOAuthSpotify, withOAuthTwitch, withOAuthFacebook, withOAuthLinkedIn,
@@ -367,10 +305,6 @@ func FuzzGenerate(f *testing.F) {
 	) {
 		tmpDir := t.TempDir()
 
-		appTypes := []initialize.AppType{
-			initialize.AppTypeAPI,
-			initialize.AppTypeWeb,
-		}
 		databases := []initialize.Database{
 			initialize.DatabaseSQLite3,
 			initialize.DatabasePostgres,
@@ -383,7 +317,6 @@ func FuzzGenerate(f *testing.F) {
 			initialize.QueueNone,
 		}
 
-		appType := appTypes[abs(appTypeInt)%len(appTypes)]
 		database := databases[abs(dbTypeInt)%len(databases)]
 		queue := queues[abs(jobTypeInt)%len(queues)]
 
@@ -394,7 +327,7 @@ func FuzzGenerate(f *testing.F) {
 			OutputDir:      tmpDir,
 			Database:       database,
 			Queue:          queue,
-			AppType:        appType,
+			ServeHTML:      withServeHTML,
 			SMTP:           withSMTP,
 			Storage:        withStorage,
 			Redis:          withRedis,

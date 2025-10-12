@@ -49,7 +49,7 @@ type Handlers struct {
 	{{- if ne .Database.String "none" }}
 	book   *handler.BookHandler
 	{{- end }}
-	{{- if eq .AppType "web"}}
+	{{- if .ServeHTML }}
 	html   *handler.HTMLHandler
 	{{- end }}
 
@@ -130,7 +130,7 @@ func NewApplication(cfg *Config) (*Application, error) {
 	)
 	healthHandler := handler.NewHealthHandler(healthService)
 
-	{{- if eq .AppType "web"}}
+	{{- if .ServeHTML }}
 	htmlHandler := handler.NewHTMLHandler()
 	{{- end }}
 
@@ -149,7 +149,7 @@ func NewApplication(cfg *Config) (*Application, error) {
 		{{- if ne .Database.String "none" }}
 		book: bookHandler,
 		{{- end }}
-		{{- if eq .AppType "web"}}
+		{{- if .ServeHTML }}
 		html: htmlHandler,
 		{{- end }}
 		{{- if .HasOAuth }}
