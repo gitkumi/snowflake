@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 )
 
-//go:embed base/*
+//go:embed all:base
 var BaseFiles embed.FS
 
 //go:embed fragments/database/*
