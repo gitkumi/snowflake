@@ -278,6 +278,57 @@ func TestGenerateWithAuthProviders(t *testing.T) {
 	}
 }
 
+func TestEnvFilesGenerated(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := initialize.Run(&initialize.Config{
+		Quiet:     true,
+		Name:      "acme",
+		Database:  initialize.DatabaseSQLite3,
+		Queue:     initialize.QueueNone,
+		OutputDir: tmpDir,
+		Git:       false,
+		SMTP:      true,
+		Storage:   true,
+		Redis:     true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+
+	// Check for .env file
+	envPath := filepath.Join(projectDir, "cmd", "app", ".env")
+	if _, err := os.Stat(envPath); os.IsNotExist(err) {
+		t.Fatalf(".env file not created at %s", envPath)
+	}
+
+	// Check for .env.test file
+	envTestPath := filepath.Join(projectDir, "cmd", "app", ".env.test")
+	if _, err := os.Stat(envTestPath); os.IsNotExist(err) {
+		t.Fatalf(".env.test file not created at %s", envTestPath)
+	}
+
+	// Verify .env file has content
+	envContent, err := os.ReadFile(envPath)
+	if err != nil {
+		t.Fatalf("failed to read .env file: %v", err)
+	}
+	if len(envContent) == 0 {
+		t.Fatal(".env file is empty")
+	}
+
+	// Verify .env.test file has content
+	envTestContent, err := os.ReadFile(envTestPath)
+	if err != nil {
+		t.Fatalf("failed to read .env.test file: %v", err)
+	}
+	if len(envTestContent) == 0 {
+		t.Fatal(".env.test file is empty")
+	}
+}
+
 func FuzzGenerate(f *testing.F) {
 	f.Add(
 		true, true, true, true,
