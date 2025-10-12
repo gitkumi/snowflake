@@ -191,11 +191,11 @@ Run your new project:
 
 	if database == DatabasePostgres || database == DatabaseMySQL || redis {
 		successMessage += `
-  $ make api.devenv.up # Initialize the docker dev environment
-  $ make api.dev`
+  $ make app.devenv.up # Initialize the docker dev environment
+  $ make app.dev`
 	} else {
 		successMessage += `
-  $ make api.dev`
+  $ make app.dev`
 	}
 
 	fmt.Println(successMessage)

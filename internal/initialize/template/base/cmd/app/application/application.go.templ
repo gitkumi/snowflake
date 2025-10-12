@@ -1,8 +1,8 @@
 package application
 
 import (
-	"{{ .Name }}/cmd/api/service"
-	"{{ .Name }}/cmd/api/handler"
+	"{{ .Name }}/cmd/app/service"
+	"{{ .Name }}/cmd/app/handler"
 	"{{ .Name }}/internal/env"
 	"context"
 	"errors"
@@ -18,7 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 	{{- if ne .Database.String "none" }}
 	"database/sql"
-	"{{ .Name }}/cmd/api/repo"
+	"{{ .Name }}/cmd/app/repo"
 	{{- end }}
 	{{- if .SMTP }}
 	"{{ .Name }}/internal/smtp"

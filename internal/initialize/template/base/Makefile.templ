@@ -17,6 +17,6 @@ test:
 	go test -v ./...
 
 # Delegate api.* commands to cmd/api/Makefile
-.PHONY: api.%
-api.%:
-	@$(MAKE) -C cmd/api $*
+.PHONY: app.%
+app.%:
+	@$(MAKE) -C cmd/app $*

@@ -1,7 +1,7 @@
 package application_test
 
 import (
-	"{{ .Name }}/cmd/api/application"
+	"{{ .Name }}/cmd/app/application"
 	"{{ .Name }}/internal/env"
 	"log"
 	"log/slog"
@@ -9,7 +9,7 @@ import (
 
 	"github.com/lmittmann/tint"
 {{- if ne .Database.String "none"}}
-	"{{ .Name }}/cmd/api/repo"
+	"{{ .Name }}/cmd/app/repo"
 	_ "{{ .Database.Import }}"
 	{{- if eq .Database.String "sqlite3" }}
 	"path/filepath"

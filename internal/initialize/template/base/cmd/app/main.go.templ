@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"os"
 
-	"{{ .Name }}/cmd/api/application"
-	"{{ .Name }}/cmd/api/env"
+	"{{ .Name }}/cmd/app/application"
+	"{{ .Name }}/cmd/app/env"
 	"github.com/lmittmann/tint"
 {{- if ne .Database.String "none" }}
 	_ "{{.Database.Import}}"

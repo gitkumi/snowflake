@@ -135,7 +135,7 @@ func NewProject(cfg *Config) *Project {
 	project.fileExclusions = []*FileExclusion{
 		{
 			FilePaths: []string{
-				"/cmd/api/dev.yaml",
+				"/cmd/app/dev.yaml",
 				"/dev.yaml",
 				"/Dockerfile",
 			},
@@ -167,30 +167,30 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/cmd/api/handler/html_handler.go",
-				"/cmd/api/html/hello.templ",
+				"/cmd/app/handler/html_handler.go",
+				"/cmd/app/html/hello.templ",
 			},
 			Check: func(p *Project) bool { return !p.ServeHTML },
 		},
 		{
 			FilePaths: []string{
-				"/cmd/api/sqlc.yaml",
+				"/cmd/app/sqlc.yaml",
 				"/sqlc.yaml",
-				"/cmd/api/dev.yaml",
+				"/cmd/app/dev.yaml",
 				"/dev.yaml",
-				"/cmd/api/static/sql/migrations/00001_books.sql",
-				"/cmd/api/static/sql/queries/books.sql",
-				"/cmd/api/static/static.go",
+				"/cmd/app/static/sql/migrations/00001_books.sql",
+				"/cmd/app/static/sql/queries/books.sql",
+				"/cmd/app/static/static.go",
 				"/static/sql/migrations/00001_books.sql",
 				"/static/sql/queries/books.sql",
 				"/static/static.go",
-				"/cmd/api/application/db.go",
+				"/cmd/app/application/db.go",
 				"/test/fixtures.go",
-				"/cmd/api/handler/book_handler.go",
-				"/cmd/api/handler/book_handler_test.go",
-				"/cmd/api/service/book_service.go",
-				"/cmd/api/dto/book.go",
-				"/cmd/api/dto/dto.go",
+				"/cmd/app/handler/book_handler.go",
+				"/cmd/app/handler/book_handler_test.go",
+				"/cmd/app/service/book_service.go",
+				"/cmd/app/dto/book.go",
+				"/cmd/app/dto/dto.go",
 			},
 			Check: func(p *Project) bool { return p.Database == DatabaseNone },
 		},
@@ -204,13 +204,13 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/cmd/api/application/task.go",
+				"/cmd/app/application/task.go",
 			},
 			Check: func(p *Project) bool { return p.Queue == QueueSQS },
 		},
 		{
 			FilePaths: []string{
-				"/cmd/api/application/task.go",
+				"/cmd/app/application/task.go",
 				"/internal/queue/queue.go",
 				"/internal/queue/queue_sqs.go",
 				"/internal/queue/queue_mock.go",
@@ -220,15 +220,15 @@ func NewProject(cfg *Config) *Project {
 		{
 			FilePaths: []string{
 				"/internal/util/http.go",
-				"/cmd/api/handler/oauth_handler.go",
-				"/cmd/api/service/oauth_service.go",
+				"/cmd/app/handler/oauth_handler.go",
+				"/cmd/app/service/oauth_service.go",
 			},
 			Check: func(p *Project) bool { return !p.HasOAuth() },
 		},
 		{
 			FilePaths: []string{
-				"/cmd/api/handler/oidc_handler.go",
-				"/cmd/api/service/oidc_service.go",
+				"/cmd/app/handler/oidc_handler.go",
+				"/cmd/app/service/oidc_service.go",
 			},
 			Check: func(p *Project) bool { return !p.HasOIDC() },
 		},
