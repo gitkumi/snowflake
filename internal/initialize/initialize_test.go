@@ -297,7 +297,7 @@ func TestEnvFilesGenerated(t *testing.T) {
 	}
 
 	projectDir := filepath.Join(tmpDir, "acme")
-	
+
 	// Check for .env file
 	envPath := filepath.Join(projectDir, "cmd", "app", ".env")
 	if _, err := os.Stat(envPath); os.IsNotExist(err) {
