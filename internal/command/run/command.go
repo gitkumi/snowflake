@@ -106,7 +106,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&smtp, "smtp", false, "Add SMTP")
 	cmd.Flags().BoolVar(&storage, "storage", false, "Add Storage (S3)")
 	cmd.Flags().BoolVar(&redis, "redis", false, "Add Redis (comes with ratelimit middleware)")
-	cmd.Flags().BoolVar(&serveHTML, "html", false, "Add HTML serving support with templ")
+	cmd.Flags().BoolVar(&serveHTML, "html", false, "Serve HTML with templ")
 
 	cmd.Flags().BoolVar(&oauthGoogle, "oauth-google", false, "Add Google OAuth")
 	cmd.Flags().BoolVar(&oauthDiscord, "oauth-discord", false, "Add Discord OAuth")

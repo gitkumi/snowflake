@@ -136,8 +136,7 @@ func NewProject(cfg *Config) *Project {
 		{
 			FilePaths: []string{
 				"/cmd/app/dev.yaml",
-				"/dev.yaml",
-				"/Dockerfile",
+				"/cmd/app/Dockerfile",
 			},
 			Check: func(p *Project) bool {
 				return p.Database == DatabaseSQLite3 && !p.Redis
@@ -175,15 +174,10 @@ func NewProject(cfg *Config) *Project {
 		{
 			FilePaths: []string{
 				"/cmd/app/sqlc.yaml",
-				"/sqlc.yaml",
 				"/cmd/app/dev.yaml",
-				"/dev.yaml",
 				"/cmd/app/static/sql/migrations/00001_books.sql",
 				"/cmd/app/static/sql/queries/books.sql",
 				"/cmd/app/static/static.go",
-				"/static/sql/migrations/00001_books.sql",
-				"/static/sql/queries/books.sql",
-				"/static/static.go",
 				"/cmd/app/application/db.go",
 				"/cmd/app/handler/book_handler.go",
 				"/cmd/app/handler/book_handler_test.go",
@@ -359,6 +353,8 @@ func NewProject(cfg *Config) *Project {
 			Check: func(p *Project) bool { return !p.HasOIDC() },
 		},
 	}
+
+	project.fileRenames = []*FileRename{}
 
 	return project
 }
