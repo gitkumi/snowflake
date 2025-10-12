@@ -47,6 +47,9 @@ Supports "sqlite3", "postgres", "mysql"
 
 #### Templating 
 
-Only for "web" app type
-
 - [templ](https://templ.guide) 
+
+
+#### Testing
+
+- [gotestsum](https://github.com/gotestyourself/gotestsum)

@@ -14,7 +14,7 @@ tidy:
 
 .PHONY: test
 test:
-	go test -v ./...
+	gotestsum -f testname
 
 # Delegate api.* commands to cmd/api/Makefile
 .PHONY: app.%
