@@ -185,7 +185,6 @@ func NewProject(cfg *Config) *Project {
 				"/static/sql/queries/books.sql",
 				"/static/static.go",
 				"/cmd/app/application/db.go",
-				"/test/fixtures.go",
 				"/cmd/app/handler/book_handler.go",
 				"/cmd/app/handler/book_handler_test.go",
 				"/cmd/app/service/book_service.go",

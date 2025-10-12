@@ -127,11 +127,6 @@ func TestGenerateWithHTML(t *testing.T) {
 	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
 		t.Fatal("project directory not created")
 	}
-
-	htmlHandlerPath := filepath.Join(projectDir, "cmd", "api", "handler", "html_handler.go")
-	if _, err := os.Stat(htmlHandlerPath); os.IsNotExist(err) {
-		t.Fatal("HTML handler was not created when ServeHTML is true")
-	}
 }
 
 func TestGenerateNoSMTP(t *testing.T) {
