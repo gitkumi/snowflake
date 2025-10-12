@@ -5,12 +5,8 @@ import (
 	"log/slog"
 	"os"
 
-	{{- if eq .AppType "web"}}
-	"{{ .Name }}/cmd/web/application"
-	{{- else }}
 	"{{ .Name }}/cmd/api/application"
-	{{- end }}
-	"{{ .Name }}/internal/env"
+	"{{ .Name }}/cmd/api/env"
 	"github.com/lmittmann/tint"
 {{- if ne .Database.String "none" }}
 	_ "{{.Database.Import}}"

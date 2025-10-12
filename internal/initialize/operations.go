@@ -74,9 +74,9 @@ func runPostCommands(project *Project, outputPath string, quiet bool) error {
 	}
 
 	commands = append(commands, Command{
-		Message: "snowflake: make build",
+		Message: "snowflake: make api.build",
 		Name:    "make",
-		Args:    []string{"build"},
+		Args:    []string{"api.build"},
 	})
 
 	return runCommands(commands, outputPath, quiet)

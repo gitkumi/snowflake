@@ -1,0 +1,103 @@
+APP_NAME := api
+BUILD_DIR := ../../bin
+
+{{- if ne .Database.String "none" }}
+export GOOSE_DBSTRING?={{.Database.ConnString .Name }}
+export GOOSE_DRIVER:={{.Database.Driver}}
+export GOOSE_MIGRATION_DIR:=./static/sql/migrations
+{{- end }}
+
+.PHONY: run
+run:
+	go run *.go
+
+.PHONY: dev
+dev:
+	air
+
+.PHONY: build
+build:
+{{- if ne .Database.String "none" }}
+	sqlc generate
+{{- end }}
+	go build -o $(BUILD_DIR)/$(APP_NAME) .
+
+.PHONY: test
+test:
+	go test -v ./...
+
+.PHONY: test.coverage
+test.coverage:
+	go test -v -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+
+{{- if ne .Database.String "none" }}
+.PHONY: sqlc
+sqlc:
+	sqlc generate
+
+.PHONY: db
+db:
+	goose status
+
+.PHONY: db.gen
+db.gen:
+	goose create $(filter-out $@,$(MAKECMDGOALS)) sql
+
+.PHONY: db.up
+db.up:
+	goose up
+
+.PHONY: db.down
+db.down:
+	goose down
+
+.PHONY: db.reset
+db.reset:
+	goose reset
+	goose up
+{{- end }}
+
+{{- if eq .Database.String "mysql" }}
+.PHONY: db.create
+db.create:
+	docker exec -i dev_{{ .Name }}_mysql \
+		mysql -uroot -pmysql -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};"
+
+.PHONY: db.drop
+db.drop:
+	docker exec -i dev_{{ .Name }}_mysql \
+		mysql -uroot -pmysql -e "DROP DATABASE IF EXISTS {{ .Name }};"
+{{- end }}
+
+.PHONY: docker.build
+docker.build:
+	docker build -f Dockerfile -t {{ .Name }}-$(APP_NAME):latest ../..
+
+.PHONY: docker.run
+docker.run:
+	docker run --rm -p 8080:8080 --env-file .env {{ .Name }}-$(APP_NAME):latest
+
+{{- if or (ne .Database.String "sqlite3") .Redis }}
+.PHONY: devenv.up
+devenv.up:
+	docker compose -f dev.yaml up -d
+
+.PHONY: devenv.down
+devenv.down:
+	docker compose -f dev.yaml down -v
+
+.PHONY: devenv.logs
+devenv.logs:
+	docker compose -f dev.yaml logs -f
+{{- end }}
+
+.PHONY: clean
+clean:
+	rm -f $(BUILD_DIR)/$(APP_NAME)
+	rm -f coverage.out coverage.html
+
+
+%:
+	@:
+

@@ -13,7 +13,7 @@ import (
 
 	"github.com/lmittmann/tint"
 {{- if ne .Database.String "none"}}
-	"{{ .Name }}/internal/repo"
+	"{{ .Name }}/cmd/api/repo"
 	_ "{{ .Database.Import }}"
 	{{- if eq .Database.String "sqlite3" }}
 	"path/filepath"

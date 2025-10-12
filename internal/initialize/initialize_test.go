@@ -323,7 +323,7 @@ func TestGenerateWithAuthProviders(t *testing.T) {
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
 		Queue:         initialize.QueueNone,
-		AppType:       initialize.AppTypeWeb,
+		AppType:       initialize.AppTypeAPI,
 		OutputDir:     tmpDir,
 		Git:           false,
 		SMTP:          true,

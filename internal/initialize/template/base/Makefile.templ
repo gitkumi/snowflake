@@ -1,11 +1,5 @@
-{{- if ne .Database.String "none" }}
-export GOOSE_DBSTRING?={{.Database.ConnString .Name }}
-export GOOSE_DRIVER:={{.Database.Driver}}
-export GOOSE_MIGRATION_DIR:=./static/sql/migrations
-{{- end }}
-
 .PHONY: audit
-audit: 
+audit:
 	go mod tidy -diff
 	go mod verify
 	test -z "$(shell gofmt -l .)" 
@@ -18,73 +12,11 @@ tidy:
 	go mod tidy -v
 	go fmt ./...
 
-.PHONY: run
-run:
-{{- if eq .AppType "web"}}
-	go run cmd/web/*.go
-{{- else }}
-	go run cmd/api/*.go
-{{- end }}
-
 .PHONY: test
 test:
-	gotestsum -f testname
+	go test -v ./...
 
-.PHONY: dev
-dev:
-	air
-
-.PHONY: build
-build:
-{{- if ne .Database.String "none" }}
-	sqlc generate
-{{- end }}
-{{- if eq .AppType "web"}}
-	templ generate
-	go build -o bin/main cmd/web/*.go
-{{- else }}
-	go build -o bin/main cmd/api/*.go
-{{- end }}
-
-{{- if ne .Database.String "none" }}
-.PHONY: db
-db:
-	goose status
-
-.PHONY: db.gen
-db.gen:
-	goose create $(filter-out $@,$(MAKECMDGOALS)) sql
-
-.PHONY: db.up
-db.up:
-	goose up
-
-.PHONY: db.down
-db.down:
-	goose down
-{{- end }}
-
-{{- if or (ne .Database.String "sqlite3") .Redis }}
-.PHONY: devenv.up
-devenv.up:
-	docker compose -f dev.yaml up -d
-
-.PHONY: devenv.down
-devenv.down:
-	docker compose -f dev.yaml down -v
-{{- end }}
-
-{{- if eq .Database.String "mysql" }}
-.PHONY: db.create
-db.create:
-	docker exec -i dev_mysql \
-		mysql -uroot -pmysql -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};"
-
-.PHONY: db.drop
-db.drop:
-	docker exec -i dev_mysql \
-		mysql -uroot -pmysql -e "DROP DATABASE IF EXISTS {{ .Name }};"
-{{- end }}
-
-%:
-	@:
+# Delegate api.* commands to cmd/api/Makefile
+.PHONY: api.%
+api.%:
+	@$(MAKE) -C cmd/api $*
