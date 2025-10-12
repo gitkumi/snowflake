@@ -47,6 +47,8 @@ Supports "sqlite3", "postgres", "mysql"
 
 #### Templating 
 
+Only if "Serve HTML" feature is enabled
+
 - [templ](https://templ.guide) 
 
 
