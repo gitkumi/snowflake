@@ -1,0 +1,42 @@
+package handler
+
+import (
+	"{{ .Name }}/cmd/app/service"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+type HealthHandler struct {
+	Service *service.HealthService
+}
+
+func NewHealthHandler(s *service.HealthService) *HealthHandler {
+	return &HealthHandler{Service: s}
+}
+
+func (h *HealthHandler) Health(c *gin.Context) {
+	response := gin.H{
+		"handler": "ok",
+	}
+
+	{{- if ne .Database.String "none" }}
+	err := h.Service.DB.Ping()
+	if err != nil {
+		response["db"] = "error"
+	} else {
+		response["db"] = "ok"
+	}
+	{{- end }}
+
+	{{- if .Redis }}
+	redisStatus, err := h.Service.Redis.Ping(c).Result()
+	if err != nil {
+		response["redis"] = "error"
+	} else {
+		response["redis"] = redisStatus
+	}
+	{{- end }}
+
+	c.JSON(http.StatusOK, response)
+}

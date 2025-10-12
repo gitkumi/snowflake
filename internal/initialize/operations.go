@@ -65,7 +65,7 @@ func runPostCommands(project *Project, outputPath string, quiet bool) error {
 
 	// Go cannot detect `templ` as a dependency because we only have a single "hello.templ" on the generated project.
 	// TODO: This dependency should automatically be detected by `go mod tidy`
-	if project.AppType == "web" {
+	if project.ServeHTML {
 		commands = append(commands, Command{
 			Message: "",
 			Name:    "go",
@@ -74,9 +74,9 @@ func runPostCommands(project *Project, outputPath string, quiet bool) error {
 	}
 
 	commands = append(commands, Command{
-		Message: "snowflake: make build",
+		Message: "snowflake: make app.build",
 		Name:    "make",
-		Args:    []string{"build"},
+		Args:    []string{"app.build"},
 	})
 
 	return runCommands(commands, outputPath, quiet)

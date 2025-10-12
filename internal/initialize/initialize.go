@@ -19,13 +19,13 @@ type Config struct {
 	Git       bool
 
 	Name     string
-	AppType  AppType
 	Database Database
 	Queue    Queue
 
-	SMTP    bool
-	Storage bool
-	Redis   bool
+	SMTP      bool
+	Storage   bool
+	Redis     bool
+	ServeHTML bool
 
 	OAuthGoogle    bool
 	OAuthDiscord   bool
@@ -191,11 +191,11 @@ Run your new project:
 
 	if database == DatabasePostgres || database == DatabaseMySQL || redis {
 		successMessage += `
-  $ make devenv.up # Initialize the docker dev environment
-  $ make dev`
+  $ make app.devenv.up # Initialize the docker dev environment
+  $ make app.dev`
 	} else {
 		successMessage += `
-  $ make dev`
+  $ make app.dev`
 	}
 
 	fmt.Println(successMessage)

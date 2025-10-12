@@ -1,0 +1,22 @@
+package handler
+
+import (
+	"{{ .Name }}/cmd/app/html"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+type HTMLHandler struct{}
+
+func NewHTMLHandler() *HTMLHandler {
+	return &HTMLHandler{}
+}
+
+func (h *HTMLHandler) TopPage(c *gin.Context) {
+	page := html.HelloPage("world!")
+	
+	if err := page.Render(c.Request.Context(), c.Writer); err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+	}
+} 

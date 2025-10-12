@@ -10,13 +10,13 @@ import (
 
 type Project struct {
 	Name     string
-	AppType  AppType
 	Database Database
 	Queue    Queue
 
-	SMTP    bool
-	Storage bool
-	Redis   bool
+	SMTP      bool
+	Storage   bool
+	Redis     bool
+	ServeHTML bool
 
 	OAuthGoogle    bool
 	OAuthDiscord   bool
@@ -84,10 +84,10 @@ func NewProject(cfg *Config) *Project {
 		Name:           cfg.Name,
 		Database:       cfg.Database,
 		Queue:          cfg.Queue,
-		AppType:        cfg.AppType,
 		SMTP:           cfg.SMTP,
 		Storage:        cfg.Storage,
 		Redis:          cfg.Redis,
+		ServeHTML:      cfg.ServeHTML,
 		OAuthGoogle:    cfg.OAuthGoogle,
 		OAuthDiscord:   cfg.OAuthDiscord,
 		OAuthGitHub:    cfg.OAuthGitHub,
@@ -134,7 +134,10 @@ func NewProject(cfg *Config) *Project {
 
 	project.fileExclusions = []*FileExclusion{
 		{
-			FilePaths: []string{"/dev.yaml"},
+			FilePaths: []string{
+				"/cmd/app/dev.yaml",
+				"/cmd/app/Dockerfile",
+			},
 			Check: func(p *Project) bool {
 				return p.Database == DatabaseSQLite3 && !p.Redis
 			},
@@ -163,25 +166,24 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/cmd/web/html/hello.templ",
-				"/cmd/api/handler/html_handler.go",
+				"/cmd/app/handler/html_handler.go",
+				"/cmd/app/html/hello.templ",
 			},
-			Check: func(p *Project) bool { return p.AppType == AppTypeAPI },
+			Check: func(p *Project) bool { return !p.ServeHTML },
 		},
 		{
 			FilePaths: []string{
-				"/sqlc.yaml",
-				"/dev.yaml",
-				"/static/sql/migrations/00001_books.sql",
-				"/static/sql/queries/books.sql",
-				"/static/static.go",
-				"/cmd/api/application/db.go",
-				"/test/fixtures.go",
-				"/cmd/api/handler/book_handler.go",
-				"/cmd/api/handler/book_handler_test.go",
-				"/cmd/api/service/book_service.go",
-				"/cmd/api/dto/book.go",
-				"/cmd/api/dto/dto.go",
+				"/cmd/app/sqlc.yaml",
+				"/cmd/app/dev.yaml",
+				"/cmd/app/static/sql/migrations/00001_books.sql",
+				"/cmd/app/static/sql/queries/books.sql",
+				"/cmd/app/static/static.go",
+				"/cmd/app/application/db.go",
+				"/cmd/app/handler/book_handler.go",
+				"/cmd/app/handler/book_handler_test.go",
+				"/cmd/app/service/book_service.go",
+				"/cmd/app/dto/book.go",
+				"/cmd/app/dto/dto.go",
 			},
 			Check: func(p *Project) bool { return p.Database == DatabaseNone },
 		},
@@ -195,13 +197,13 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/cmd/api/application/task.go",
+				"/cmd/app/application/task.go",
 			},
 			Check: func(p *Project) bool { return p.Queue == QueueSQS },
 		},
 		{
 			FilePaths: []string{
-				"/cmd/api/application/task.go",
+				"/cmd/app/application/task.go",
 				"/internal/queue/queue.go",
 				"/internal/queue/queue_sqs.go",
 				"/internal/queue/queue_mock.go",
@@ -211,15 +213,15 @@ func NewProject(cfg *Config) *Project {
 		{
 			FilePaths: []string{
 				"/internal/util/http.go",
-				"/cmd/api/handler/oauth_handler.go",
-				"/cmd/api/service/oauth_service.go",
+				"/cmd/app/handler/oauth_handler.go",
+				"/cmd/app/service/oauth_service.go",
 			},
 			Check: func(p *Project) bool { return !p.HasOAuth() },
 		},
 		{
 			FilePaths: []string{
-				"/cmd/api/handler/oidc_handler.go",
-				"/cmd/api/service/oidc_service.go",
+				"/cmd/app/handler/oidc_handler.go",
+				"/cmd/app/service/oidc_service.go",
 			},
 			Check: func(p *Project) bool { return !p.HasOIDC() },
 		},
@@ -352,114 +354,7 @@ func NewProject(cfg *Config) *Project {
 		},
 	}
 
-	project.fileRenames = []*FileRename{
-		{
-			OldPath: "/cmd/api/main.go",
-			NewPath: "/cmd/web/main.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/application/application.go",
-			NewPath: "/cmd/web/application/application.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/application/application_test.go",
-			NewPath: "/cmd/web/application/application_test.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/application/task.go",
-			NewPath: "/cmd/web/application/task.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/application/router.go",
-			NewPath: "/cmd/web/application/router.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/application/db.go",
-			NewPath: "/cmd/web/application/db.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/service/health_service.go",
-			NewPath: "/cmd/web/service/health_service.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/service/oauth_service.go",
-			NewPath: "/cmd/web/service/oauth_service.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/service/oidc_service.go",
-			NewPath: "/cmd/web/service/oidc_service.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/service/book_service.go",
-			NewPath: "/cmd/web/service/book_service.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/handler/book_handler.go",
-			NewPath: "/cmd/web/handler/book_handler.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/handler/health_handler.go",
-			NewPath: "/cmd/web/handler/health_handler.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/handler/oauth_handler.go",
-			NewPath: "/cmd/web/handler/oauth_handler.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/handler/oidc_handler.go",
-			NewPath: "/cmd/web/handler/oidc_handler.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/handler/pagination.go",
-			NewPath: "/cmd/web/handler/pagination.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/handler/validator.go",
-			NewPath: "/cmd/web/handler/validator.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/handler/response.go",
-			NewPath: "/cmd/web/handler/response.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/handler/html_handler.go",
-			NewPath: "/cmd/web/handler/html_handler.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/handler/book_handler_test.go",
-			NewPath: "/cmd/web/handler/book_handler_test.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-
-		{
-			OldPath: "/cmd/api/dto/dto.go",
-			NewPath: "/cmd/web/dto/dto.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-		{
-			OldPath: "/cmd/api/dto/book.go",
-			NewPath: "/cmd/web/dto/book.go",
-			Check:   func(p *Project) bool { return p.AppType == AppTypeWeb },
-		},
-	}
+	project.fileRenames = []*FileRename{}
 
 	return project
 }

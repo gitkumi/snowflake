@@ -15,12 +15,12 @@ func Command() *cobra.Command {
 		quiet          bool
 		database       string
 		queue          string
-		appType        string
 		outputDir      string
 		git            bool
 		smtp           bool
 		storage        bool
 		redis          bool
+		serveHTML      bool
 		oauthGoogle    bool
 		oauthDiscord   bool
 		oauthGitHub    bool
@@ -75,14 +75,9 @@ func Command() *cobra.Command {
 				log.Fatalf("Invalid database type: %s. Must be one of: %v", database, initialize.AllDatabases)
 			}
 
-			appTypeEnum := initialize.AppType(appType)
-			if !appTypeEnum.IsValid() {
-				log.Fatalf("Invalid app type: %s. Must be one of: %v", appType, initialize.AllAppTypes)
-			}
-
 			queueEnum := initialize.Queue(queue)
 			if !queueEnum.IsValid() {
-				log.Fatalf("Invalid app type: %s. Must be one of: %v", queue, initialize.AllQueues)
+				log.Fatalf("Invalid queue type: %s. Must be one of: %v", queue, initialize.AllQueues)
 			}
 
 			err := initialize.Run(&initialize.Config{
@@ -90,12 +85,12 @@ func Command() *cobra.Command {
 				Name:      args[0],
 				Database:  dbEnum,
 				Queue:     queueEnum,
-				AppType:   appTypeEnum,
 				Git:       git,
 				OutputDir: outputDir,
 				SMTP:      smtp,
 				Storage:   storage,
 				Redis:     redis,
+				ServeHTML: serveHTML,
 			})
 			if err != nil {
 				log.Fatal(err.Error())
@@ -103,7 +98,6 @@ func Command() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&appType, "app-type", "t", "api", fmt.Sprintf("App type %v", initialize.AllAppTypes))
 	cmd.Flags().StringVarP(&database, "database", "d", "none", fmt.Sprintf("Database type %v", initialize.AllDatabases))
 	cmd.Flags().StringVarP(&queue, "queue", "q", "none", fmt.Sprintf("Queue type %v", initialize.AllQueues))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
@@ -112,6 +106,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&smtp, "smtp", false, "Add SMTP")
 	cmd.Flags().BoolVar(&storage, "storage", false, "Add Storage (S3)")
 	cmd.Flags().BoolVar(&redis, "redis", false, "Add Redis (comes with ratelimit middleware)")
+	cmd.Flags().BoolVar(&serveHTML, "html", false, "Serve HTML with templ")
 
 	cmd.Flags().BoolVar(&oauthGoogle, "oauth-google", false, "Add Google OAuth")
 	cmd.Flags().BoolVar(&oauthDiscord, "oauth-discord", false, "Add Discord OAuth")

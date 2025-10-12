@@ -1,36 +1,19 @@
 # {{ .Name }}
 
+Snowflake project. 
+
 ## Prerequisite
 
-Install the following tools and check their documentation.
+Install the following tools and check their documentation:
 
 ```sh
 go install github.com/air-verse/air@latest &&
 go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest &&
 go install github.com/pressly/goose/v3/cmd/goose@latest &&
-{{- if eq .AppType "web"}}
-go install github.com/a-h/templ/cmd/templ@latest &&
-{{- end }}
-go install gotest.tools/gotestsum@latest
-````
-
-## Getting Started
-
-{{- if .UsesDockerOnDev }}
-
-0. Start the development container:
-
-```sh
-make devenv.up
+go install github.com/gotestyourself/gotestsum
 ```
 
-Note: `docker compose` is required.
-{{- end }}
-
-1. Start the development environment:
-
-```sh
-make dev
-````
-
-Check the Makefile for more commands.
+### Project-wide Commands
+- `make audit` - Run comprehensive code checks on entire project
+- `make tidy` - Tidy and format all Go code
+- `make test` - Run all tests across the project
