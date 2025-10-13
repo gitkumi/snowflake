@@ -40,7 +40,7 @@ Snowflake is built with these packages. Make sure to check their documentation.
 
 #### Database
 
-Supports "sqlite3", "postgres", "mysql"
+Supports "sqlite3", "postgres", "mysql", "mariadb"
 
 - [sqlc](https://github.com/sqlc-dev/sqlc)
 - [goose](https://github.com/pressly/goose)

@@ -38,6 +38,22 @@
       - mysql_{{ .Name }}_data:/var/lib/mysql
 {{- end }}
 
+{{- define "mariadb" }}
+  mariadb:
+    image: mariadb:11
+    container_name: dev_{{ .Name}}_mariadb
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: mariadb
+      MARIADB_USER: mariadb
+      MARIADB_PASSWORD: mariadb
+      MARIADB_DATABASE: {{ .Name }}
+    volumes:
+      - mariadb_{{ .Name }}_data:/var/lib/mysql
+{{- end }}
+
 {{- $volName := "" -}}
 services:
 {{- if eq .Database.String "postgres" }}
@@ -46,6 +62,9 @@ services:
 {{- else if eq .Database.String "mysql" }}
 {{ template "mysql" . }}
 {{- $volName = printf "mysql_%s_data" .Name }}
+{{- else if eq .Database.String "mariadb" }}
+{{ template "mariadb" . }}
+{{- $volName = printf "mariadb_%s_data" .Name }}
 {{- end }}
 
 {{- if .Redis }}

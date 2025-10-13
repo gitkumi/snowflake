@@ -3,6 +3,7 @@ package initialize_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/gitkumi/snowflake/internal/initialize"
@@ -87,6 +88,30 @@ func TestGenerateMySQL(t *testing.T) {
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseMySQL,
+		Queue:     initialize.QueueNone,
+		OutputDir: tmpDir,
+		Git:       false,
+		SMTP:      true,
+		Storage:   true,
+		Redis:     true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+		t.Fatal("project directory not created")
+	}
+}
+
+func TestGenerateMariaDB(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := initialize.Run(&initialize.Config{
+		Quiet:     true,
+		Name:      "acme",
+		Database:  initialize.DatabaseMariaDB,
 		Queue:     initialize.QueueNone,
 		OutputDir: tmpDir,
 		Git:       false,
@@ -355,6 +380,7 @@ func FuzzGenerate(f *testing.F) {
 			initialize.DatabaseSQLite3,
 			initialize.DatabasePostgres,
 			initialize.DatabaseMySQL,
+			initialize.DatabaseMariaDB,
 			initialize.DatabaseNone,
 		}
 		queues := []initialize.Queue{
@@ -414,4 +440,8 @@ func abs(x int) int {
 		return -x
 	}
 	return x
+}
+
+func containsStr(s, substr string) bool {
+	return strings.Contains(s, substr)
 }

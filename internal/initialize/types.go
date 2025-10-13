@@ -10,6 +10,7 @@ const (
 	DatabaseSQLite3  Database = "sqlite3"
 	DatabasePostgres Database = "postgres"
 	DatabaseMySQL    Database = "mysql"
+	DatabaseMariaDB  Database = "mariadb"
 	DatabaseNone     Database = "none"
 )
 
@@ -18,6 +19,7 @@ var AllDatabases = []Database{
 	DatabaseSQLite3,
 	DatabasePostgres,
 	DatabaseMySQL,
+	DatabaseMariaDB,
 }
 
 func (d Database) String() string {
@@ -41,6 +43,8 @@ func (d Database) ConnString(projectName string) string {
 		return fmt.Sprintf("user=postgres password=postgres dbname=%s host=localhost port=5432 sslmode=disable", projectName)
 	case DatabaseMySQL:
 		return fmt.Sprintf("mysql:mysql@tcp(localhost:3306)/%s?parseTime=true", projectName)
+	case DatabaseMariaDB:
+		return fmt.Sprintf("mariadb:mariadb@tcp(localhost:3306)/%s?parseTime=true", projectName)
 	default:
 		return ""
 	}
@@ -53,6 +57,8 @@ func (d Database) Driver() string {
 	case DatabasePostgres:
 		return "postgres"
 	case DatabaseMySQL:
+		return "mysql"
+	case DatabaseMariaDB:
 		return "mysql"
 	default:
 		return ""
@@ -67,6 +73,8 @@ func (d Database) SQLCEngine() string {
 		return "postgresql"
 	case DatabaseMySQL:
 		return "mysql"
+	case DatabaseMariaDB:
+		return "mysql"
 	default:
 		return ""
 	}
@@ -79,6 +87,8 @@ func (d Database) Import() string {
 	case DatabasePostgres:
 		return "github.com/lib/pq"
 	case DatabaseMySQL:
+		return "github.com/go-sql-driver/mysql"
+	case DatabaseMariaDB:
 		return "github.com/go-sql-driver/mysql"
 	default:
 		return ""

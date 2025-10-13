@@ -36,6 +36,7 @@ func Command() *cobra.Command {
 						huh.NewOption("SQLite3", initialize.DatabaseSQLite3),
 						huh.NewOption("Postgres", initialize.DatabasePostgres),
 						huh.NewOption("MySQL", initialize.DatabaseMySQL),
+						huh.NewOption("MariaDB", initialize.DatabaseMariaDB),
 					).
 					Value(&database),
 			)

@@ -15,7 +15,7 @@ func NewBookService(q *repo.Queries) *BookService {
 }
 
 func (s *BookService) CreateBook(ctx context.Context, input dto.CreateBook) (repo.Book, error) {
-	{{- if eq .Database.String "mysql"}}
+	{{- if or (eq .Database.String "mysql") (eq .Database.String "mariadb")}}
 	result, err := s.Query.CreateBook(ctx, input.Repo())
 	if err != nil {
 		return repo.Book{}, err
@@ -38,7 +38,7 @@ func (s *BookService) UpdateBook(ctx context.Context, id int64, input dto.Update
 	return repo.Book{}, err
 	}
 
-	{{- if eq .Database.String "mysql"}}
+	{{- if or (eq .Database.String "mysql") (eq .Database.String "mariadb")}}
 	err = s.Query.UpdateBook(ctx, input.Repo(current))
 	if err != nil {
 		return repo.Book{}, err
