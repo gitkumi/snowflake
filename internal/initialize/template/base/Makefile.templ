@@ -12,7 +12,6 @@ tidy:
 	go mod tidy -v
 	go fmt ./...
 
-
 # Delegate api.* commands to cmd/api/Makefile
 .PHONY: app.%
 app.%:

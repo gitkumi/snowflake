@@ -1,19 +1,19 @@
 # {{ .Name }}
 
-Snowflake project. 
+Snowflake project.
 
-## Prerequisite
-
-Install the following tools and check their documentation:
+## Setup
 
 ```sh
-go install github.com/air-verse/air@latest &&
-go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest &&
-go install github.com/pressly/goose/v3/cmd/goose@latest &&
-go install github.com/gotestyourself/gotestsum
+make app.tools.install
 ```
 
-### Project-wide Commands
-- `make audit` - Run comprehensive code checks on entire project
-- `make tidy` - Tidy and format all Go code
-- `make test` - Run all tests across the project
+Note: Be sure to check the docs of each tools.
+
+## Commands
+
+**Project-wide:**
+- `make audit` - Code quality checks
+- `make tidy` - Format and tidy code
+
+**App-specific:** See `cmd/app/Makefile` for development commands.
