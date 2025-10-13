@@ -39,6 +39,8 @@ type Project struct {
 	OIDCTwitch    bool
 	OIDCDiscord   bool
 
+	Billing Billing
+
 	fileExclusions []*FileExclusion
 	fileRenames    []*FileRename
 }
@@ -107,6 +109,7 @@ func NewProject(cfg *Config) *Project {
 		OIDCMicrosoft:  cfg.OIDCMicrosoft,
 		OIDCTwitch:     cfg.OIDCTwitch,
 		OIDCDiscord:    cfg.OIDCDiscord,
+		Billing:        cfg.Billing,
 	}
 
 	if project.OIDCGoogle {
@@ -351,6 +354,17 @@ func NewProject(cfg *Config) *Project {
 				"/internal/oidc/token.go",
 			},
 			Check: func(p *Project) bool { return !p.HasOIDC() },
+		},
+		{
+			FilePaths: []string{
+				"/internal/billing/billing.go",
+				"/internal/billing/billing_stripe.go",
+				"/cmd/app/dto/billing.go",
+				"/cmd/app/service/billing_service.go",
+				"/cmd/app/handler/billing_handler.go",
+				"/cmd/app/handler/billing_webhook_handler.go",
+			},
+			Check: func(p *Project) bool { return p.Billing == BillingNone },
 		},
 	}
 

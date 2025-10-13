@@ -1,0 +1,353 @@
+package dto
+
+import "github.com/stripe/stripe-go/v83"
+
+
+type CreateCustomer struct {
+	Email       string            `json:"email" binding:"required,email"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Metadata    map[string]string `json:"metadata"`
+}
+
+
+type UpdateCustomer struct {
+	Email       string            `json:"email" binding:"omitempty,email"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Metadata    map[string]string `json:"metadata"`
+}
+
+
+type CreatePaymentIntent struct {
+	Amount              int64             `json:"amount" binding:"required,min=1"`
+	Currency            string            `json:"currency" binding:"required"`
+	CustomerID          string            `json:"customer_id"`
+	Description         string            `json:"description"`
+	PaymentMethodTypes  []string          `json:"payment_method_types"`
+	Metadata            map[string]string `json:"metadata"`
+	ReceiptEmail        string            `json:"receipt_email" binding:"omitempty,email"`
+	SetupFutureUsage    string            `json:"setup_future_usage"`
+	AutomaticPaymentMethods *AutomaticPaymentMethods `json:"automatic_payment_methods"`
+}
+
+
+type AutomaticPaymentMethods struct {
+	Enabled        bool     `json:"enabled"`
+	AllowRedirects string   `json:"allow_redirects"`
+}
+
+
+type CreateSubscription struct {
+	CustomerID            string            `json:"customer_id" binding:"required"`
+	PriceID               string            `json:"price_id" binding:"required"`
+	Quantity              int64             `json:"quantity"`
+	TrialPeriodDays       int64             `json:"trial_period_days"`
+	Metadata              map[string]string `json:"metadata"`
+	PaymentBehavior       string            `json:"payment_behavior"`
+	ProrationBehavior     string            `json:"proration_behavior"`
+	DefaultPaymentMethod  string            `json:"default_payment_method"`
+}
+
+
+type UpdateSubscription struct {
+	PriceID               string            `json:"price_id"`
+	Quantity              int64             `json:"quantity"`
+	Metadata              map[string]string `json:"metadata"`
+	ProrationBehavior     string            `json:"proration_behavior"`
+	DefaultPaymentMethod  string            `json:"default_payment_method"`
+}
+
+
+type CancelSubscription struct {
+	InvoiceNow bool `json:"invoice_now"`
+	Prorate    bool `json:"prorate"`
+}
+
+
+type CreateCheckoutSession struct {
+	SuccessURL         string                    `json:"success_url" binding:"required"`
+	CancelURL          string                    `json:"cancel_url" binding:"required"`
+	CustomerID         string                    `json:"customer_id"`
+	CustomerEmail      string                    `json:"customer_email" binding:"omitempty,email"`
+	Mode               string                    `json:"mode" binding:"required"`
+	LineItems          []CheckoutLineItem        `json:"line_items" binding:"required,min=1"`
+	Metadata           map[string]string         `json:"metadata"`
+	PaymentMethodTypes []string                  `json:"payment_method_types"`
+	AllowPromoCodes    bool                      `json:"allow_promotion_codes"`
+	BillingAddressCollection string              `json:"billing_address_collection"`
+}
+
+
+type CheckoutLineItem struct {
+	PriceID  string `json:"price_id" binding:"required"`
+	Quantity int64  `json:"quantity" binding:"required,min=1"`
+}
+
+
+type CreatePrice struct {
+	ProductID       string            `json:"product_id" binding:"required"`
+	UnitAmount      int64             `json:"unit_amount" binding:"required,min=0"`
+	Currency        string            `json:"currency" binding:"required"`
+	Recurring       *RecurringConfig  `json:"recurring"`
+	Metadata        map[string]string `json:"metadata"`
+	Nickname        string            `json:"nickname"`
+	Active          *bool             `json:"active"`
+}
+
+
+type RecurringConfig struct {
+	Interval      string `json:"interval" binding:"required"`
+	IntervalCount int64  `json:"interval_count"`
+	UsageType     string `json:"usage_type"`
+}
+
+
+type CreateProduct struct {
+	Name        string            `json:"name" binding:"required"`
+	Description string            `json:"description"`
+	Active      *bool             `json:"active"`
+	Metadata    map[string]string `json:"metadata"`
+	Images      []string          `json:"images"`
+}
+
+
+type UpdateProduct struct {
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Active      *bool             `json:"active"`
+	Metadata    map[string]string `json:"metadata"`
+	Images      []string          `json:"images"`
+}
+
+
+type CreateRefund struct {
+	PaymentIntentID string            `json:"payment_intent_id" binding:"required"`
+	Amount          int64             `json:"amount"`
+	Reason          string            `json:"reason"`
+	Metadata        map[string]string `json:"metadata"`
+}
+
+
+type CustomerResponse struct {
+	ID          string                 `json:"id"`
+	Email       string                 `json:"email"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Metadata    map[string]string      `json:"metadata"`
+	Created     int64                  `json:"created"`
+	Balance     int64                  `json:"balance"`
+	Delinquent  bool                   `json:"delinquent"`
+	Currency    string                 `json:"currency"`
+}
+
+
+func ToCustomerResponse(c *stripe.Customer) *CustomerResponse {
+	if c == nil {
+		return nil
+	}
+	return &CustomerResponse{
+		ID:          c.ID,
+		Email:       c.Email,
+		Name:        c.Name,
+		Description: c.Description,
+		Metadata:    c.Metadata,
+		Created:     c.Created,
+		Balance:     c.Balance,
+		Delinquent:  c.Delinquent,
+		Currency:    string(c.Currency),
+	}
+}
+
+
+type PaymentIntentResponse struct {
+	ID                   string                 `json:"id"`
+	Amount               int64                  `json:"amount"`
+	Currency             string                 `json:"currency"`
+	Status               string                 `json:"status"`
+	ClientSecret         string                 `json:"client_secret"`
+	CustomerID           string                 `json:"customer_id"`
+	Description          string                 `json:"description"`
+	Metadata             map[string]string      `json:"metadata"`
+	Created              int64                  `json:"created"`
+	ReceiptEmail         string                 `json:"receipt_email"`
+}
+
+
+func ToPaymentIntentResponse(pi *stripe.PaymentIntent) *PaymentIntentResponse {
+	if pi == nil {
+		return nil
+	}
+	customerID := ""
+	if pi.Customer != nil {
+		customerID = pi.Customer.ID
+	}
+	return &PaymentIntentResponse{
+		ID:           pi.ID,
+		Amount:       pi.Amount,
+		Currency:     string(pi.Currency),
+		Status:       string(pi.Status),
+		ClientSecret: pi.ClientSecret,
+		CustomerID:   customerID,
+		Description:  pi.Description,
+		Metadata:     pi.Metadata,
+		Created:      pi.Created,
+		ReceiptEmail: pi.ReceiptEmail,
+	}
+}
+
+
+type SubscriptionResponse struct {
+	ID                string            `json:"id"`
+	CustomerID        string            `json:"customer_id"`
+	Status            string            `json:"status"`
+	StartDate         int64             `json:"start_date"`
+	TrialStart        int64             `json:"trial_start"`
+	TrialEnd          int64             `json:"trial_end"`
+	CancelAtPeriodEnd bool              `json:"cancel_at_period_end"`
+	CanceledAt        int64             `json:"canceled_at"`
+	EndedAt           int64             `json:"ended_at"`
+	Created           int64             `json:"created"`
+	Metadata          map[string]string `json:"metadata"`
+}
+
+
+func ToSubscriptionResponse(s *stripe.Subscription) *SubscriptionResponse {
+	if s == nil {
+		return nil
+	}
+	return &SubscriptionResponse{
+		ID:                s.ID,
+		CustomerID:        s.Customer.ID,
+		Status:            string(s.Status),
+		StartDate:         s.StartDate,
+		TrialStart:        s.TrialStart,
+		TrialEnd:          s.TrialEnd,
+		CancelAtPeriodEnd: s.CancelAtPeriodEnd,
+		CanceledAt:        s.CanceledAt,
+		EndedAt:           s.EndedAt,
+		Created:           s.Created,
+		Metadata:          s.Metadata,
+	}
+}
+
+
+type CheckoutSessionResponse struct {
+	ID                string `json:"id"`
+	URL               string `json:"url"`
+	CustomerID        string `json:"customer_id"`
+	PaymentStatus     string `json:"payment_status"`
+	Status            string `json:"status"`
+	SuccessURL        string `json:"success_url"`
+	CancelURL         string `json:"cancel_url"`
+}
+
+
+func ToCheckoutSessionResponse(cs *stripe.CheckoutSession) *CheckoutSessionResponse {
+	if cs == nil {
+		return nil
+	}
+	customerID := ""
+	if cs.Customer != nil {
+		customerID = cs.Customer.ID
+	}
+	return &CheckoutSessionResponse{
+		ID:            cs.ID,
+		URL:           cs.URL,
+		CustomerID:    customerID,
+		PaymentStatus: string(cs.PaymentStatus),
+		Status:        string(cs.Status),
+		SuccessURL:    cs.SuccessURL,
+		CancelURL:     cs.CancelURL,
+	}
+}
+
+
+type ProductResponse struct {
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Active      bool              `json:"active"`
+	Metadata    map[string]string `json:"metadata"`
+	Images      []string          `json:"images"`
+	Created     int64             `json:"created"`
+}
+
+
+func ToProductResponse(p *stripe.Product) *ProductResponse {
+	if p == nil {
+		return nil
+	}
+	return &ProductResponse{
+		ID:          p.ID,
+		Name:        p.Name,
+		Description: p.Description,
+		Active:      p.Active,
+		Metadata:    p.Metadata,
+		Images:      p.Images,
+		Created:     p.Created,
+	}
+}
+
+
+type PriceResponse struct {
+	ID         string            `json:"id"`
+	ProductID  string            `json:"product_id"`
+	UnitAmount int64             `json:"unit_amount"`
+	Currency   string            `json:"currency"`
+	Active     bool              `json:"active"`
+	Nickname   string            `json:"nickname"`
+	Metadata   map[string]string `json:"metadata"`
+	Created    int64             `json:"created"`
+}
+
+
+func ToPriceResponse(p *stripe.Price) *PriceResponse {
+	if p == nil {
+		return nil
+	}
+	productID := ""
+	if p.Product != nil {
+		productID = p.Product.ID
+	}
+	return &PriceResponse{
+		ID:         p.ID,
+		ProductID:  productID,
+		UnitAmount: p.UnitAmount,
+		Currency:   string(p.Currency),
+		Active:     p.Active,
+		Nickname:   p.Nickname,
+		Metadata:   p.Metadata,
+		Created:    p.Created,
+	}
+}
+
+
+type RefundResponse struct {
+	ID              string            `json:"id"`
+	Amount          int64             `json:"amount"`
+	Currency        string            `json:"currency"`
+	Status          string            `json:"status"`
+	PaymentIntentID string            `json:"payment_intent_id"`
+	Reason          string            `json:"reason"`
+	Metadata        map[string]string `json:"metadata"`
+	Created         int64             `json:"created"`
+}
+
+
+func ToRefundResponse(r *stripe.Refund) *RefundResponse {
+	if r == nil {
+		return nil
+	}
+	return &RefundResponse{
+		ID:              r.ID,
+		Amount:          r.Amount,
+		Currency:        string(r.Currency),
+		Status:          string(r.Status),
+		PaymentIntentID: r.PaymentIntent.ID,
+		Reason:          string(r.Reason),
+		Metadata:        r.Metadata,
+		Created:         r.Created,
+	}
+}
+

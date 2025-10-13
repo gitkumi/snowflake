@@ -121,3 +121,28 @@ func (t Queue) IsValid() bool {
 func (t Queue) String() string {
 	return string(t)
 }
+
+type Billing string
+
+const (
+	BillingNone   Billing = "none"
+	BillingStripe Billing = "stripe"
+)
+
+var AllBillings = []Billing{
+	BillingNone,
+	BillingStripe,
+}
+
+func (b Billing) IsValid() bool {
+	for _, billing := range AllBillings {
+		if billing == b {
+			return true
+		}
+	}
+	return false
+}
+
+func (b Billing) String() string {
+	return string(b)
+}

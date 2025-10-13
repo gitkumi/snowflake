@@ -1,0 +1,569 @@
+package service
+
+import (
+	"{{ .Name }}/cmd/app/dto"
+	"{{ .Name }}/internal/billing"
+	"context"
+	"fmt"
+
+	"github.com/stripe/stripe-go/v83"
+)
+
+type BillingService struct {
+	billing billing.Billing
+}
+
+func NewBillingService(b billing.Billing) *BillingService {
+	return &BillingService{
+		billing: b,
+	}
+}
+
+func (s *BillingService) CreateCustomer(ctx context.Context, input dto.CreateCustomer) (*dto.CustomerResponse, error) {
+	params := &stripe.CustomerCreateParams{
+		Email:       stripe.String(input.Email),
+		Name:        stripe.String(input.Name),
+		Description: stripe.String(input.Description),
+	}
+	
+	if input.Metadata != nil {
+		for k, v := range input.Metadata {
+			params.AddMetadata(k, v)
+		}
+	}
+
+	customer, err := s.billing.Client().V1Customers.Create(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create customer: %w", err)
+	}
+
+	return dto.ToCustomerResponse(customer), nil
+}
+
+func (s *BillingService) GetCustomer(ctx context.Context, customerID string) (*dto.CustomerResponse, error) {
+	params := &stripe.CustomerRetrieveParams{}
+	customer, err := s.billing.Client().V1Customers.Retrieve(ctx, customerID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get customer: %w", err)
+	}
+
+	return dto.ToCustomerResponse(customer), nil
+}
+
+func (s *BillingService) UpdateCustomer(ctx context.Context, customerID string, input dto.UpdateCustomer) (*dto.CustomerResponse, error) {
+	params := &stripe.CustomerUpdateParams{}
+	
+	if input.Email != "" {
+		params.Email = stripe.String(input.Email)
+	}
+	if input.Name != "" {
+		params.Name = stripe.String(input.Name)
+	}
+	if input.Description != "" {
+		params.Description = stripe.String(input.Description)
+	}
+	if input.Metadata != nil {
+		for k, v := range input.Metadata {
+			params.AddMetadata(k, v)
+		}
+	}
+
+	customer, err := s.billing.Client().V1Customers.Update(ctx, customerID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update customer: %w", err)
+	}
+
+	return dto.ToCustomerResponse(customer), nil
+}
+
+func (s *BillingService) DeleteCustomer(ctx context.Context, customerID string) error {
+	params := &stripe.CustomerDeleteParams{}
+	_, err := s.billing.Client().V1Customers.Delete(ctx, customerID, params)
+	if err != nil {
+		return fmt.Errorf("failed to delete customer: %w", err)
+	}
+
+	return nil
+}
+
+func (s *BillingService) ListCustomers(ctx context.Context, limit int64) ([]*dto.CustomerResponse, error) {
+	params := &stripe.CustomerListParams{}
+	params.Limit = stripe.Int64(limit)
+
+	customers := []*dto.CustomerResponse{}
+	for cust, err := range s.billing.Client().V1Customers.List(ctx, params) {
+		if err != nil {
+			return nil, fmt.Errorf("failed to list customers: %w", err)
+		}
+		customers = append(customers, dto.ToCustomerResponse(cust))
+	}
+
+	return customers, nil
+}
+
+func (s *BillingService) CreatePaymentIntent(ctx context.Context, input dto.CreatePaymentIntent) (*dto.PaymentIntentResponse, error) {
+	params := &stripe.PaymentIntentCreateParams{
+		Amount:      stripe.Int64(input.Amount),
+		Currency:    stripe.String(input.Currency),
+		Description: stripe.String(input.Description),
+	}
+
+	if input.CustomerID != "" {
+		params.Customer = stripe.String(input.CustomerID)
+	}
+
+	if input.ReceiptEmail != "" {
+		params.ReceiptEmail = stripe.String(input.ReceiptEmail)
+	}
+
+	if input.SetupFutureUsage != "" {
+		params.SetupFutureUsage = stripe.String(input.SetupFutureUsage)
+	}
+
+	if len(input.PaymentMethodTypes) > 0 {
+		params.PaymentMethodTypes = stripe.StringSlice(input.PaymentMethodTypes)
+	}
+
+	if input.AutomaticPaymentMethods != nil && input.AutomaticPaymentMethods.Enabled {
+		params.AutomaticPaymentMethods = &stripe.PaymentIntentCreateAutomaticPaymentMethodsParams{
+			Enabled: stripe.Bool(true),
+		}
+		if input.AutomaticPaymentMethods.AllowRedirects != "" {
+			params.AutomaticPaymentMethods.AllowRedirects = stripe.String(input.AutomaticPaymentMethods.AllowRedirects)
+		}
+	}
+
+	if input.Metadata != nil {
+		for k, v := range input.Metadata {
+			params.AddMetadata(k, v)
+		}
+	}
+
+	pi, err := s.billing.Client().V1PaymentIntents.Create(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create payment intent: %w", err)
+	}
+
+	return dto.ToPaymentIntentResponse(pi), nil
+}
+
+func (s *BillingService) GetPaymentIntent(ctx context.Context, paymentIntentID string) (*dto.PaymentIntentResponse, error) {
+	params := &stripe.PaymentIntentRetrieveParams{}
+	pi, err := s.billing.Client().V1PaymentIntents.Retrieve(ctx, paymentIntentID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get payment intent: %w", err)
+	}
+
+	return dto.ToPaymentIntentResponse(pi), nil
+}
+
+func (s *BillingService) CancelPaymentIntent(ctx context.Context, paymentIntentID string) (*dto.PaymentIntentResponse, error) {
+	params := &stripe.PaymentIntentCancelParams{}
+	pi, err := s.billing.Client().V1PaymentIntents.Cancel(ctx, paymentIntentID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to cancel payment intent: %w", err)
+	}
+
+	return dto.ToPaymentIntentResponse(pi), nil
+}
+
+func (s *BillingService) CreateSubscription(ctx context.Context, input dto.CreateSubscription) (*dto.SubscriptionResponse, error) {
+	params := &stripe.SubscriptionCreateParams{
+		Customer: stripe.String(input.CustomerID),
+		Items: []*stripe.SubscriptionCreateItemParams{
+			{
+				Price: stripe.String(input.PriceID),
+			},
+		},
+	}
+
+	if input.Quantity > 0 {
+		params.Items[0].Quantity = stripe.Int64(input.Quantity)
+	}
+
+	if input.TrialPeriodDays > 0 {
+		params.TrialPeriodDays = stripe.Int64(input.TrialPeriodDays)
+	}
+
+	if input.PaymentBehavior != "" {
+		params.PaymentBehavior = stripe.String(input.PaymentBehavior)
+	}
+
+	if input.ProrationBehavior != "" {
+		params.ProrationBehavior = stripe.String(input.ProrationBehavior)
+	}
+
+	if input.DefaultPaymentMethod != "" {
+		params.DefaultPaymentMethod = stripe.String(input.DefaultPaymentMethod)
+	}
+
+	if input.Metadata != nil {
+		for k, v := range input.Metadata {
+			params.AddMetadata(k, v)
+		}
+	}
+
+	sub, err := s.billing.Client().V1Subscriptions.Create(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create subscription: %w", err)
+	}
+
+	return dto.ToSubscriptionResponse(sub), nil
+}
+
+func (s *BillingService) GetSubscription(ctx context.Context, subscriptionID string) (*dto.SubscriptionResponse, error) {
+	params := &stripe.SubscriptionRetrieveParams{}
+	sub, err := s.billing.Client().V1Subscriptions.Retrieve(ctx, subscriptionID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get subscription: %w", err)
+	}
+
+	return dto.ToSubscriptionResponse(sub), nil
+}
+
+func (s *BillingService) UpdateSubscription(ctx context.Context, subscriptionID string, input dto.UpdateSubscription) (*dto.SubscriptionResponse, error) {
+	params := &stripe.SubscriptionUpdateParams{}
+
+	if input.PriceID != "" {
+		// Get the current subscription to find the subscription item ID
+		retrieveParams := &stripe.SubscriptionRetrieveParams{}
+		currentSub, err := s.billing.Client().V1Subscriptions.Retrieve(ctx, subscriptionID, retrieveParams)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get current subscription: %w", err)
+		}
+
+		if len(currentSub.Items.Data) > 0 {
+			params.Items = []*stripe.SubscriptionUpdateItemParams{
+				{
+					ID:    stripe.String(currentSub.Items.Data[0].ID),
+					Price: stripe.String(input.PriceID),
+				},
+			}
+		}
+	}
+
+	if input.Quantity > 0 {
+		if params.Items == nil || len(params.Items) == 0 {
+			retrieveParams := &stripe.SubscriptionRetrieveParams{}
+			currentSub, err := s.billing.Client().V1Subscriptions.Retrieve(ctx, subscriptionID, retrieveParams)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get current subscription: %w", err)
+			}
+			if len(currentSub.Items.Data) > 0 {
+				params.Items = []*stripe.SubscriptionUpdateItemParams{
+					{
+						ID:       stripe.String(currentSub.Items.Data[0].ID),
+						Quantity: stripe.Int64(input.Quantity),
+					},
+				}
+			}
+		} else {
+			params.Items[0].Quantity = stripe.Int64(input.Quantity)
+		}
+	}
+
+	if input.ProrationBehavior != "" {
+		params.ProrationBehavior = stripe.String(input.ProrationBehavior)
+	}
+
+	if input.DefaultPaymentMethod != "" {
+		params.DefaultPaymentMethod = stripe.String(input.DefaultPaymentMethod)
+	}
+
+	if input.Metadata != nil {
+		for k, v := range input.Metadata {
+			params.AddMetadata(k, v)
+		}
+	}
+
+	sub, err := s.billing.Client().V1Subscriptions.Update(ctx, subscriptionID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update subscription: %w", err)
+	}
+
+	return dto.ToSubscriptionResponse(sub), nil
+}
+
+func (s *BillingService) CancelSubscription(ctx context.Context, subscriptionID string, input dto.CancelSubscription) (*dto.SubscriptionResponse, error) {
+	params := &stripe.SubscriptionCancelParams{}
+
+	if input.InvoiceNow {
+		params.InvoiceNow = stripe.Bool(true)
+	}
+
+	if input.Prorate {
+		params.Prorate = stripe.Bool(true)
+	}
+
+	sub, err := s.billing.Client().V1Subscriptions.Cancel(ctx, subscriptionID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to cancel subscription: %w", err)
+	}
+
+	return dto.ToSubscriptionResponse(sub), nil
+}
+
+func (s *BillingService) ListSubscriptions(ctx context.Context, customerID string, limit int64) ([]*dto.SubscriptionResponse, error) {
+	params := &stripe.SubscriptionListParams{
+		Customer: stripe.String(customerID),
+	}
+	params.Limit = stripe.Int64(limit)
+
+	subscriptions := []*dto.SubscriptionResponse{}
+	for sub, err := range s.billing.Client().V1Subscriptions.List(ctx, params) {
+		if err != nil {
+			return nil, fmt.Errorf("failed to list subscriptions: %w", err)
+		}
+		subscriptions = append(subscriptions, dto.ToSubscriptionResponse(sub))
+	}
+
+	return subscriptions, nil
+}
+
+func (s *BillingService) CreateCheckoutSession(ctx context.Context, input dto.CreateCheckoutSession) (*dto.CheckoutSessionResponse, error) {
+	params := &stripe.CheckoutSessionCreateParams{
+		SuccessURL: stripe.String(input.SuccessURL),
+		CancelURL:  stripe.String(input.CancelURL),
+		Mode:       stripe.String(input.Mode),
+	}
+
+	if input.CustomerID != "" {
+		params.Customer = stripe.String(input.CustomerID)
+	}
+
+	if input.CustomerEmail != "" {
+		params.CustomerEmail = stripe.String(input.CustomerEmail)
+	}
+
+	if len(input.PaymentMethodTypes) > 0 {
+		params.PaymentMethodTypes = stripe.StringSlice(input.PaymentMethodTypes)
+	}
+
+	if input.AllowPromoCodes {
+		params.AllowPromotionCodes = stripe.Bool(true)
+	}
+
+	if input.BillingAddressCollection != "" {
+		params.BillingAddressCollection = stripe.String(input.BillingAddressCollection)
+	}
+
+	for _, item := range input.LineItems {
+		params.LineItems = append(params.LineItems, &stripe.CheckoutSessionCreateLineItemParams{
+			Price:    stripe.String(item.PriceID),
+			Quantity: stripe.Int64(item.Quantity),
+		})
+	}
+
+	if input.Metadata != nil {
+		for k, v := range input.Metadata {
+			params.AddMetadata(k, v)
+		}
+	}
+
+	session, err := s.billing.Client().V1CheckoutSessions.Create(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create checkout session: %w", err)
+	}
+
+	return dto.ToCheckoutSessionResponse(session), nil
+}
+
+func (s *BillingService) GetCheckoutSession(ctx context.Context, sessionID string) (*dto.CheckoutSessionResponse, error) {
+	params := &stripe.CheckoutSessionRetrieveParams{}
+	session, err := s.billing.Client().V1CheckoutSessions.Retrieve(ctx, sessionID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get checkout session: %w", err)
+	}
+
+	return dto.ToCheckoutSessionResponse(session), nil
+}
+
+func (s *BillingService) CreateProduct(ctx context.Context, input dto.CreateProduct) (*dto.ProductResponse, error) {
+	params := &stripe.ProductCreateParams{
+		Name:        stripe.String(input.Name),
+		Description: stripe.String(input.Description),
+	}
+
+	if input.Active != nil {
+		params.Active = stripe.Bool(*input.Active)
+	}
+
+	if len(input.Images) > 0 {
+		params.Images = stripe.StringSlice(input.Images)
+	}
+
+	if input.Metadata != nil {
+		for k, v := range input.Metadata {
+			params.AddMetadata(k, v)
+		}
+	}
+
+	product, err := s.billing.Client().V1Products.Create(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create product: %w", err)
+	}
+
+	return dto.ToProductResponse(product), nil
+}
+
+func (s *BillingService) GetProduct(ctx context.Context, productID string) (*dto.ProductResponse, error) {
+	params := &stripe.ProductRetrieveParams{}
+	product, err := s.billing.Client().V1Products.Retrieve(ctx, productID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get product: %w", err)
+	}
+
+	return dto.ToProductResponse(product), nil
+}
+
+func (s *BillingService) UpdateProduct(ctx context.Context, productID string, input dto.UpdateProduct) (*dto.ProductResponse, error) {
+	params := &stripe.ProductUpdateParams{}
+
+	if input.Name != "" {
+		params.Name = stripe.String(input.Name)
+	}
+
+	if input.Description != "" {
+		params.Description = stripe.String(input.Description)
+	}
+
+	if input.Active != nil {
+		params.Active = stripe.Bool(*input.Active)
+	}
+
+	if len(input.Images) > 0 {
+		params.Images = stripe.StringSlice(input.Images)
+	}
+
+	if input.Metadata != nil {
+		for k, v := range input.Metadata {
+			params.AddMetadata(k, v)
+		}
+	}
+
+	product, err := s.billing.Client().V1Products.Update(ctx, productID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update product: %w", err)
+	}
+
+	return dto.ToProductResponse(product), nil
+}
+
+func (s *BillingService) ListProducts(ctx context.Context, limit int64) ([]*dto.ProductResponse, error) {
+	params := &stripe.ProductListParams{}
+	params.Limit = stripe.Int64(limit)
+
+	products := []*dto.ProductResponse{}
+	for product, err := range s.billing.Client().V1Products.List(ctx, params) {
+		if err != nil {
+			return nil, fmt.Errorf("failed to list products: %w", err)
+		}
+		products = append(products, dto.ToProductResponse(product))
+	}
+
+	return products, nil
+}
+
+func (s *BillingService) CreatePrice(ctx context.Context, input dto.CreatePrice) (*dto.PriceResponse, error) {
+	params := &stripe.PriceCreateParams{
+		Product:    stripe.String(input.ProductID),
+		UnitAmount: stripe.Int64(input.UnitAmount),
+		Currency:   stripe.String(input.Currency),
+	}
+
+	if input.Nickname != "" {
+		params.Nickname = stripe.String(input.Nickname)
+	}
+
+	if input.Active != nil {
+		params.Active = stripe.Bool(*input.Active)
+	}
+
+	if input.Recurring != nil {
+		params.Recurring = &stripe.PriceCreateRecurringParams{
+			Interval: stripe.String(input.Recurring.Interval),
+		}
+		if input.Recurring.IntervalCount > 0 {
+			params.Recurring.IntervalCount = stripe.Int64(input.Recurring.IntervalCount)
+		}
+		if input.Recurring.UsageType != "" {
+			params.Recurring.UsageType = stripe.String(input.Recurring.UsageType)
+		}
+	}
+
+	if input.Metadata != nil {
+		for k, v := range input.Metadata {
+			params.AddMetadata(k, v)
+		}
+	}
+
+	price, err := s.billing.Client().V1Prices.Create(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create price: %w", err)
+	}
+
+	return dto.ToPriceResponse(price), nil
+}
+
+func (s *BillingService) GetPrice(ctx context.Context, priceID string) (*dto.PriceResponse, error) {
+	params := &stripe.PriceRetrieveParams{}
+	price, err := s.billing.Client().V1Prices.Retrieve(ctx, priceID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get price: %w", err)
+	}
+
+	return dto.ToPriceResponse(price), nil
+}
+
+func (s *BillingService) ListPrices(ctx context.Context, limit int64) ([]*dto.PriceResponse, error) {
+	params := &stripe.PriceListParams{}
+	params.Limit = stripe.Int64(limit)
+
+	prices := []*dto.PriceResponse{}
+	for price, err := range s.billing.Client().V1Prices.List(ctx, params) {
+		if err != nil {
+			return nil, fmt.Errorf("failed to list prices: %w", err)
+		}
+		prices = append(prices, dto.ToPriceResponse(price))
+	}
+
+	return prices, nil
+}
+
+func (s *BillingService) CreateRefund(ctx context.Context, input dto.CreateRefund) (*dto.RefundResponse, error) {
+	params := &stripe.RefundCreateParams{
+		PaymentIntent: stripe.String(input.PaymentIntentID),
+	}
+
+	if input.Amount > 0 {
+		params.Amount = stripe.Int64(input.Amount)
+	}
+
+	if input.Reason != "" {
+		params.Reason = stripe.String(input.Reason)
+	}
+
+	if input.Metadata != nil {
+		for k, v := range input.Metadata {
+			params.AddMetadata(k, v)
+		}
+	}
+
+	refund, err := s.billing.Client().V1Refunds.Create(ctx, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create refund: %w", err)
+	}
+
+	return dto.ToRefundResponse(refund), nil
+}
+
+func (s *BillingService) GetRefund(ctx context.Context, refundID string) (*dto.RefundResponse, error) {
+	params := &stripe.RefundRetrieveParams{}
+	refund, err := s.billing.Client().V1Refunds.Retrieve(ctx, refundID, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get refund: %w", err)
+	}
+
+	return dto.ToRefundResponse(refund), nil
+}
+

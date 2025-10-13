@@ -55,6 +55,11 @@ func (app *Application) RegisterRoutes({{- if .Redis }}redis *redis.Client {{- e
 	app.Router.GET("/oidc/:provider/callback", app.handlers.oidc.Callback)
 	{{- end }}
 
+	{{- if eq .Billing.String "stripe" }}
+	// outside /api prefix, no rate limiting
+	app.Router.POST("/webhook/billing", app.handlers.webhook.HandleWebhook)
+	{{- end }}
+
 	api := app.Router.Group("/api")
 	api.GET("/health", app.handlers.health.Health)
 	
@@ -64,6 +69,41 @@ func (app *Application) RegisterRoutes({{- if .Redis }}redis *redis.Client {{- e
 	api.POST("/books", app.handlers.book.CreateBook)
 	api.PATCH("/books/:id", app.handlers.book.UpdateBook)
 	api.DELETE("/books/:id", app.handlers.book.DeleteBook)
+	{{- end }}
+
+	{{- if eq .Billing.String "stripe" }}
+	billing := api.Group("/billing")
+	
+	billing.POST("/customers", app.handlers.billing.CreateCustomer)
+	billing.GET("/customers/:id", app.handlers.billing.GetCustomer)
+	billing.PATCH("/customers/:id", app.handlers.billing.UpdateCustomer)
+	billing.DELETE("/customers/:id", app.handlers.billing.DeleteCustomer)
+	billing.GET("/customers", app.handlers.billing.ListCustomers)
+	
+	billing.POST("/payment-intents", app.handlers.billing.CreatePaymentIntent)
+	billing.GET("/payment-intents/:id", app.handlers.billing.GetPaymentIntent)
+	billing.POST("/payment-intents/:id/cancel", app.handlers.billing.CancelPaymentIntent)
+	
+	billing.POST("/subscriptions", app.handlers.billing.CreateSubscription)
+	billing.GET("/subscriptions/:id", app.handlers.billing.GetSubscription)
+	billing.PATCH("/subscriptions/:id", app.handlers.billing.UpdateSubscription)
+	billing.POST("/subscriptions/:id/cancel", app.handlers.billing.CancelSubscription)
+	billing.GET("/subscriptions", app.handlers.billing.ListSubscriptions)
+	
+	billing.POST("/checkout-sessions", app.handlers.billing.CreateCheckoutSession)
+	billing.GET("/checkout-sessions/:id", app.handlers.billing.GetCheckoutSession)
+	
+	billing.POST("/products", app.handlers.billing.CreateProduct)
+	billing.GET("/products/:id", app.handlers.billing.GetProduct)
+	billing.PATCH("/products/:id", app.handlers.billing.UpdateProduct)
+	billing.GET("/products", app.handlers.billing.ListProducts)
+	
+	billing.POST("/prices", app.handlers.billing.CreatePrice)
+	billing.GET("/prices/:id", app.handlers.billing.GetPrice)
+	billing.GET("/prices", app.handlers.billing.ListPrices)
+	
+	billing.POST("/refunds", app.handlers.billing.CreateRefund)
+	billing.GET("/refunds/:id", app.handlers.billing.GetRefund)
 	{{- end }}
 
 	return nil
