@@ -7,6 +7,51 @@ export GOOSE_DRIVER:={{.Database.Driver}}
 export GOOSE_MIGRATION_DIR:=./static/sql/migrations
 {{- end }}
 
+.PHONY: help
+help:
+	@echo "Available commands:"
+	@echo ""
+	@echo "  Tools:"
+	@echo "    tools.install Install required development tools"
+	@echo "    tools.check  Check if required tools are installed"
+	@echo ""
+	@echo "  Development:"
+	@echo "    dev          Start development server with hot reload"
+	@echo "    run          Run the application directly"
+	@echo "    build        Build the application"
+	@echo "    clean        Clean build artifacts"
+	@echo ""
+	@echo "  Testing:"
+	@echo "    test         Run tests"
+	@echo "    test.verbose Run tests with verbose output"
+	@echo "    test.coverage Run tests with coverage report"
+	@echo "    test.watch   Run tests in watch mode"
+	@echo ""
+	{{- if ne .Database.String "none" }}
+	@echo "  Database:"
+	@echo "    db           Show database migration status"
+	@echo "    db.up        Run database migrations"
+	@echo "    db.down      Rollback database migrations"
+	@echo "    db.reset     Reset and re-run all migrations"
+	@echo "    db.create    Create database"
+	@echo "    db.drop      Drop database"
+	@echo "    db.gen       Generate new migration file"
+	@echo ""
+	@echo "  Code Generation:"
+	@echo "    sqlc         Generate SQL code"
+	@echo ""
+	{{- end }}
+	{{- if or (eq .Database.String "postgres") (eq .Database.String "mysql") (eq .Database.String "mariadb") .Redis }}
+	@echo "  Development Environment:"
+	@echo "    devenv.up    Start development environment"
+	@echo "    devenv.down  Stop development environment"
+	@echo "    devenv.logs  Show development environment logs"
+	@echo ""
+	{{- end }}
+	@echo "  Docker:"
+	@echo "    docker.build Build Docker image"
+	@echo "    docker.run   Run Docker container"
+
 .PHONY: run
 run:
 	go run *.go
@@ -27,12 +72,21 @@ build:
 
 .PHONY: test
 test:
-	gotestsum -f testname
+	gotestsum -f testname ./...
+
+.PHONY: test.verbose
+test.verbose:
+	gotestsum -f standard-verbose ./...
 
 .PHONY: test.coverage
 test.coverage:
 	gotestsum --format testname -- -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
+.PHONY: test.watch
+test.watch:
+	gotestsum -f testname --watch ./...
 
 {{- if ne .Database.String "none" }}
 
@@ -46,6 +100,10 @@ db:
 
 .PHONY: db.gen
 db.gen:
+	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
+		echo "Usage: make db.gen <migration_name>"; \
+		exit 1; \
+	fi
 	goose create $(filter-out $@,$(MAKECMDGOALS)) sql
 
 .PHONY: db.up
@@ -67,12 +125,14 @@ db.reset:
 .PHONY: db.create
 db.create:
 	docker exec -i dev_{{ .Name }}_mysql \
-		mysql -uroot -pmysql -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};"
+		mysql -uroot -pmysql -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};" || \
+		echo "Database creation failed. Make sure MySQL is running."
 
 .PHONY: db.drop
 db.drop:
 	docker exec -i dev_{{ .Name }}_mysql \
-		mysql -uroot -pmysql -e "DROP DATABASE IF EXISTS {{ .Name }};"
+		mysql -uroot -pmysql -e "DROP DATABASE IF EXISTS {{ .Name }};" || \
+		echo "Database drop failed. Make sure MySQL is running."
 {{- end }}
 
 {{- if eq .Database.String "mariadb" }}
@@ -80,12 +140,14 @@ db.drop:
 .PHONY: db.create
 db.create:
 	docker exec -i dev_{{ .Name }}_mariadb \
-		mariadb -uroot -pmariadb -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};"
+		mariadb -uroot -pmariadb -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};" || \
+		echo "Database creation failed. Make sure MariaDB is running."
 
 .PHONY: db.drop
 db.drop:
 	docker exec -i dev_{{ .Name }}_mariadb \
-		mariadb -uroot -pmariadb -e "DROP DATABASE IF EXISTS {{ .Name }};"
+		mariadb -uroot -pmariadb -e "DROP DATABASE IF EXISTS {{ .Name }};" || \
+		echo "Database drop failed. Make sure MariaDB is running."
 {{- end }}
 
 {{- if eq .Database.String "postgres" }}
@@ -93,12 +155,14 @@ db.drop:
 .PHONY: db.create
 db.create:
 	docker exec -i dev_{{ .Name }}_postgres \
-		psql -U postgres -c "CREATE DATABASE {{ .Name }};"
+		psql -U postgres -c "CREATE DATABASE {{ .Name }};" || \
+		echo "Database creation failed. Make sure PostgreSQL is running."
 
 .PHONY: db.drop
 db.drop:
 	docker exec -i dev_{{ .Name }}_postgres \
-		psql -U postgres -c "DROP DATABASE IF EXISTS {{ .Name }};"
+		psql -U postgres -c "DROP DATABASE IF EXISTS {{ .Name }};" || \
+		echo "Database drop failed. Make sure PostgreSQL is running."
 {{- end }}
 
 .PHONY: docker.build
@@ -129,6 +193,36 @@ clean:
 	rm -f $(BUILD_DIR)/$(APP_NAME)
 	rm -f coverage.out coverage.html
 
+
+.PHONY: tools.install
+tools.install:
+	@echo "Installing development tools..."
+	@go install github.com/cosmtrek/air@latest
+	@go install github.com/gotestsum/gotestsum@latest
+	{{- if ne .Database.String "none" }}
+	@go install github.com/pressly/goose/v3/cmd/goose@latest
+	@go install github.com/kyleconroy/sqlc/cmd/sqlc@latest
+	{{- end }}
+	{{- if .ServeHTML }}
+	@go install github.com/a-h/templ/cmd/templ@latest
+	{{- end }}
+	@echo "Development tools installed!"
+
+.PHONY: tools.check
+tools.check:
+	@echo "Checking required tools..."
+	@command -v air >/dev/null 2>&1 || { echo "air is not installed. Run 'make tools.install'"; exit 1; }
+	@command -v gotestsum >/dev/null 2>&1 || { echo "gotestsum is not installed. Run 'make tools.install'"; exit 1; }
+	{{- if ne .Database.String "none" }}
+	@command -v goose >/dev/null 2>&1 || { echo "goose is not installed. Run 'make tools.install'"; exit 1; }
+	@command -v sqlc >/dev/null 2>&1 || { echo "sqlc is not installed. Run 'make tools.install'"; exit 1; }
+	{{- end }}
+	{{- if .ServeHTML }}
+	@command -v templ >/dev/null 2>&1 || { echo "templ is not installed. Run 'make tools.install'"; exit 1; }
+	{{- end }}
+	@command -v docker >/dev/null 2>&1 || { echo "docker is not installed"; exit 1; }
+	@command -v docker compose >/dev/null 2>&1 || { echo "docker compose is not installed"; exit 1; }
+	@echo "All required tools are installed!"
 
 %:
 	@:
