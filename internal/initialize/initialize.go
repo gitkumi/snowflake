@@ -189,7 +189,7 @@ Run your new project:
 
   $ cd %s`, projectName, projectName)
 
-	if database == DatabasePostgres || database == DatabaseMySQL || redis {
+	if database == DatabasePostgres || database == DatabaseMySQL || database == DatabaseMariaDB || redis {
 		successMessage += `
   $ make app.devenv.up # Initialize the docker dev environment
   $ make app.dev`
