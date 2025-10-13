@@ -51,7 +51,10 @@ Only if "Serve HTML" feature is enabled
 
 - [templ](https://templ.guide) 
 
-
 #### Testing
 
 - [gotestsum](https://github.com/gotestyourself/gotestsum)
+
+#### Billing
+
+- [Stripe](https://docs.stripe.com/api)
