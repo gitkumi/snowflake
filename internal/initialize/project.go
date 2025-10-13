@@ -138,7 +138,7 @@ func NewProject(cfg *Config) *Project {
 	project.fileExclusions = []*FileExclusion{
 		{
 			FilePaths: []string{
-				"/cmd/app/dev.yaml",
+				"/cmd/app/devenv.yaml",
 				"/cmd/app/Dockerfile",
 			},
 			Check: func(p *Project) bool {
@@ -177,7 +177,7 @@ func NewProject(cfg *Config) *Project {
 		{
 			FilePaths: []string{
 				"/cmd/app/sqlc.yaml",
-				"/cmd/app/dev.yaml",
+				"/cmd/app/devenv.yaml",
 				"/cmd/app/static/sql/migrations/00001_books.sql",
 				"/cmd/app/static/sql/queries/books.sql",
 				"/cmd/app/static/static.go",

@@ -113,15 +113,15 @@ docker.run:
 
 .PHONY: devenv.up
 devenv.up:
-	docker compose -f dev.yaml up -d
+	docker compose -f devenv.yaml up -d
 
 .PHONY: devenv.down
 devenv.down:
-	docker compose -f dev.yaml down -v
+	docker compose -f devenv.yaml down -v
 
 .PHONY: devenv.logs
 devenv.logs:
-	docker compose -f dev.yaml logs -f
+	docker compose -f devenv.yaml logs -f
 {{- end }}
 
 .PHONY: clean
