@@ -35,6 +35,7 @@ test.coverage:
 	go tool cover -html=coverage.out -o coverage.html
 
 {{- if ne .Database.String "none" }}
+
 .PHONY: sqlc
 sqlc:
 	sqlc generate
@@ -62,6 +63,7 @@ db.reset:
 {{- end }}
 
 {{- if eq .Database.String "mysql" }}
+
 .PHONY: db.create
 db.create:
 	docker exec -i dev_{{ .Name }}_mysql \
@@ -74,6 +76,7 @@ db.drop:
 {{- end }}
 
 {{- if eq .Database.String "mariadb" }}
+
 .PHONY: db.create
 db.create:
 	docker exec -i dev_{{ .Name }}_mariadb \
@@ -85,6 +88,19 @@ db.drop:
 		mariadb -uroot -pmariadb -e "DROP DATABASE IF EXISTS {{ .Name }};"
 {{- end }}
 
+{{- if eq .Database.String "postgres" }}
+
+.PHONY: db.create
+db.create:
+	docker exec -i dev_{{ .Name }}_postgres \
+		psql -U postgres -c "CREATE DATABASE {{ .Name }};"
+
+.PHONY: db.drop
+db.drop:
+	docker exec -i dev_{{ .Name }}_postgres \
+		psql -U postgres -c "DROP DATABASE IF EXISTS {{ .Name }};"
+{{- end }}
+
 .PHONY: docker.build
 docker.build:
 	docker build -f Dockerfile -t {{ .Name }}-$(APP_NAME):latest ../..
@@ -94,6 +110,7 @@ docker.run:
 	docker run --rm -p 8080:8080 --env-file .env {{ .Name }}-$(APP_NAME):latest
 
 {{- if or (eq .Database.String "postgres") (eq .Database.String "mysql") (eq .Database.String "mariadb") .Redis }}
+
 .PHONY: devenv.up
 devenv.up:
 	docker compose -f dev.yaml up -d
