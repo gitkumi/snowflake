@@ -20,6 +20,11 @@ run:
 test:
 	gotestsum -f testname
 
+.PHONY: test.coverage
+test.coverage:
+	gotestsum --format testname -- -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+
 .PHONY: build
 build:
 	go build -o bin/main ./main.go

@@ -27,11 +27,11 @@ build:
 
 .PHONY: test
 test:
-	go test -v ./...
+	gotestsum -f testname
 
 .PHONY: test.coverage
 test.coverage:
-	go test -v -coverprofile=coverage.out ./...
+	gotestsum --format testname -- -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 
 {{- if ne .Database.String "none" }}

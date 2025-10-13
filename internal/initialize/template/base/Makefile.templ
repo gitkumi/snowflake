@@ -12,9 +12,6 @@ tidy:
 	go mod tidy -v
 	go fmt ./...
 
-.PHONY: test
-test:
-	gotestsum -f testname
 
 # Delegate api.* commands to cmd/api/Makefile
 .PHONY: app.%
