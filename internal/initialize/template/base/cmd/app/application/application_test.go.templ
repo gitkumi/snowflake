@@ -2,7 +2,7 @@ package application_test
 
 import (
 	"{{ .Name }}/cmd/app/application"
-	"{{ .Name }}/internal/env"
+	"{{ .Name }}/cmd/app/env"
 	"log"
 	"log/slog"
 	"os"
@@ -37,7 +37,7 @@ type TestApplication struct {
 }
 
 func Init() (*TestApplication, error) {
-	vars, err := env.Read(".env.test")
+	vars, err := env.Load(".env.test")
 	if err != nil {
 		log.Fatal("failed to read environment variables", err)
 	}
