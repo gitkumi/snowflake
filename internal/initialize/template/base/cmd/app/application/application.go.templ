@@ -42,6 +42,10 @@ import (
 	{{- if .HasOIDC }}
 	"{{ .Name }}/internal/oidc"
 	{{- end }}
+
+	{{- if eq .Billing.String "stripe" }}
+	"{{ .Name }}/internal/billing"
+	{{- end }}
 )
 
 type Handlers struct {
@@ -59,6 +63,11 @@ type Handlers struct {
 
 	{{- if .HasOIDC }}
 	oidc   *handler.OIDCHandler
+	{{- end }}
+
+	{{- if eq .Billing.String "stripe" }}
+	billing *handler.BillingHandler
+	webhook *handler.WebhookHandler
 	{{- end }}
 }
 
@@ -102,6 +111,10 @@ type Config struct {
 {{- if .HasOIDC }}
 	OIDC    *oidc.OIDC
 {{- end }}
+{{- if eq .Billing.String "stripe" }}
+	Billing billing.Billing
+	StripeWebhookSecret string
+{{- end }}
 }
 
 func NewApplication(cfg *Config) (*Application, error) {
@@ -144,6 +157,12 @@ func NewApplication(cfg *Config) (*Application, error) {
 	oidcHandler := handler.NewOIDCHandler(oidcService)
 	{{- end }}
 
+	{{- if eq .Billing.String "stripe" }}
+	billingService := service.NewBillingService(cfg.Billing)
+	billingHandler := handler.NewBillingHandler(billingService)
+	webhookHandler := handler.NewWebhookHandler(cfg.StripeWebhookSecret)
+	{{- end }}
+
 	handlers := &Handlers{
 		health: healthHandler,
 		{{- if ne .Database.String "none" }}
@@ -157,6 +176,10 @@ func NewApplication(cfg *Config) (*Application, error) {
 		{{- end }}
 		{{- if .HasOIDC }}
 		oidc: oidcHandler,
+		{{- end }}
+		{{- if eq .Billing.String "stripe" }}
+		billing: billingHandler,
+		webhook: webhookHandler,
 		{{- end }}
 	}
 

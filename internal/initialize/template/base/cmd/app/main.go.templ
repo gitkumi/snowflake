@@ -29,6 +29,9 @@ import (
 {{- if .HasOIDC }}
 	"{{ .Name }}/internal/oidc"
 {{- end }}
+{{- if eq .Billing.String "stripe" }}
+	"{{ .Name }}/internal/billing"
+{{- end }}
 )
 
 func main() {
@@ -96,6 +99,13 @@ func main() {
 	// })
 	{{- end }}
 
+	{{- if eq .Billing.String "stripe" }}
+	// Use test keys during development, switch to live keys in production
+	stripeBilling := billing.NewStripeBilling(&billing.StripeBillingConfig{
+		SecretKey: vars.StripeSecretKey,
+	})
+	{{- end }}
+
 	app, err := application.NewApplication(&application.Config{
 		Environment: vars.Environment,
 		BaseURL: vars.BaseURL,
@@ -124,6 +134,11 @@ func main() {
 
 		{{- if .HasOIDC }}
 		OIDC: newOIDCRegistry(vars),
+		{{- end }}
+
+		{{- if eq .Billing.String "stripe" }}
+		Billing: stripeBilling,
+		StripeWebhookSecret: vars.StripeWebhookSecret,
 		{{- end }}
 	})
 	if err != nil {

@@ -17,6 +17,7 @@ func Command() *cobra.Command {
 			projectName := ""
 			database := initialize.AllDatabases[0]
 			queue := initialize.AllQueues[0]
+			billing := initialize.BillingNone
 			selectedFeatures := []string{"Git"}
 			selectedOAuth := []string{}
 			selectedOIDC := []string{}
@@ -65,6 +66,16 @@ func Command() *cobra.Command {
 					Value(&queue),
 			)
 
+			billingGroup := huh.NewGroup(
+				huh.NewSelect[initialize.Billing]().
+					Title("Add billing").
+					Options(
+						huh.NewOption("None", initialize.BillingNone),
+						huh.NewOption("Stripe", initialize.BillingStripe),
+					).
+					Value(&billing),
+			)
+
 			oauthGroup := huh.NewGroup(
 				huh.NewMultiSelect[string]().
 					Title("Add OAuth providers (requires Redis)").
@@ -91,6 +102,7 @@ func Command() *cobra.Command {
 				databaseGroup,
 				featuresGroup,
 				queueGroup,
+				billingGroup,
 				oauthGroup,
 			)
 
@@ -127,6 +139,7 @@ func Command() *cobra.Command {
 			cfg.Name = projectName
 			cfg.Database = database
 			cfg.Queue = queue
+			cfg.Billing = billing
 
 			cfg.Git = contains(selectedFeatures, "Git")
 			cfg.SMTP = contains(selectedFeatures, "SMTP")
