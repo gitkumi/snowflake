@@ -1,0 +1,61 @@
+package oauth
+
+import (
+	"context"
+
+	"golang.org/x/oauth2"
+)
+
+var StripeEndpoint = oauth2.Endpoint{
+	AuthURL:  "https://connect.stripe.com/oauth/authorize",
+	TokenURL: "https://connect.stripe.com/oauth/token",
+}
+
+const StripeUserInfoURL = "https://api.stripe.com/v1/account"
+
+func NewStripeProvider(config *oauth2.Config) *Provider {
+	config.Endpoint = StripeEndpoint
+	providerConfig := ProviderConfig{
+		RequirePKCE: false,
+		Scopes:      []string{"read_only"},
+	}
+	return NewProvider("stripe", config, fetchStripeUserInfo, providerConfig)
+}
+
+type StripeUserInfo struct {
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	DisplayName   string `json:"display_name"`
+	Provider      string `json:"provider"`
+}
+
+func fetchStripeUserInfo(ctx context.Context, config *oauth2.Config, token *oauth2.Token) (any, error) {
+	var resp struct {
+		ID          string `json:"id"`
+		Email       string `json:"email"`
+		DisplayName string `json:"display_name"`
+		Settings    struct {
+			Dashboard struct {
+				DisplayName string `json:"display_name"`
+			} `json:"dashboard"`
+		} `json:"settings"`
+	}
+
+	if err := FetchUserInfo(ctx, config, token, StripeUserInfoURL, &resp); err != nil {
+		return nil, err
+	}
+
+	name := resp.DisplayName
+	if name == "" {
+		name = resp.Settings.Dashboard.DisplayName
+	}
+
+	return &StripeUserInfo{
+		ID:            resp.ID,
+		Email:         resp.Email,
+		EmailVerified: true,
+		DisplayName:   name,
+		Provider:      "stripe",
+	}, nil
+}

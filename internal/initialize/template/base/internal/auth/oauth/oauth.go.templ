@@ -1,0 +1,115 @@
+package oauth
+
+import (
+	"context"
+	"errors"
+
+	"golang.org/x/oauth2"
+)
+
+var (
+	ErrProviderNotFound = errors.New("oauth: provider not found")
+)
+
+type UserInfoFunc func(ctx context.Context, config *oauth2.Config, token *oauth2.Token) (any, error)
+
+type ExchangeFunc func(ctx context.Context, config *oauth2.Config, code string) (*oauth2.Token, error)
+
+type ProviderConfig struct {
+	RequirePKCE bool
+	Scopes      []string
+}
+
+type Provider struct {
+	name           string
+	config         *oauth2.Config
+	authURLOpts    []oauth2.AuthCodeOption
+	exchangeFunc   ExchangeFunc
+	userInfoFunc   UserInfoFunc
+	providerConfig ProviderConfig
+}
+
+func NewProvider(name string, config *oauth2.Config, userInfoFunc UserInfoFunc, providerConfig ProviderConfig, authURLOpts ...oauth2.AuthCodeOption) *Provider {
+	return &Provider{
+		name:           name,
+		config:         config,
+		authURLOpts:    authURLOpts,
+		userInfoFunc:   userInfoFunc,
+		providerConfig: providerConfig,
+	}
+}
+
+func (p *Provider) WithCustomExchange(fn ExchangeFunc) *Provider {
+	p.exchangeFunc = fn
+	return p
+}
+
+func (p *Provider) Name() string {
+	return p.name
+}
+
+func (p *Provider) AuthURL(state string) string {
+	return p.config.AuthCodeURL(state, p.authURLOpts...)
+}
+
+func (p *Provider) AuthURLWithPKCE(state string, pkceChallenge *PKCEChallenge) string {
+	opts := make([]oauth2.AuthCodeOption, len(p.authURLOpts))
+	copy(opts, p.authURLOpts)
+	opts = append(opts,
+		oauth2.SetAuthURLParam("code_challenge", pkceChallenge.CodeChallenge),
+		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+	)
+	return p.config.AuthCodeURL(state, opts...)
+}
+
+func (p *Provider) Exchange(ctx context.Context, code string) (*oauth2.Token, error) {
+	if p.exchangeFunc != nil {
+		return p.exchangeFunc(ctx, p.config, code)
+	}
+	return p.config.Exchange(ctx, code)
+}
+
+func (p *Provider) ExchangeWithPKCE(ctx context.Context, code string, codeVerifier string) (*oauth2.Token, error) {
+	return p.config.Exchange(ctx, code,
+		oauth2.SetAuthURLParam("code_verifier", codeVerifier),
+	)
+}
+
+func (p *Provider) UserInfo(ctx context.Context, token *oauth2.Token) (any, error) {
+	return p.userInfoFunc(ctx, p.config, token)
+}
+
+func (p *Provider) RedirectURL() string {
+	return p.config.RedirectURL
+}
+
+func (p *Provider) RequiresPKCE() bool {
+	return p.providerConfig.RequirePKCE
+}
+
+func (p *Provider) GetConfig() ProviderConfig {
+	return p.providerConfig
+}
+
+type Registry struct {
+	providers map[string]*Provider
+}
+
+func NewRegistry(providers map[string]*Provider) *Registry {
+	return &Registry{
+		providers: providers,
+	}
+}
+
+func (r *Registry) Get(name string) (*Provider, bool) {
+	provider, exists := r.providers[name]
+	return provider, exists
+}
+
+func (r *Registry) Names() []string {
+	names := make([]string, 0, len(r.providers))
+	for name := range r.providers {
+		names = append(names, name)
+	}
+	return names
+}

@@ -1,0 +1,64 @@
+package oauth
+
+import (
+	"context"
+	"fmt"
+
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/facebook"
+)
+
+const FacebookUserInfoURL = "https://graph.facebook.com/v15.0/me"
+
+func NewFacebookProvider(config *oauth2.Config) *Provider {
+	config.Endpoint = facebook.Endpoint
+	providerConfig := ProviderConfig{
+		RequirePKCE: false,
+		Scopes:      []string{"email"},
+	}
+	return NewProvider("facebook", config, fetchFacebookUserInfo, providerConfig)
+}
+
+type FacebookUserInfo struct {
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	Name          string `json:"name"`
+	FirstName     string `json:"first_name"`
+	LastName      string `json:"last_name"`
+	PictureURL    string `json:"picture_url"`
+	Provider      string `json:"provider"`
+}
+
+func fetchFacebookUserInfo(ctx context.Context, config *oauth2.Config, token *oauth2.Token) (any, error) {
+	fields := "id,email,name,first_name,last_name,picture.type(large)"
+	url := fmt.Sprintf("%s?fields=%s", FacebookUserInfoURL, fields)
+
+	var resp struct {
+		ID        string `json:"id"`
+		Email     string `json:"email"`
+		Name      string `json:"name"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		Picture   struct {
+			Data struct {
+				URL string `json:"url"`
+			} `json:"data"`
+		} `json:"picture"`
+	}
+
+	if err := FetchUserInfo(ctx, config, token, url, &resp); err != nil {
+		return nil, err
+	}
+
+	return &FacebookUserInfo{
+		ID:            resp.ID,
+		Email:         resp.Email,
+		EmailVerified: true,
+		Name:          resp.Name,
+		FirstName:     resp.FirstName,
+		LastName:      resp.LastName,
+		PictureURL:    resp.Picture.Data.URL,
+		Provider:      "facebook",
+	}, nil
+}

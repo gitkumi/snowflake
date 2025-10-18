@@ -78,7 +78,7 @@ func Command() *cobra.Command {
 
 			oauthGroup := huh.NewGroup(
 				huh.NewMultiSelect[string]().
-					Title("Add OAuth providers (requires Redis)").
+					Title("Add OAuth providers").
 					Options(
 						huh.NewOption("Google", "Google"),
 						huh.NewOption("Discord", "Discord"),

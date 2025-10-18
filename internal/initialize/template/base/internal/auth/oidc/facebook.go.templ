@@ -1,0 +1,11 @@
+package oidc
+
+import (
+	"{{ .Name }}/internal/auth/oauth"
+)
+
+const FacebookIssuer = "https://www.facebook.com"
+
+func NewFacebookProvider(oauthProvider *oauth.Provider, clientID string) *Provider {
+	return NewProvider(oauthProvider, FacebookIssuer, clientID, nil)
+}

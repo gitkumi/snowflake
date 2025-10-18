@@ -1,0 +1,39 @@
+package oauth
+
+import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
+	"errors"
+	"fmt"
+)
+
+var (
+	ErrInvalidVerifierLength = errors.New("oauth: PKCE verifier must be between 43 and 128 characters")
+)
+
+type PKCEChallenge struct {
+	CodeVerifier  string
+	CodeChallenge string
+}
+
+func GeneratePKCEChallenge() (*PKCEChallenge, error) {
+	verifierBytes := make([]byte, 64)
+	if _, err := rand.Read(verifierBytes); err != nil {
+		return nil, fmt.Errorf("failed to generate code verifier: %w", err)
+	}
+
+	codeVerifier := base64.RawURLEncoding.EncodeToString(verifierBytes)
+
+	if len(codeVerifier) < 43 || len(codeVerifier) > 128 {
+		return nil, ErrInvalidVerifierLength
+	}
+
+	hash := sha256.Sum256([]byte(codeVerifier))
+	codeChallenge := base64.RawURLEncoding.EncodeToString(hash[:])
+
+	return &PKCEChallenge{
+		CodeVerifier:  codeVerifier,
+		CodeChallenge: codeChallenge,
+	}, nil
+}

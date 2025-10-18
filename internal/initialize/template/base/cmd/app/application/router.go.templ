@@ -5,10 +5,6 @@ import (
 	"{{ .Name }}/internal/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-{{- if .Redis }}
-	"fmt"
-	"github.com/redis/go-redis/v9"
-{{- end }}
 )
 
 type RouterConfig struct {
@@ -24,18 +20,10 @@ func NewRouter(cfg *RouterConfig) *gin.Engine {
 	return router
 }
 
-func (app *Application) RegisterRoutes({{- if .Redis }}redis *redis.Client {{- end }}) error {
-	{{- if .Redis }}
-	rateLimit, err := middleware.RateLimitMiddleware(redis)
-	if err != nil {
-		return fmt.Errorf("failed to init rate limit middleware: %v", err)
-	}
-	{{- end }}
+func (app *Application) RegisterRoutes() error {
+	app.Router.Use(middleware.SecurityHeadersMiddleware())
 
 	if app.Environment == env.Production {
-		{{- if .Redis }}
-		app.Router.Use(rateLimit)
-		{{- end }}
 		app.Router.Use(middleware.LoggingMiddleware(app.Logger))
 	}
 	
@@ -44,19 +32,18 @@ func (app *Application) RegisterRoutes({{- if .Redis }}redis *redis.Client {{- e
 	{{- end }}
 
 	{{- if .HasOAuth }}
-	app.Router.GET("/oauth/providers", app.handlers.oauth.ListProviders)
-	app.Router.GET("/oauth/:provider", app.handlers.oauth.Authorize)
-	app.Router.GET("/oauth/:provider/callback", app.handlers.oauth.Callback)
+	oauthGroup := app.Router.Group("/oauth")
+	oauthGroup.GET("/:provider/authorize", app.handlers.oauth.Authorize)
+	oauthGroup.GET("/:provider/callback", app.handlers.oauth.Callback)
 	{{- end }}
 	
 	{{- if .HasOIDC }}
-	app.Router.GET("/oidc/providers", app.handlers.oidc.ListProviders)
-	app.Router.GET("/oidc/:provider", app.handlers.oidc.Authorize)
-	app.Router.GET("/oidc/:provider/callback", app.handlers.oidc.Callback)
+	oidcGroup := app.Router.Group("/oidc")
+	oidcGroup.GET("/:provider/authorize", app.handlers.oidc.Authorize)
+	oidcGroup.GET("/:provider/callback", app.handlers.oidc.Callback)
 	{{- end }}
 
 	{{- if eq .Billing.String "stripe" }}
-	// outside /api prefix, no rate limiting
 	app.Router.POST("/webhook/billing", app.handlers.webhook.HandleWebhook)
 	{{- end }}
 
@@ -108,5 +95,3 @@ func (app *Application) RegisterRoutes({{- if .Redis }}redis *redis.Client {{- e
 
 	return nil
 }
-
-

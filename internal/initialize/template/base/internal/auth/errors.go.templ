@@ -1,0 +1,74 @@
+package auth
+
+import (
+	"fmt"
+	"net/http"
+)
+
+type AuthError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Status  int    `json:"-"`
+}
+
+func (e *AuthError) Error() string {
+	return fmt.Sprintf("auth error: %s - %s", e.Code, e.Message)
+}
+
+var (
+	ErrInvalidRequest = &AuthError{
+		Code:    "invalid_request",
+		Message: "Invalid request. Please check your parameters and try again.",
+		Status:  http.StatusBadRequest,
+	}
+
+	ErrInvalidSession = &AuthError{
+		Code:    "invalid_session",
+		Message: "Session expired or invalid. Please try again.",
+		Status:  http.StatusBadRequest,
+	}
+
+	ErrAuthenticationFailed = &AuthError{
+		Code:    "authentication_failed",
+		Message: "Authentication failed. Please try again.",
+		Status:  http.StatusBadRequest,
+	}
+
+	ErrAuthenticationCancelled = &AuthError{
+		Code:    "authentication_cancelled",
+		Message: "Authentication was cancelled. Please try again.",
+		Status:  http.StatusBadRequest,
+	}
+
+	ErrInvalidProvider = &AuthError{
+		Code:    "invalid_provider",
+		Message: "Invalid authentication provider.",
+		Status:  http.StatusBadRequest,
+	}
+
+	ErrServerError = &AuthError{
+		Code:    "server_error",
+		Message: "Internal server error. Please try again later.",
+		Status:  http.StatusInternalServerError,
+	}
+
+	ErrConfigurationError = &AuthError{
+		Code:    "configuration_error",
+		Message: "Configuration error. Please contact support.",
+		Status:  http.StatusInternalServerError,
+	}
+
+	ErrRateLimited = &AuthError{
+		Code:    "rate_limited",
+		Message: "Too many requests. Please try again later.",
+		Status:  http.StatusTooManyRequests,
+	}
+)
+
+func NewAuthError(code, message string, status int) *AuthError {
+	return &AuthError{
+		Code:    code,
+		Message: message,
+		Status:  status,
+	}
+}

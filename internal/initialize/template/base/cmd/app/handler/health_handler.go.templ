@@ -17,7 +17,7 @@ func NewHealthHandler(s *service.HealthService) *HealthHandler {
 
 func (h *HealthHandler) Health(c *gin.Context) {
 	response := gin.H{
-		"handler": "ok",
+		"status": "ok",
 	}
 
 	{{- if ne .Database.String "none" }}

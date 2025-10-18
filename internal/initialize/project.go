@@ -215,7 +215,14 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/internal/util/http.go",
+				"/internal/auth/errors.go",
+				"/internal/auth/jwt.go",
+				"/internal/auth/validation.go",
+				"/internal/auth/oauth/http.go",
+				"/internal/auth/oauth/oauth.go",
+				"/internal/auth/oauth/pkce.go",
+				"/internal/auth/oauth/pkce_test.go",
+				"/cmd/app/public/README.md",
 				"/cmd/app/handler/oauth_handler.go",
 				"/cmd/app/service/oauth_service.go",
 			},
@@ -230,128 +237,122 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/google.go",
+				"/internal/auth/oauth/google.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthGoogle },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/facebook.go",
+				"/internal/auth/oauth/facebook.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthFacebook },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/github.go",
+				"/internal/auth/oauth/github.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthGitHub },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/discord.go",
+				"/internal/auth/oauth/discord.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthDiscord },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/instagram.go",
+				"/internal/auth/oauth/instagram.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthInstagram },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/linkedin.go",
+				"/internal/auth/oauth/linkedin.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthLinkedIn },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/microsoft.go",
+				"/internal/auth/oauth/microsoft.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthMicrosoft },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/reddit.go",
+				"/internal/auth/oauth/reddit.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthReddit },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/slack.go",
+				"/internal/auth/oauth/slack.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthSlack },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/spotify.go",
+				"/internal/auth/oauth/spotify.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthSpotify },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/stripe.go",
+				"/internal/auth/oauth/stripe.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthStripe },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/twitch.go",
+				"/internal/auth/oauth/twitch.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthTwitch },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/x.go",
+				"/internal/auth/oauth/x.go",
 			},
 			Check: func(p *Project) bool { return !p.OAuthX },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oauth/oauth.go",
-			},
-			Check: func(p *Project) bool { return !p.HasOAuth() },
-		},
-		{
-			FilePaths: []string{
-				"/internal/oidc/google.go",
+				"/internal/auth/oidc/google.go",
 			},
 			Check: func(p *Project) bool { return !p.OIDCGoogle },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oidc/facebook.go",
+				"/internal/auth/oidc/facebook.go",
 			},
 			Check: func(p *Project) bool { return !p.OIDCFacebook },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oidc/linkedin.go",
+				"/internal/auth/oidc/linkedin.go",
 			},
 			Check: func(p *Project) bool { return !p.OIDCLinkedIn },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oidc/microsoft.go",
+				"/internal/auth/oidc/microsoft.go",
 			},
 			Check: func(p *Project) bool { return !p.OIDCMicrosoft },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oidc/twitch.go",
+				"/internal/auth/oidc/twitch.go",
 			},
 			Check: func(p *Project) bool { return !p.OIDCTwitch },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oidc/discord.go",
+				"/internal/auth/oidc/discord.go",
 			},
 			Check: func(p *Project) bool { return !p.OIDCDiscord },
 		},
 		{
 			FilePaths: []string{
-				"/internal/oidc/oidc.go",
-				"/internal/oidc/token.go",
+				"/internal/auth/oidc/oidc.go",
+				"/internal/auth/oidc/token.go",
 			},
 			Check: func(p *Project) bool { return !p.HasOIDC() },
 		},
