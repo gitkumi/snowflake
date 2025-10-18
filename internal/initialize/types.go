@@ -98,14 +98,12 @@ func (d Database) Import() string {
 type Queue string
 
 const (
-	QueueNone  Queue = "none"
-	QueueBasic Queue = "basic"
-	QueueSQS   Queue = "sqs"
+	QueueNone Queue = "none"
+	QueueSQS  Queue = "sqs"
 )
 
 var AllQueues = []Queue{
 	QueueNone,
-	QueueBasic,
 	QueueSQS,
 }
 

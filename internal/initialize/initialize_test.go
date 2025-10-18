@@ -226,30 +226,6 @@ func TestGenerateNoRedis(t *testing.T) {
 	}
 }
 
-func TestGenerateQueueBasic(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseSQLite3,
-		Queue:     initialize.QueueBasic,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
-		Redis:     true,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
 func TestGenerateQueueSQS(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -409,7 +385,6 @@ func FuzzGenerate(f *testing.F) {
 			initialize.DatabaseNone,
 		}
 		queues := []initialize.Queue{
-			initialize.QueueBasic,
 			initialize.QueueSQS,
 			initialize.QueueNone,
 		}
