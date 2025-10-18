@@ -31,24 +31,22 @@ func (app *Application) RegisterRoutes() error {
 	app.Router.GET("/", app.handlers.html.TopPage)
 	{{- end }}
 
-	{{- if .HasOAuth }}
-	oauthGroup := app.Router.Group("/oauth")
-	oauthGroup.GET("/:provider/authorize", app.handlers.oauth.Authorize)
-	oauthGroup.GET("/:provider/callback", app.handlers.oauth.Callback)
-	{{- end }}
-	
-	{{- if .HasOIDC }}
-	oidcGroup := app.Router.Group("/oidc")
-	oidcGroup.GET("/:provider/authorize", app.handlers.oidc.Authorize)
-	oidcGroup.GET("/:provider/callback", app.handlers.oidc.Callback)
-	{{- end }}
-
 	{{- if eq .Billing.String "stripe" }}
 	app.Router.POST("/webhook/billing", app.handlers.webhook.HandleWebhook)
 	{{- end }}
 
 	api := app.Router.Group("/api")
 	api.GET("/health", app.handlers.health.Health)
+
+	{{- if .HasOAuth }}
+	api.GET("/oauth/:provider/authorize", app.handlers.oauth.Authorize)
+	api.GET("/oauth/:provider/callback", app.handlers.oauth.Callback)
+	{{- end }}
+	
+	{{- if .HasOIDC }}
+	api.GET("/oidc/:provider/authorize", app.handlers.oidc.Authorize)
+	api.GET("/oidc/:provider/callback", app.handlers.oidc.Callback)
+	{{- end }}
 	
 	{{- if ne .Database.String "none" }}
 	api.GET("/books", app.handlers.book.ListBook)
