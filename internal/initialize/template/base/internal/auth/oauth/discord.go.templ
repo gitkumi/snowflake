@@ -1,0 +1,67 @@
+package oauth
+
+import (
+	"context"
+	"fmt"
+
+	"golang.org/x/oauth2"
+)
+
+var DiscordEndpoint = oauth2.Endpoint{
+	AuthURL:  "https://discord.com/api/oauth2/authorize",
+	TokenURL: "https://discord.com/api/oauth2/token",
+}
+
+const DiscordUserInfoURL = "https://discord.com/api/users/@me"
+
+func NewDiscordProvider(config *oauth2.Config) *Provider {
+	config.Endpoint = DiscordEndpoint
+	providerConfig := ProviderConfig{
+		RequirePKCE: false,
+		Scopes:      []string{"identify", "email"},
+	}
+	return NewProvider("discord", config, fetchDiscordUserInfo, providerConfig)
+}
+
+type DiscordUserInfo struct {
+	ID            string `json:"id"`
+	Username      string `json:"username"`
+	Discriminator string `json:"discriminator"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	AvatarURL     string `json:"avatar_url"`
+	Locale        string `json:"locale"`
+	Provider      string `json:"provider"`
+}
+
+func fetchDiscordUserInfo(ctx context.Context, config *oauth2.Config, token *oauth2.Token) (any, error) {
+	var resp struct {
+		ID            string `json:"id"`
+		Username      string `json:"username"`
+		Discriminator string `json:"discriminator"`
+		Avatar        string `json:"avatar"`
+		Email         string `json:"email"`
+		Verified      bool   `json:"verified"`
+		Locale        string `json:"locale"`
+	}
+
+	if err := FetchUserInfo(ctx, config, token, DiscordUserInfoURL, &resp); err != nil {
+		return nil, err
+	}
+
+	avatarURL := ""
+	if resp.Avatar != "" {
+		avatarURL = fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", resp.ID, resp.Avatar)
+	}
+
+	return &DiscordUserInfo{
+		ID:            resp.ID,
+		Username:      resp.Username,
+		Discriminator: resp.Discriminator,
+		Email:         resp.Email,
+		EmailVerified: resp.Verified,
+		AvatarURL:     avatarURL,
+		Locale:        resp.Locale,
+		Provider:      "discord",
+	}, nil
+}

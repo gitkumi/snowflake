@@ -8,6 +8,9 @@ import (
 	"{{ .Name }}/cmd/app/application"
 	"{{ .Name }}/cmd/app/env"
 	"github.com/lmittmann/tint"
+{{- if .HasOAuth }}
+	"{{ .Name }}/internal/auth"
+{{- end }}
 {{- if ne .Database.String "none" }}
 	_ "{{.Database.Import}}"
 {{- end }}
@@ -23,11 +26,14 @@ import (
 {{- if eq .Queue "sqs" }}
 	"{{ .Name }}/internal/queue"
 {{- end }}
-{{- if .HasOAuth }}
-	"{{ .Name }}/internal/oauth"
+{{- if or .HasOAuth .HasOIDC }}
+	"{{ .Name }}/internal/auth/oauth"
 {{- end }}
 {{- if .HasOIDC }}
-	"{{ .Name }}/internal/oidc"
+	"{{ .Name }}/internal/auth/oidc"
+{{- end }}
+{{- if or .HasOAuth .HasOIDC }}
+	"golang.org/x/oauth2"
 {{- end }}
 {{- if eq .Billing.String "stripe" }}
 	"{{ .Name }}/internal/billing"
@@ -44,7 +50,7 @@ func main() {
 		GinMode: vars.GinMode,
 	})
 
-	{{- if ne .Database.String "none" }}
+{{- if ne .Database.String "none" }}
 	db, err := application.NewDB(&application.DBConfig{
 		DatabaseConnString: vars.DatabaseConnString,
 		MigrateDatabase:    vars.MigrateDatabase,
@@ -88,7 +94,7 @@ func main() {
 		DB:       vars.RedisDB,
 	})
 	{{- end }}
-	{{- if eq .Queue "sqs" }}
+{{- if eq .Queue "sqs" }}
 	sqs := queue.NewMockQueue()
 	// TODO: Uncomment this after setting up your SQS 
 	// sqs := queue.NewSQSQueue(&queue.SQSQueueConfig{
@@ -97,7 +103,14 @@ func main() {
 	// 	Region:    vars.SQSRegion,
 	// 	QueueURL:  vars.SQSQueueURL,
 	// })
-	{{- end }}
+{{- end }}
+
+{{- if .HasOAuth }}
+	jwtManager, err := auth.NewJWTManager(vars.SessionSecret)
+	if err != nil {
+		log.Fatal("failed to create JWT manager", err)
+	}
+{{- end }}
 
 	{{- if eq .Billing.String "stripe" }}
 	// Use test keys during development, switch to live keys in production
@@ -129,11 +142,14 @@ func main() {
 		{{- end }}
 
 		{{- if .HasOAuth }}
-		OAuth: newOAuthRegistry(vars),
+		OAuth:                    newOAuthRegistry(vars),
+		OAuthAllowedRedirectURLs: vars.OAuthAllowedRedirectURLs,
+		JWTManager:               jwtManager,
+		SessionMaxAge:            vars.SessionMaxAge,
 		{{- end }}
 
 		{{- if .HasOIDC }}
-		OIDC: newOIDCRegistry(vars),
+		OIDC:                     newOIDCRegistry(vars),
 		{{- end }}
 
 		{{- if eq .Billing.String "stripe" }}
@@ -150,207 +166,194 @@ func main() {
 
 
 {{- if .HasOAuth }}
-func newOAuthRegistry(vars *env.EnvironmentVariables) *oauth.OAuth {
-	oauthProviders := []*oauth.ProviderConfig{}
+func newOAuthRegistry(vars *env.EnvironmentVariables) *oauth.Registry {
+	providers := make(map[string]*oauth.Provider)
 
 	{{- if .OAuthGoogle }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "google",
+	providers["google"] = oauth.NewGoogleProvider(&oauth2.Config{
 		ClientID:     vars.OAuthGoogleClientID,
 		ClientSecret: vars.OAuthGoogleClientSecret,
 		RedirectURL:  vars.OAuthGoogleRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"},
 	})
 	{{- end }}
 
 	{{- if .OAuthGitHub }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "github",
+	providers["github"] = oauth.NewGitHubProvider(&oauth2.Config{
 		ClientID:     vars.OAuthGitHubClientID,
 		ClientSecret: vars.OAuthGitHubClientSecret,
 		RedirectURL:  vars.OAuthGitHubRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"user:email"},
 	})
 	{{- end }}
 
 	{{- if .OAuthFacebook }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "facebook",
+	providers["facebook"] = oauth.NewFacebookProvider(&oauth2.Config{
 		ClientID:     vars.OAuthFacebookClientID,
 		ClientSecret: vars.OAuthFacebookClientSecret,
 		RedirectURL:  vars.OAuthFacebookRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"email"},
 	})
 	{{- end }}
 
 	{{- if .OAuthInstagram }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "instagram",
+	providers["instagram"] = oauth.NewInstagramProvider(&oauth2.Config{
 		ClientID:     vars.OAuthInstagramClientID,
 		ClientSecret: vars.OAuthInstagramClientSecret,
 		RedirectURL:  vars.OAuthInstagramRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"user_profile"},
 	})
 	{{- end }}
 
 	{{- if .OAuthDiscord }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "discord",
+	providers["discord"] = oauth.NewDiscordProvider(&oauth2.Config{
 		ClientID:     vars.OAuthDiscordClientID,
 		ClientSecret: vars.OAuthDiscordClientSecret,
 		RedirectURL:  vars.OAuthDiscordRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"identify", "email"},
 	})
 	{{- end }}
 
 	{{- if .OAuthLinkedIn }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "linkedin",
+	providers["linkedin"] = oauth.NewLinkedInProvider(&oauth2.Config{
 		ClientID:     vars.OAuthLinkedInClientID,
 		ClientSecret: vars.OAuthLinkedInClientSecret,
 		RedirectURL:  vars.OAuthLinkedInRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"r_liteprofile", "r_emailaddress"},
 	})
 	{{- end }}
 
 	{{- if .OAuthReddit }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "reddit",
+	providers["reddit"] = oauth.NewRedditProvider(&oauth2.Config{
 		ClientID:     vars.OAuthRedditClientID,
 		ClientSecret: vars.OAuthRedditClientSecret,
 		RedirectURL:  vars.OAuthRedditRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"identity"},
 	})
 	{{- end }}
 
 	{{- if .OAuthTwitch }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "twitch",
+	providers["twitch"] = oauth.NewTwitchProvider(&oauth2.Config{
 		ClientID:     vars.OAuthTwitchClientID,
 		ClientSecret: vars.OAuthTwitchClientSecret,
 		RedirectURL:  vars.OAuthTwitchRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"user:read:email"},
 	})
 	{{- end }}
 
 	{{- if .OAuthStripe }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "stripe",
+	providers["stripe"] = oauth.NewStripeProvider(&oauth2.Config{
 		ClientID:     vars.OAuthStripeClientID,
 		ClientSecret: vars.OAuthStripeClientSecret,
 		RedirectURL:  vars.OAuthStripeRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"read_only"},
 	})
 	{{- end }}
 
 	{{- if .OAuthX }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "x",
+	providers["x"] = oauth.NewXProvider(&oauth2.Config{
 		ClientID:     vars.OAuthXClientID,
 		ClientSecret: vars.OAuthXClientSecret,
 		RedirectURL:  vars.OAuthXRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"users.read", "tweet.read"},
 	})
 	{{- end }}
 
 	{{- if .OAuthMicrosoft }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "microsoft",
+	providers["microsoft"] = oauth.NewMicrosoftProvider(&oauth2.Config{
 		ClientID:     vars.OAuthMicrosoftClientID,
 		ClientSecret: vars.OAuthMicrosoftClientSecret,
 		RedirectURL:  vars.OAuthMicrosoftRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"openid", "email", "profile"},
 	})
 	{{- end }}
 
 	{{- if .OAuthSlack }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "slack",
+	providers["slack"] = oauth.NewSlackProvider(&oauth2.Config{
 		ClientID:     vars.OAuthSlackClientID,
 		ClientSecret: vars.OAuthSlackClientSecret,
 		RedirectURL:  vars.OAuthSlackRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"identity.basic", "identity.email", "identity.avatar"},
 	})
 	{{- end }}
 
 	{{- if .OAuthSpotify }}
-	oauthProviders = append(oauthProviders, &oauth.ProviderConfig{
-		Name:         "spotify",
+	providers["spotify"] = oauth.NewSpotifyProvider(&oauth2.Config{
 		ClientID:     vars.OAuthSpotifyClientID,
 		ClientSecret: vars.OAuthSpotifyClientSecret,
 		RedirectURL:  vars.OAuthSpotifyRedirectURL,
-		Scopes:       []string{},
+		Scopes:       []string{"user-read-email"},
 	})
 	{{- end }}
 
-	return oauth.NewOAuth(oauthProviders)
+	return oauth.NewRegistry(providers)
 }
 {{- end }}
 
 {{- if .HasOIDC }}
-func newOIDCRegistry(vars *env.EnvironmentVariables) *oidc.OIDC {
-	oidcProviders := []*oauth.ProviderConfig{}
+func newOIDCRegistry(vars *env.EnvironmentVariables) *oidc.Registry {
+	providers := make(map[string]*oidc.Provider)
 
 	{{- if .OIDCGoogle }}
-	oidcProviders = append(oidcProviders, &oauth.ProviderConfig{
-		Name:         "google",
+	googleOIDC := oauth.NewGoogleProvider(&oauth2.Config{
 		ClientID:     vars.OAuthGoogleClientID,
 		ClientSecret: vars.OAuthGoogleClientSecret,
 		RedirectURL:  vars.OIDCGoogleRedirectURL,
 		Scopes:       []string{"openid", "profile", "email"},
 	})
+	providers["google"] = oidc.NewGoogleProvider(googleOIDC, vars.OAuthGoogleClientID)
 	{{- end }}
 
 	{{- if .OIDCMicrosoft }}
-	oidcProviders = append(oidcProviders, &oauth.ProviderConfig{
-		Name:         "microsoft",
+	microsoftOIDC := oauth.NewMicrosoftProvider(&oauth2.Config{
 		ClientID:     vars.OAuthMicrosoftClientID,
 		ClientSecret: vars.OAuthMicrosoftClientSecret,
 		RedirectURL:  vars.OIDCMicrosoftRedirectURL,
-		Scopes:       []string{"openid", "profile", "email"},
+		Scopes:       []string{"openid", "email", "profile"},
 	})
+	providers["microsoft"] = oidc.NewMicrosoftProvider(microsoftOIDC, vars.OAuthMicrosoftClientID)
 	{{- end }}
 
 	{{- if .OIDCFacebook }}
-	oidcProviders = append(oidcProviders, &oauth.ProviderConfig{
-		Name:         "facebook",
+	facebookOIDC := oauth.NewFacebookProvider(&oauth2.Config{
 		ClientID:     vars.OAuthFacebookClientID,
 		ClientSecret: vars.OAuthFacebookClientSecret,
 		RedirectURL:  vars.OIDCFacebookRedirectURL,
-		Scopes:       []string{"openid", "profile", "email"},
+		Scopes:       []string{"openid", "email"},
 	})
+	providers["facebook"] = oidc.NewFacebookProvider(facebookOIDC, vars.OAuthFacebookClientID)
 	{{- end }}
 
 	{{- if .OIDCLinkedIn }}
-	oidcProviders = append(oidcProviders, &oauth.ProviderConfig{
-		Name:         "linkedin",
+	linkedinOIDC := oauth.NewLinkedInProvider(&oauth2.Config{
 		ClientID:     vars.OAuthLinkedInClientID,
 		ClientSecret: vars.OAuthLinkedInClientSecret,
 		RedirectURL:  vars.OIDCLinkedInRedirectURL,
-		Scopes:       []string{"openid", "profile", "email"},
+		Scopes:       []string{"openid", "r_liteprofile", "r_emailaddress"},
 	})
+	providers["linkedin"] = oidc.NewLinkedInProvider(linkedinOIDC, vars.OAuthLinkedInClientID)
 	{{- end }}
 
 	{{- if .OIDCDiscord }}
-	oidcProviders = append(oidcProviders, &oauth.ProviderConfig{
-		Name:         "discord",
+	discordOIDC := oauth.NewDiscordProvider(&oauth2.Config{
 		ClientID:     vars.OAuthDiscordClientID,
 		ClientSecret: vars.OAuthDiscordClientSecret,
 		RedirectURL:  vars.OIDCDiscordRedirectURL,
-		Scopes:       []string{"openid", "profile", "email"},
+		Scopes:       []string{"identify", "email", "openid"},
 	})
+	providers["discord"] = oidc.NewDiscordProvider(discordOIDC, vars.OAuthDiscordClientID)
 	{{- end }}
 
 	{{- if .OIDCTwitch }}
-	oidcProviders = append(oidcProviders, &oauth.ProviderConfig{
-		Name:         "twitch",
+	twitchOIDC := oauth.NewTwitchProvider(&oauth2.Config{
 		ClientID:     vars.OAuthTwitchClientID,
 		ClientSecret: vars.OAuthTwitchClientSecret,
 		RedirectURL:  vars.OIDCTwitchRedirectURL,
-		Scopes:       []string{"openid", "profile", "email"},
+		Scopes:       []string{"openid", "user:read:email"},
 	})
+	providers["twitch"] = oidc.NewTwitchProvider(twitchOIDC, vars.OAuthTwitchClientID)
 	{{- end }}
 
-	return oidc.NewOIDC(oidcProviders)
+	return oidc.NewRegistry(providers)
 }
 {{- end }}

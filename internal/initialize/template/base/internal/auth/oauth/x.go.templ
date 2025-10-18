@@ -1,0 +1,61 @@
+package oauth
+
+import (
+	"context"
+	"fmt"
+
+	"golang.org/x/oauth2"
+)
+
+var XEndpoint = oauth2.Endpoint{
+	AuthURL:   "https://twitter.com/i/oauth2/authorize",
+	TokenURL:  "https://api.twitter.com/2/oauth2/token",
+	AuthStyle: oauth2.AuthStyleInParams,
+}
+
+const XUserInfoURL = "https://api.twitter.com/2/users/me"
+
+func NewXProvider(config *oauth2.Config) *Provider {
+	config.Endpoint = XEndpoint
+	providerConfig := ProviderConfig{
+		RequirePKCE: true,
+		Scopes:      []string{"users.read", "tweet.read"},
+	}
+	return NewProvider("x", config, fetchXUserInfo, providerConfig)
+}
+
+type XUserInfo struct {
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	Username        string `json:"username"`
+	ProfileImageURL string `json:"profile_image_url"`
+	Verified        bool   `json:"verified"`
+	Provider        string `json:"provider"`
+}
+
+func fetchXUserInfo(ctx context.Context, config *oauth2.Config, token *oauth2.Token) (any, error) {
+	url := fmt.Sprintf("%s?user.fields=id,name,username,profile_image_url,verified", XUserInfoURL)
+
+	var resp struct {
+		Data struct {
+			ID              string `json:"id"`
+			Name            string `json:"name"`
+			Username        string `json:"username"`
+			ProfileImageURL string `json:"profile_image_url"`
+			Verified        bool   `json:"verified"`
+		} `json:"data"`
+	}
+
+	if err := FetchUserInfo(ctx, config, token, url, &resp); err != nil {
+		return nil, err
+	}
+
+	return &XUserInfo{
+		ID:              resp.Data.ID,
+		Name:            resp.Data.Name,
+		Username:        resp.Data.Username,
+		ProfileImageURL: resp.Data.ProfileImageURL,
+		Verified:        resp.Data.Verified,
+		Provider:        "x",
+	}, nil
+}

@@ -35,12 +35,15 @@ import (
 	"sync"
 	{{- end }}
 
+	{{- if or .HasOAuth .HasOIDC }}
+	"{{ .Name }}/internal/auth"
+	{{- end }}
 	{{- if .HasOAuth }}
-	"{{ .Name }}/internal/oauth"
+	"{{ .Name }}/internal/auth/oauth"
 	{{- end }}
 
 	{{- if .HasOIDC }}
-	"{{ .Name }}/internal/oidc"
+	"{{ .Name }}/internal/auth/oidc"
 	{{- end }}
 
 	{{- if eq .Billing.String "stripe" }}
@@ -85,51 +88,49 @@ type Application struct {
 }
 
 type Config struct {
-	BaseURL string
-	Port    int
-	Router  *gin.Engine
-	Logger  *slog.Logger
-	Environment env.Environment
+	BaseURL                  string
+	Port                     int
+	Router                   *gin.Engine
+	Logger                   *slog.Logger
+	Environment              env.Environment
 {{- if ne .Database.String "none" }}
-	DB      *sql.DB
+	DB                       *sql.DB
 {{- end }}
 {{- if .SMTP }}
-	Mailer  smtp.Mailer
+	Mailer                   smtp.Mailer
 {{- end }}
 {{- if .Storage }}
-	Storage storage.Storage
+	Storage                  storage.Storage
 {{- end }}
 {{- if .Redis }}
-	Redis   *redis.Client
+	Redis                    *redis.Client
 {{- end }}
 {{- if eq .Queue "sqs" }}
-	Queue   queue.Queue
+	Queue                    queue.Queue
 {{- end }}
 {{- if .HasOAuth }}
-	OAuth   *oauth.OAuth
+	OAuth                    *oauth.Registry
 {{- end }}
 {{- if .HasOIDC }}
-	OIDC    *oidc.OIDC
+	OIDC                     *oidc.Registry
+{{- end }}
+{{- if .HasOAuth }}
+	OAuthAllowedRedirectURLs []string
+{{- end }}
+{{- if .HasOAuth }}
+	JWTManager               *auth.JWTManager
+{{- end }}
+{{- if .HasOAuth }}
+	SessionMaxAge            int
 {{- end }}
 {{- if eq .Billing.String "stripe" }}
-	Billing billing.Billing
-	StripeWebhookSecret string
+	Billing                  billing.Billing
+	StripeWebhookSecret      string
 {{- end }}
 }
 
 func NewApplication(cfg *Config) (*Application, error) {
-	// Inject these to service when needed:
-	{{- if ne .Database "none" }}
-	// cfg.DB
-	{{- end }}
-	{{- if .Redis }}
-	// cfg.Redis
-	{{- end }}
-	{{- if eq .Queue "sqs" }}
-	// cfg.Queue
-	{{- end }}
-
-	{{- if ne .Database.String "none" }}
+{{- if ne .Database.String "none" }}
 	query := repo.New(cfg.DB)
 
 	bookService := service.NewBookService(query)
@@ -148,14 +149,28 @@ func NewApplication(cfg *Config) (*Application, error) {
 	{{- end }}
 
 	{{- if .HasOAuth }}
-	oauthService := service.NewOAuthService(cfg.OAuth, cfg.Redis)
-	oauthHandler := handler.NewOAuthHandler(oauthService)
-	{{- end }}
+	oauthService := service.NewOAuthService(cfg.OAuth, cfg.Logger)
+	oauthHandler := handler.NewOAuthHandler(
+		oauthService,
+		cfg.Environment,
+		cfg.OAuthAllowedRedirectURLs,
+		cfg.JWTManager,
+		cfg.SessionMaxAge,
+		cfg.Logger,
+	)
+{{- end }}
 
-	{{- if .HasOIDC }}
-	oidcService := service.NewOIDCService(cfg.OIDC, cfg.Redis)
-	oidcHandler := handler.NewOIDCHandler(oidcService)
-	{{- end }}
+{{- if .HasOIDC }}
+	oidcService := service.NewOIDCService(cfg.OIDC, cfg.Logger)
+	oidcHandler := handler.NewOIDCHandler(
+		oidcService,
+		cfg.Environment,
+		cfg.OAuthAllowedRedirectURLs,
+		cfg.JWTManager,
+		cfg.SessionMaxAge,
+		cfg.Logger,
+	)
+{{- end }}
 
 	{{- if eq .Billing.String "stripe" }}
 	billingService := service.NewBillingService(cfg.Billing)
@@ -187,16 +202,12 @@ func NewApplication(cfg *Config) (*Application, error) {
 		Environment: cfg.Environment,
 		baseURL:  cfg.BaseURL,
 		Logger:   cfg.Logger,
-		Router:   cfg.Router,
-		handlers: handlers,
-		port:			cfg.Port,
-	}
+	Router:   cfg.Router,
+	handlers: handlers,
+	port:			cfg.Port,
+}
 
-	{{- if .Redis }}
-	err := s.RegisterRoutes(cfg.Redis)
-	{{- else }}
 	err := s.RegisterRoutes()
-	{{- end }}
 	if err != nil {
 		return nil, err
 	}
