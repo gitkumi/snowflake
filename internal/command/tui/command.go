@@ -60,7 +60,6 @@ func Command() *cobra.Command {
 					Title("Select queue").
 					Options(
 						huh.NewOption("None", initialize.QueueNone),
-						huh.NewOption("Basic (sync.WaitGroup)", initialize.QueueBasic),
 						huh.NewOption("SQS", initialize.QueueSQS),
 					).
 					Value(&queue),

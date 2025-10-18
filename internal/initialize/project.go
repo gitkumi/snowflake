@@ -196,21 +196,6 @@ func NewProject(cfg *Config) *Project {
 				"/internal/queue/queue_sqs.go",
 				"/internal/queue/queue_mock.go",
 			},
-			Check: func(p *Project) bool { return p.Queue == QueueBasic },
-		},
-		{
-			FilePaths: []string{
-				"/cmd/app/application/task.go",
-			},
-			Check: func(p *Project) bool { return p.Queue == QueueSQS },
-		},
-		{
-			FilePaths: []string{
-				"/cmd/app/application/task.go",
-				"/internal/queue/queue.go",
-				"/internal/queue/queue_sqs.go",
-				"/internal/queue/queue_mock.go",
-			},
 			Check: func(p *Project) bool { return p.Queue == QueueNone },
 		},
 		{

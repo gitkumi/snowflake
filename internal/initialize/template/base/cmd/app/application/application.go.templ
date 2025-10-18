@@ -31,8 +31,6 @@ import (
 	{{- end }}
 	{{- if eq .Queue "sqs" }}
 	"{{ .Name }}/internal/queue"
-	{{- else if eq .Queue "basic" }}
-	"sync"
 	{{- end }}
 
 	{{- if or .HasOAuth .HasOIDC }}
@@ -78,9 +76,6 @@ type Application struct {
 	Environment env.Environment
 	baseURL  string
 	port     int
-	{{- if eq .Queue "basic" }}
-	wg       sync.WaitGroup
-	{{- end }}
 	handlers *Handlers
 
 	Logger  *slog.Logger
@@ -239,8 +234,4 @@ func (app *Application) Run() {
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Println("listen and serve error: ", err)
 	}
-
-	{{- if eq .Queue "basic" }}
-	app.wg.Wait()
-	{{- end }}
 }
