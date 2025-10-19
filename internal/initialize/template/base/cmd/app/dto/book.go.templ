@@ -12,7 +12,7 @@ type CreateBook struct {
 	Genre  string `json:"genre"`
 }
 
-func (i CreateBook) Repo() repo.CreateBookParams {
+func (i CreateBook) ToCreateBookParams() repo.CreateBookParams {
 	return repo.CreateBookParams{
 		Title:  i.Title,
 		Author: sql.NullString{String: i.Author, Valid: i.Author != ""},
@@ -28,7 +28,7 @@ type UpdateBook struct {
 	Genre  string `json:"genre"`
 }
 
-func (i UpdateBook) Repo(current repo.Book) repo.UpdateBookParams {
+func (i UpdateBook) ToUpdateBookParams(current repo.Book) repo.UpdateBookParams {
 	return repo.UpdateBookParams{
 		ID:     current.ID,
 		Title:  i.Title,
