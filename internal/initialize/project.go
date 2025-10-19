@@ -363,6 +363,10 @@ func (p *Project) UsesDockerOnDev() bool {
 	return p.Redis || p.Database != DatabaseNone
 }
 
+func (p *Project) HasDevEnv() bool {
+	return !(p.Database == DatabaseSQLite3 && !p.Redis)
+}
+
 func (p *Project) ExcludeFile(templateFileName string) bool {
 	fileName := strings.TrimSuffix(templateFileName, ".templ")
 

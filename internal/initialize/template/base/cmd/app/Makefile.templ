@@ -41,7 +41,7 @@ help:
 	@echo "    sqlc         Generate SQL code"
 	@echo ""
 	{{- end }}
-	{{- if or (eq .Database.String "postgres") (eq .Database.String "mysql") (eq .Database.String "mariadb") .Redis }}
+	{{- if .HasDevEnv }}
 	@echo "  Development Environment:"
 	@echo "    devenv.up    Start development environment"
 	@echo "    devenv.down  Stop development environment"
@@ -173,7 +173,7 @@ docker.build:
 docker.run:
 	docker run --rm -p 8080:8080 --env-file .env {{ .Name }}-$(APP_NAME):latest
 
-{{- if or (eq .Database.String "postgres") (eq .Database.String "mysql") (eq .Database.String "mariadb") .Redis }}
+{{- if .HasDevEnv }}
 
 .PHONY: devenv.up
 devenv.up:
