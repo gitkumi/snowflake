@@ -197,7 +197,7 @@ clean:
 .PHONY: tools.install
 tools.install:
 	@echo "Installing development tools..."
-	@go install github.com/cosmtrek/air@latest
+	@go install github.com/air-verse/air@latest
 	@go install github.com/gotestsum/gotestsum@latest
 	{{- if ne .Database.String "none" }}
 	@go install github.com/pressly/goose/v3/cmd/goose@latest
