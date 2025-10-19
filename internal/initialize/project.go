@@ -131,10 +131,6 @@ func NewProject(cfg *Config) *Project {
 		project.OAuthDiscord = true
 	}
 
-	if project.HasOAuth() || project.HasOIDC() {
-		project.Redis = true
-	}
-
 	project.fileExclusions = []*FileExclusion{
 		{
 			FilePaths: []string{

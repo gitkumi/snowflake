@@ -28,7 +28,7 @@ func (s *BookService) CreateBook(ctx context.Context, input dto.CreateBook) (rep
 
 	return s.Query.GetBook(ctx, id)
 	{{ else }}
-	return s.Query.CreateBook(ctx, input.Repo())
+	return s.Query.CreateBook(ctx, input.ToCreateBookParams())
 	{{- end }}
 }
 
@@ -46,7 +46,7 @@ func (s *BookService) UpdateBook(ctx context.Context, id int64, input dto.Update
 
 	return s.Query.GetBook(ctx, id)
 	{{- else }}
-	return s.Query.UpdateBook(ctx, input.Repo(current))
+	return s.Query.UpdateBook(ctx, input.ToUpdateBookParams(current))
 	{{- end }}
 }
 
