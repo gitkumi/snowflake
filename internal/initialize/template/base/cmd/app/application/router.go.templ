@@ -22,10 +22,6 @@ func NewRouter(cfg *RouterConfig) *gin.Engine {
 
 func (app *Application) RegisterRoutes() error {
 	app.Router.Use(middleware.SecurityHeadersMiddleware())
-
-	if app.Environment == env.Production {
-		app.Router.Use(middleware.LoggingMiddleware(app.Logger))
-	}
 	
 	{{- if .ServeHTML }}
 	app.Router.GET("/", app.handlers.html.TopPage)
