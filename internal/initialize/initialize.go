@@ -21,7 +21,6 @@ type Config struct {
 	Name     string
 	Database Database
 	Queue    Queue
-	Billing  Billing
 
 	SMTP      bool
 	Storage   bool

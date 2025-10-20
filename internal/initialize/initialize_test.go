@@ -250,31 +250,6 @@ func TestGenerateQueueSQS(t *testing.T) {
 	}
 }
 
-func TestGenerateWithStripeBilling(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseSQLite3,
-		Queue:     initialize.QueueNone,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
-		Redis:     true,
-		Billing:   initialize.BillingStripe,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
 func TestEnvFilesGenerated(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -329,12 +304,12 @@ func TestEnvFilesGenerated(t *testing.T) {
 func FuzzGenerate(f *testing.F) {
 	f.Add(
 		true, true, true, true,
-		0, 0, 0,
+		0, 0,
 	)
 
 	f.Fuzz(func(t *testing.T,
 		withSMTP, withStorage, withRedis, withServeHTML bool,
-		dbTypeInt, jobTypeInt, billingTypeInt int,
+		dbTypeInt, jobTypeInt int,
 	) {
 		tmpDir := t.TempDir()
 
@@ -349,14 +324,9 @@ func FuzzGenerate(f *testing.F) {
 			initialize.QueueSQS,
 			initialize.QueueNone,
 		}
-		billings := []initialize.Billing{
-			initialize.BillingNone,
-			initialize.BillingStripe,
-		}
 
 		database := databases[abs(dbTypeInt)%len(databases)]
 		queue := queues[abs(jobTypeInt)%len(queues)]
-		billing := billings[abs(billingTypeInt)%len(billings)]
 
 		err := initialize.Run(&initialize.Config{
 			Git:       false,
@@ -365,7 +335,6 @@ func FuzzGenerate(f *testing.F) {
 			OutputDir: tmpDir,
 			Database:  database,
 			Queue:     queue,
-			Billing:   billing,
 			ServeHTML: withServeHTML,
 			SMTP:      withSMTP,
 			Storage:   withStorage,

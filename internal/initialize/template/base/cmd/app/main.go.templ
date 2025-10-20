@@ -23,9 +23,6 @@ import (
 {{- if eq .Queue "sqs" }}
 	"{{ .Name }}/internal/queue"
 {{- end }}
-{{- if eq .Billing.String "stripe" }}
-	"{{ .Name }}/internal/billing"
-{{- end }}
 )
 
 func main() {
@@ -93,13 +90,6 @@ func main() {
 	// })
 {{- end }}
 
-	{{- if eq .Billing.String "stripe" }}
-	// Use test keys during development, switch to live keys in production
-	stripeBilling := billing.NewStripeBilling(&billing.StripeBillingConfig{
-		SecretKey: vars.StripeSecretKey,
-	})
-	{{- end }}
-
 	app, err := application.NewApplication(&application.Config{
 		Environment: vars.Environment,
 		BaseURL: vars.BaseURL,
@@ -122,10 +112,6 @@ func main() {
 		Queue:       sqs,
 		{{- end }}
 
-		{{- if eq .Billing.String "stripe" }}
-		Billing: stripeBilling,
-		StripeWebhookSecret: vars.StripeWebhookSecret,
-		{{- end }}
 	})
 	if err != nil {
 		log.Fatal("failed to create application", err)

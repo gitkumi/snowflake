@@ -18,8 +18,6 @@ type Project struct {
 	Redis     bool
 	ServeHTML bool
 
-	Billing Billing
-
 	fileExclusions []*FileExclusion
 	fileRenames    []*FileRename
 }
@@ -44,7 +42,6 @@ func NewProject(cfg *Config) *Project {
 		Storage:   cfg.Storage,
 		Redis:     cfg.Redis,
 		ServeHTML: cfg.ServeHTML,
-		Billing:   cfg.Billing,
 	}
 
 	project.fileExclusions = []*FileExclusion{
@@ -109,18 +106,6 @@ func NewProject(cfg *Config) *Project {
 				"/internal/queue/queue_mock.go",
 			},
 			Check: func(p *Project) bool { return p.Queue == QueueNone },
-		},
-
-		{
-			FilePaths: []string{
-				"/internal/billing/billing.go",
-				"/internal/billing/billing_stripe.go",
-				"/cmd/app/dto/billing.go",
-				"/cmd/app/service/billing_service.go",
-				"/cmd/app/handler/billing_handler.go",
-				"/cmd/app/handler/billing_webhook_handler.go",
-			},
-			Check: func(p *Project) bool { return p.Billing == BillingNone },
 		},
 	}
 

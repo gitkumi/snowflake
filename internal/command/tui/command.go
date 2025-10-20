@@ -17,7 +17,6 @@ func Command() *cobra.Command {
 			projectName := ""
 			database := initialize.AllDatabases[0]
 			queue := initialize.AllQueues[0]
-			billing := initialize.BillingNone
 			selectedFeatures := []string{"Git"}
 
 			projectNameGroup := huh.NewGroup(
@@ -63,22 +62,11 @@ func Command() *cobra.Command {
 					Value(&queue),
 			)
 
-			billingGroup := huh.NewGroup(
-				huh.NewSelect[initialize.Billing]().
-					Title("Add billing").
-					Options(
-						huh.NewOption("None", initialize.BillingNone),
-						huh.NewOption("Stripe", initialize.BillingStripe),
-					).
-					Value(&billing),
-			)
-
 			initialForm := huh.NewForm(
 				projectNameGroup,
 				databaseGroup,
 				featuresGroup,
 				queueGroup,
-				billingGroup,
 			)
 
 			if err := initialForm.Run(); err != nil {
@@ -89,7 +77,6 @@ func Command() *cobra.Command {
 			cfg.Name = projectName
 			cfg.Database = database
 			cfg.Queue = queue
-			cfg.Billing = billing
 
 			cfg.Git = contains(selectedFeatures, "Git")
 			cfg.SMTP = contains(selectedFeatures, "SMTP")
