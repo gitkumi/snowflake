@@ -21,33 +21,11 @@ type Config struct {
 	Name     string
 	Database Database
 	Queue    Queue
-	Billing  Billing
 
 	SMTP      bool
 	Storage   bool
 	Redis     bool
 	ServeHTML bool
-
-	OAuthGoogle    bool
-	OAuthDiscord   bool
-	OAuthGitHub    bool
-	OAuthInstagram bool
-	OAuthMicrosoft bool
-	OAuthReddit    bool
-	OAuthSpotify   bool
-	OAuthTwitch    bool
-	OAuthFacebook  bool
-	OAuthLinkedIn  bool
-	OAuthSlack     bool
-	OAuthStripe    bool
-	OAuthX         bool
-
-	OIDCFacebook  bool
-	OIDCGoogle    bool
-	OIDCLinkedIn  bool
-	OIDCMicrosoft bool
-	OIDCTwitch    bool
-	OIDCDiscord   bool
 }
 
 func Run(cfg *Config) error {

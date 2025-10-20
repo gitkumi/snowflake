@@ -32,21 +32,6 @@ import (
 	{{- if eq .Queue "sqs" }}
 	"{{ .Name }}/internal/queue"
 	{{- end }}
-
-	{{- if or .HasOAuth .HasOIDC }}
-	"{{ .Name }}/internal/auth"
-	{{- end }}
-	{{- if .HasOAuth }}
-	"{{ .Name }}/internal/auth/oauth"
-	{{- end }}
-
-	{{- if .HasOIDC }}
-	"{{ .Name }}/internal/auth/oidc"
-	{{- end }}
-
-	{{- if eq .Billing.String "stripe" }}
-	"{{ .Name }}/internal/billing"
-	{{- end }}
 )
 
 type Handlers struct {
@@ -56,19 +41,6 @@ type Handlers struct {
 	{{- end }}
 	{{- if .ServeHTML }}
 	html   *handler.HTMLHandler
-	{{- end }}
-
-	{{- if .HasOAuth }}
-	oauth  *handler.OAuthHandler
-	{{- end }}
-
-	{{- if .HasOIDC }}
-	oidc   *handler.OIDCHandler
-	{{- end }}
-
-	{{- if eq .Billing.String "stripe" }}
-	billing *handler.BillingHandler
-	webhook *handler.WebhookHandler
 	{{- end }}
 }
 
@@ -103,25 +75,6 @@ type Config struct {
 {{- if eq .Queue "sqs" }}
 	Queue                    queue.Queue
 {{- end }}
-{{- if .HasOAuth }}
-	OAuth                    *oauth.Registry
-{{- end }}
-{{- if .HasOIDC }}
-	OIDC                     *oidc.Registry
-{{- end }}
-{{- if .HasOAuth }}
-	OAuthAllowedRedirectURLs []string
-{{- end }}
-{{- if .HasOAuth }}
-	JWTManager               *auth.JWTManager
-{{- end }}
-{{- if .HasOAuth }}
-	SessionMaxAge            int
-{{- end }}
-{{- if eq .Billing.String "stripe" }}
-	Billing                  billing.Billing
-	StripeWebhookSecret      string
-{{- end }}
 }
 
 func NewApplication(cfg *Config) (*Application, error) {
@@ -143,36 +96,6 @@ func NewApplication(cfg *Config) (*Application, error) {
 	htmlHandler := handler.NewHTMLHandler()
 	{{- end }}
 
-	{{- if .HasOAuth }}
-	oauthService := service.NewOAuthService(cfg.OAuth, cfg.Logger)
-	oauthHandler := handler.NewOAuthHandler(
-		oauthService,
-		cfg.Environment,
-		cfg.OAuthAllowedRedirectURLs,
-		cfg.JWTManager,
-		cfg.SessionMaxAge,
-		cfg.Logger,
-	)
-{{- end }}
-
-{{- if .HasOIDC }}
-	oidcService := service.NewOIDCService(cfg.OIDC, cfg.Logger)
-	oidcHandler := handler.NewOIDCHandler(
-		oidcService,
-		cfg.Environment,
-		cfg.OAuthAllowedRedirectURLs,
-		cfg.JWTManager,
-		cfg.SessionMaxAge,
-		cfg.Logger,
-	)
-{{- end }}
-
-	{{- if eq .Billing.String "stripe" }}
-	billingService := service.NewBillingService(cfg.Billing)
-	billingHandler := handler.NewBillingHandler(billingService)
-	webhookHandler := handler.NewWebhookHandler(cfg.StripeWebhookSecret)
-	{{- end }}
-
 	handlers := &Handlers{
 		health: healthHandler,
 		{{- if ne .Database.String "none" }}
@@ -180,16 +103,6 @@ func NewApplication(cfg *Config) (*Application, error) {
 		{{- end }}
 		{{- if .ServeHTML }}
 		html: htmlHandler,
-		{{- end }}
-		{{- if .HasOAuth }}
-		oauth: oauthHandler,
-		{{- end }}
-		{{- if .HasOIDC }}
-		oidc: oidcHandler,
-		{{- end }}
-		{{- if eq .Billing.String "stripe" }}
-		billing: billingHandler,
-		webhook: webhookHandler,
 		{{- end }}
 	}
 

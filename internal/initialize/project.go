@@ -18,56 +18,8 @@ type Project struct {
 	Redis     bool
 	ServeHTML bool
 
-	OAuthGoogle    bool
-	OAuthDiscord   bool
-	OAuthGitHub    bool
-	OAuthInstagram bool
-	OAuthMicrosoft bool
-	OAuthReddit    bool
-	OAuthSpotify   bool
-	OAuthTwitch    bool
-	OAuthFacebook  bool
-	OAuthLinkedIn  bool
-	OAuthSlack     bool
-	OAuthStripe    bool
-	OAuthX         bool
-
-	OIDCFacebook  bool
-	OIDCGoogle    bool
-	OIDCLinkedIn  bool
-	OIDCMicrosoft bool
-	OIDCTwitch    bool
-	OIDCDiscord   bool
-
-	Billing Billing
-
 	fileExclusions []*FileExclusion
 	fileRenames    []*FileRename
-}
-
-func (p *Project) HasOAuth() bool {
-	return p.OAuthGoogle ||
-		p.OAuthGitHub ||
-		p.OAuthFacebook ||
-		p.OAuthInstagram ||
-		p.OAuthDiscord ||
-		p.OAuthLinkedIn ||
-		p.OAuthReddit ||
-		p.OAuthTwitch ||
-		p.OAuthStripe ||
-		p.OAuthX ||
-		p.OAuthMicrosoft ||
-		p.OAuthSlack ||
-		p.OAuthSpotify
-}
-
-func (p *Project) HasOIDC() bool {
-	return p.OIDCGoogle ||
-		p.OIDCMicrosoft ||
-		p.OIDCFacebook ||
-		p.OIDCLinkedIn ||
-		p.OIDCTwitch ||
-		p.OIDCDiscord
 }
 
 type FileRename struct {
@@ -83,52 +35,13 @@ type FileExclusion struct {
 
 func NewProject(cfg *Config) *Project {
 	project := &Project{
-		Name:           cfg.Name,
-		Database:       cfg.Database,
-		Queue:          cfg.Queue,
-		SMTP:           cfg.SMTP,
-		Storage:        cfg.Storage,
-		Redis:          cfg.Redis,
-		ServeHTML:      cfg.ServeHTML,
-		OAuthGoogle:    cfg.OAuthGoogle,
-		OAuthDiscord:   cfg.OAuthDiscord,
-		OAuthGitHub:    cfg.OAuthGitHub,
-		OAuthInstagram: cfg.OAuthInstagram,
-		OAuthMicrosoft: cfg.OAuthMicrosoft,
-		OAuthReddit:    cfg.OAuthReddit,
-		OAuthSpotify:   cfg.OAuthSpotify,
-		OAuthTwitch:    cfg.OAuthTwitch,
-		OAuthFacebook:  cfg.OAuthFacebook,
-		OAuthLinkedIn:  cfg.OAuthLinkedIn,
-		OAuthSlack:     cfg.OAuthSlack,
-		OAuthStripe:    cfg.OAuthStripe,
-		OAuthX:         cfg.OAuthX,
-		OIDCGoogle:     cfg.OIDCGoogle,
-		OIDCFacebook:   cfg.OIDCFacebook,
-		OIDCLinkedIn:   cfg.OIDCLinkedIn,
-		OIDCMicrosoft:  cfg.OIDCMicrosoft,
-		OIDCTwitch:     cfg.OIDCTwitch,
-		OIDCDiscord:    cfg.OIDCDiscord,
-		Billing:        cfg.Billing,
-	}
-
-	if project.OIDCGoogle {
-		project.OAuthGoogle = true
-	}
-	if project.OIDCFacebook {
-		project.OAuthFacebook = true
-	}
-	if project.OIDCLinkedIn {
-		project.OAuthLinkedIn = true
-	}
-	if project.OIDCMicrosoft {
-		project.OAuthMicrosoft = true
-	}
-	if project.OIDCTwitch {
-		project.OAuthTwitch = true
-	}
-	if project.OIDCDiscord {
-		project.OAuthDiscord = true
+		Name:      cfg.Name,
+		Database:  cfg.Database,
+		Queue:     cfg.Queue,
+		SMTP:      cfg.SMTP,
+		Storage:   cfg.Storage,
+		Redis:     cfg.Redis,
+		ServeHTML: cfg.ServeHTML,
 	}
 
 	project.fileExclusions = []*FileExclusion{
@@ -193,160 +106,6 @@ func NewProject(cfg *Config) *Project {
 				"/internal/queue/queue_mock.go",
 			},
 			Check: func(p *Project) bool { return p.Queue == QueueNone },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/errors.go",
-				"/internal/auth/jwt.go",
-				"/internal/auth/validation.go",
-				"/internal/auth/oauth/http.go",
-				"/internal/auth/oauth/oauth.go",
-				"/internal/auth/oauth/pkce.go",
-				"/internal/auth/oauth/pkce_test.go",
-				"/cmd/app/public/README.md",
-				"/cmd/app/handler/oauth_handler.go",
-				"/cmd/app/service/oauth_service.go",
-			},
-			Check: func(p *Project) bool { return !p.HasOAuth() },
-		},
-		{
-			FilePaths: []string{
-				"/cmd/app/handler/oidc_handler.go",
-				"/cmd/app/service/oidc_service.go",
-			},
-			Check: func(p *Project) bool { return !p.HasOIDC() },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/google.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthGoogle },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/facebook.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthFacebook },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/github.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthGitHub },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/discord.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthDiscord },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/instagram.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthInstagram },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/linkedin.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthLinkedIn },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/microsoft.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthMicrosoft },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/reddit.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthReddit },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/slack.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthSlack },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/spotify.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthSpotify },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/stripe.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthStripe },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/twitch.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthTwitch },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oauth/x.go",
-			},
-			Check: func(p *Project) bool { return !p.OAuthX },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oidc/google.go",
-			},
-			Check: func(p *Project) bool { return !p.OIDCGoogle },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oidc/facebook.go",
-			},
-			Check: func(p *Project) bool { return !p.OIDCFacebook },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oidc/linkedin.go",
-			},
-			Check: func(p *Project) bool { return !p.OIDCLinkedIn },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oidc/microsoft.go",
-			},
-			Check: func(p *Project) bool { return !p.OIDCMicrosoft },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oidc/twitch.go",
-			},
-			Check: func(p *Project) bool { return !p.OIDCTwitch },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oidc/discord.go",
-			},
-			Check: func(p *Project) bool { return !p.OIDCDiscord },
-		},
-		{
-			FilePaths: []string{
-				"/internal/auth/oidc/oidc.go",
-				"/internal/auth/oidc/token.go",
-			},
-			Check: func(p *Project) bool { return !p.HasOIDC() },
-		},
-		{
-			FilePaths: []string{
-				"/internal/billing/billing.go",
-				"/internal/billing/billing_stripe.go",
-				"/cmd/app/dto/billing.go",
-				"/cmd/app/service/billing_service.go",
-				"/cmd/app/handler/billing_handler.go",
-				"/cmd/app/handler/billing_webhook_handler.go",
-			},
-			Check: func(p *Project) bool { return p.Billing == BillingNone },
 		},
 	}
 

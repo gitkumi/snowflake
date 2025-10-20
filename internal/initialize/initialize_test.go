@@ -250,60 +250,6 @@ func TestGenerateQueueSQS(t *testing.T) {
 	}
 }
 
-func TestGenerateWithAuthProviders(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:         true,
-		Name:          "acme",
-		Database:      initialize.DatabaseSQLite3,
-		Queue:         initialize.QueueNone,
-		OutputDir:     tmpDir,
-		Git:           false,
-		SMTP:          true,
-		Storage:       true,
-		Redis:         true,
-		OAuthGoogle:   true,
-		OAuthGitHub:   true,
-		OAuthFacebook: true,
-		OIDCGoogle:    true,
-		OIDCMicrosoft: true,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
-func TestGenerateWithStripeBilling(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseSQLite3,
-		Queue:     initialize.QueueNone,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
-		Redis:     true,
-		Billing:   initialize.BillingStripe,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
 func TestEnvFilesGenerated(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -358,22 +304,12 @@ func TestEnvFilesGenerated(t *testing.T) {
 func FuzzGenerate(f *testing.F) {
 	f.Add(
 		true, true, true, true,
-		0, 0, 0,
-		// OAuth providers
-		false, false, false, false, false, false, false, false, false, false, false, false, false,
-		// OIDC providers
-		false, false, false, false, false, false,
+		0, 0,
 	)
 
 	f.Fuzz(func(t *testing.T,
 		withSMTP, withStorage, withRedis, withServeHTML bool,
-		dbTypeInt, jobTypeInt, billingTypeInt int,
-		// OAuth providers
-		withOAuthGoogle, withOAuthDiscord, withOAuthGitHub, withOAuthInstagram, withOAuthMicrosoft,
-		withOAuthReddit, withOAuthSpotify, withOAuthTwitch, withOAuthFacebook, withOAuthLinkedIn,
-		withOAuthSlack, withOAuthStripe, withOAuthX bool,
-		// OIDC providers
-		withOIDCFacebook, withOIDCGoogle, withOIDCLinkedIn, withOIDCMicrosoft, withOIDCTwitch, withOIDCDiscord bool,
+		dbTypeInt, jobTypeInt int,
 	) {
 		tmpDir := t.TempDir()
 
@@ -388,46 +324,21 @@ func FuzzGenerate(f *testing.F) {
 			initialize.QueueSQS,
 			initialize.QueueNone,
 		}
-		billings := []initialize.Billing{
-			initialize.BillingNone,
-			initialize.BillingStripe,
-		}
 
 		database := databases[abs(dbTypeInt)%len(databases)]
 		queue := queues[abs(jobTypeInt)%len(queues)]
-		billing := billings[abs(billingTypeInt)%len(billings)]
 
 		err := initialize.Run(&initialize.Config{
-			Git:            false,
-			Quiet:          true,
-			Name:           "acme",
-			OutputDir:      tmpDir,
-			Database:       database,
-			Queue:          queue,
-			Billing:        billing,
-			ServeHTML:      withServeHTML,
-			SMTP:           withSMTP,
-			Storage:        withStorage,
-			Redis:          withRedis,
-			OAuthGoogle:    withOAuthGoogle,
-			OAuthDiscord:   withOAuthDiscord,
-			OAuthGitHub:    withOAuthGitHub,
-			OAuthInstagram: withOAuthInstagram,
-			OAuthMicrosoft: withOAuthMicrosoft,
-			OAuthReddit:    withOAuthReddit,
-			OAuthSpotify:   withOAuthSpotify,
-			OAuthTwitch:    withOAuthTwitch,
-			OAuthFacebook:  withOAuthFacebook,
-			OAuthLinkedIn:  withOAuthLinkedIn,
-			OAuthSlack:     withOAuthSlack,
-			OAuthStripe:    withOAuthStripe,
-			OAuthX:         withOAuthX,
-			OIDCFacebook:   withOIDCFacebook,
-			OIDCGoogle:     withOIDCGoogle,
-			OIDCLinkedIn:   withOIDCLinkedIn,
-			OIDCMicrosoft:  withOIDCMicrosoft,
-			OIDCTwitch:     withOIDCTwitch,
-			OIDCDiscord:    withOIDCDiscord,
+			Git:       false,
+			Quiet:     true,
+			Name:      "acme",
+			OutputDir: tmpDir,
+			Database:  database,
+			Queue:     queue,
+			ServeHTML: withServeHTML,
+			SMTP:      withSMTP,
+			Storage:   withStorage,
+			Redis:     withRedis,
 		})
 		if err != nil {
 			t.Logf("initialize.Run returned error: %v", err)

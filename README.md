@@ -54,7 +54,3 @@ Only if "Serve HTML" feature is enabled
 #### Testing
 
 - [gotestsum](https://github.com/gotestyourself/gotestsum)
-
-#### Billing
-
-- [Stripe](https://docs.stripe.com/api)
