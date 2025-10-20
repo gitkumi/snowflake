@@ -12,34 +12,15 @@ import (
 
 func Command() *cobra.Command {
 	var (
-		quiet          bool
-		database       string
-		queue          string
-		outputDir      string
-		git            bool
-		smtp           bool
-		storage        bool
-		redis          bool
-		serveHTML      bool
-		oauthGoogle    bool
-		oauthDiscord   bool
-		oauthGitHub    bool
-		oauthInstagram bool
-		oauthMicrosoft bool
-		oauthReddit    bool
-		oauthSpotify   bool
-		oauthTwitch    bool
-		oauthFacebook  bool
-		oauthLinkedIn  bool
-		oauthSlack     bool
-		oauthStripe    bool
-		oauthX         bool
-		oidcFacebook   bool
-		oidcGoogle     bool
-		oidcLinkedIn   bool
-		oidcMicrosoft  bool
-		oidcTwitch     bool
-		oidcDiscord    bool
+		quiet     bool
+		database  string
+		queue     string
+		outputDir string
+		git       bool
+		smtp      bool
+		storage   bool
+		redis     bool
+		serveHTML bool
 	)
 
 	cmd := &cobra.Command{
@@ -81,35 +62,16 @@ func Command() *cobra.Command {
 			}
 
 			err := initialize.Run(&initialize.Config{
-				Quiet:          quiet,
-				Name:           args[0],
-				Database:       dbEnum,
-				Queue:          queueEnum,
-				Git:            git,
-				OutputDir:      outputDir,
-				SMTP:           smtp,
-				Storage:        storage,
-				Redis:          redis,
-				ServeHTML:      serveHTML,
-				OAuthGoogle:    oauthGoogle,
-				OAuthDiscord:   oauthDiscord,
-				OAuthGitHub:    oauthGitHub,
-				OAuthInstagram: oauthInstagram,
-				OAuthMicrosoft: oauthMicrosoft,
-				OAuthReddit:    oauthReddit,
-				OAuthSpotify:   oauthSpotify,
-				OAuthTwitch:    oauthTwitch,
-				OAuthFacebook:  oauthFacebook,
-				OAuthLinkedIn:  oauthLinkedIn,
-				OAuthSlack:     oauthSlack,
-				OAuthStripe:    oauthStripe,
-				OAuthX:         oauthX,
-				OIDCFacebook:   oidcFacebook,
-				OIDCGoogle:     oidcGoogle,
-				OIDCLinkedIn:   oidcLinkedIn,
-				OIDCMicrosoft:  oidcMicrosoft,
-				OIDCTwitch:     oidcTwitch,
-				OIDCDiscord:    oidcDiscord,
+				Quiet:     quiet,
+				Name:      args[0],
+				Database:  dbEnum,
+				Queue:     queueEnum,
+				Git:       git,
+				OutputDir: outputDir,
+				SMTP:      smtp,
+				Storage:   storage,
+				Redis:     redis,
+				ServeHTML: serveHTML,
 			})
 			if err != nil {
 				log.Fatal(err.Error())
@@ -126,26 +88,6 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&storage, "storage", false, "Add Storage (S3)")
 	cmd.Flags().BoolVar(&redis, "redis", false, "Add Redis (comes with ratelimit middleware)")
 	cmd.Flags().BoolVar(&serveHTML, "html", false, "Serve HTML with templ")
-
-	cmd.Flags().BoolVar(&oauthGoogle, "oauth-google", false, "Add Google OAuth")
-	cmd.Flags().BoolVar(&oauthDiscord, "oauth-discord", false, "Add Discord OAuth")
-	cmd.Flags().BoolVar(&oauthGitHub, "oauth-github", false, "Add GitHub OAuth")
-	cmd.Flags().BoolVar(&oauthInstagram, "oauth-instagram", false, "Add Instagram OAuth")
-	cmd.Flags().BoolVar(&oauthMicrosoft, "oauth-microsoft", false, "Add Microsoft OAuth")
-	cmd.Flags().BoolVar(&oauthReddit, "oauth-reddit", false, "Add Reddit OAuth")
-	cmd.Flags().BoolVar(&oauthSpotify, "oauth-spotify", false, "Add Spotify OAuth")
-	cmd.Flags().BoolVar(&oauthTwitch, "oauth-twitch", false, "Add Twitch OAuth")
-	cmd.Flags().BoolVar(&oauthFacebook, "oauth-facebook", false, "Add Facebook OAuth")
-	cmd.Flags().BoolVar(&oauthLinkedIn, "oauth-linkedin", false, "Add LinkedIn OAuth")
-	cmd.Flags().BoolVar(&oauthSlack, "oauth-slack", false, "Add Slack OAuth")
-	cmd.Flags().BoolVar(&oauthStripe, "oauth-stripe", false, "Add Stripe OAuth")
-	cmd.Flags().BoolVar(&oauthX, "oauth-x", false, "Add X OAuth")
-	cmd.Flags().BoolVar(&oidcFacebook, "oidc-facebook", false, "Add Facebook OIDC")
-	cmd.Flags().BoolVar(&oidcGoogle, "oidc-google", false, "Add Google OIDC")
-	cmd.Flags().BoolVar(&oidcLinkedIn, "oidc-linkedin", false, "Add LinkedIn OIDC")
-	cmd.Flags().BoolVar(&oidcMicrosoft, "oidc-microsoft", false, "Add Microsoft OIDC")
-	cmd.Flags().BoolVar(&oidcTwitch, "oidc-twitch", false, "Add Twitch OIDC")
-	cmd.Flags().BoolVar(&oidcDiscord, "oidc-discord", false, "Add Discord OIDC")
 
 	return cmd
 }

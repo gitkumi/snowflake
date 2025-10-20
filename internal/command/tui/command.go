@@ -19,8 +19,6 @@ func Command() *cobra.Command {
 			queue := initialize.AllQueues[0]
 			billing := initialize.BillingNone
 			selectedFeatures := []string{"Git"}
-			selectedOAuth := []string{}
-			selectedOIDC := []string{}
 
 			projectNameGroup := huh.NewGroup(
 				huh.NewInput().
@@ -75,64 +73,17 @@ func Command() *cobra.Command {
 					Value(&billing),
 			)
 
-			oauthGroup := huh.NewGroup(
-				huh.NewMultiSelect[string]().
-					Title("Add OAuth providers").
-					Options(
-						huh.NewOption("Google", "Google"),
-						huh.NewOption("Discord", "Discord"),
-						huh.NewOption("GitHub", "GitHub"),
-						huh.NewOption("Instagram", "Instagram"),
-						huh.NewOption("Microsoft", "Microsoft"),
-						huh.NewOption("Reddit", "Reddit"),
-						huh.NewOption("Spotify", "Spotify"),
-						huh.NewOption("Twitch", "Twitch"),
-						huh.NewOption("Facebook", "Facebook"),
-						huh.NewOption("LinkedIn", "LinkedIn"),
-						huh.NewOption("Slack", "Slack"),
-						huh.NewOption("Stripe", "Stripe"),
-						huh.NewOption("X", "X"),
-					).
-					Value(&selectedOAuth),
-			)
-
 			initialForm := huh.NewForm(
 				projectNameGroup,
 				databaseGroup,
 				featuresGroup,
 				queueGroup,
 				billingGroup,
-				oauthGroup,
 			)
 
 			if err := initialForm.Run(); err != nil {
 				fmt.Printf("error running initial form: %v\n", err)
 				return
-			}
-
-			oidcProviders := []string{"Facebook", "Google", "LinkedIn", "Microsoft", "Twitch", "Discord"}
-			var oidcOptions []huh.Option[string]
-
-			for _, provider := range oidcProviders {
-				if contains(selectedOAuth, provider) {
-					oidcOptions = append(oidcOptions, huh.NewOption(provider, provider))
-				}
-			}
-
-			if len(oidcOptions) > 0 {
-				oidcForm := huh.NewForm(
-					huh.NewGroup(
-						huh.NewMultiSelect[string]().
-							Title("Add OIDC providers").
-							Options(oidcOptions...).
-							Value(&selectedOIDC),
-					),
-				)
-
-				if err := oidcForm.Run(); err != nil {
-					fmt.Printf("error running OIDC form: %v\n", err)
-					return
-				}
 			}
 
 			cfg.Name = projectName
@@ -145,27 +96,6 @@ func Command() *cobra.Command {
 			cfg.Storage = contains(selectedFeatures, "Storage")
 			cfg.Redis = contains(selectedFeatures, "Redis")
 			cfg.ServeHTML = contains(selectedFeatures, "HTML")
-
-			cfg.OAuthGoogle = contains(selectedOAuth, "Google")
-			cfg.OAuthDiscord = contains(selectedOAuth, "Discord")
-			cfg.OAuthGitHub = contains(selectedOAuth, "GitHub")
-			cfg.OAuthInstagram = contains(selectedOAuth, "Instagram")
-			cfg.OAuthMicrosoft = contains(selectedOAuth, "Microsoft")
-			cfg.OAuthReddit = contains(selectedOAuth, "Reddit")
-			cfg.OAuthSpotify = contains(selectedOAuth, "Spotify")
-			cfg.OAuthTwitch = contains(selectedOAuth, "Twitch")
-			cfg.OAuthFacebook = contains(selectedOAuth, "Facebook")
-			cfg.OAuthLinkedIn = contains(selectedOAuth, "LinkedIn")
-			cfg.OAuthSlack = contains(selectedOAuth, "Slack")
-			cfg.OAuthStripe = contains(selectedOAuth, "Stripe")
-			cfg.OAuthX = contains(selectedOAuth, "X")
-
-			cfg.OIDCFacebook = contains(selectedOIDC, "Facebook")
-			cfg.OIDCGoogle = contains(selectedOIDC, "Google")
-			cfg.OIDCLinkedIn = contains(selectedOIDC, "LinkedIn")
-			cfg.OIDCMicrosoft = contains(selectedOIDC, "Microsoft")
-			cfg.OIDCTwitch = contains(selectedOIDC, "Twitch")
-			cfg.OIDCDiscord = contains(selectedOIDC, "Discord")
 
 			if err := initialize.Run(cfg); err != nil {
 				fmt.Printf("error creating project: %v\n", err)
