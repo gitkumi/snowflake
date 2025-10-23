@@ -12,7 +12,7 @@ tidy:
 	go mod tidy -v
 	go fmt ./...
 
-# Delegate api.* commands to cmd/api/Makefile
+# Delegate app.* commands to cmd/api/Makefile
 .PHONY: app.%
 app.%:
 	@$(MAKE) -C cmd/app $*
