@@ -1,7 +1,6 @@
 package application
 
 import (
-	"{{ .Name }}/internal/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -20,10 +19,16 @@ func NewRouter(cfg *RouterConfig) *gin.Engine {
 }
 
 func (app *Application) RegisterRoutes() error {
-	app.Router.Use(middleware.SecurityHeadersMiddleware())
-
 	api := app.Router.Group("/api")
 	api.GET("/health", app.handlers.health.Health)
+
+	{{- if ne .Database.String "none" }}
+	api.GET("/books", app.handlers.book.ListBook)
+	api.GET("/books/:id", app.handlers.book.GetBook)
+	api.POST("/books", app.handlers.book.CreateBook)
+	api.PATCH("/books/:id", app.handlers.book.UpdateBook)
+	api.DELETE("/books/:id", app.handlers.book.DeleteBook)
+	{{- end }}
 
 	return nil
 }

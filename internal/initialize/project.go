@@ -57,16 +57,16 @@ func NewProject(cfg *Config) *Project {
 		{
 			FilePaths: []string{
 				"/internal/smtp/mailer.go",
-				"/internal/smtp/mailer_smtp.go",
-				"/internal/smtp/mailer_mock.go",
+				"/internal/smtp/smtp.go",
+				"/internal/smtp/mock.go",
 			},
 			Check: func(p *Project) bool { return !p.SMTP },
 		},
 		{
 			FilePaths: []string{
 				"/internal/storage/storage.go",
-				"/internal/storage/storage_s3.go",
-				"/internal/storage/storage_mock.go",
+				"/internal/storage/s3.go",
+				"/internal/storage/mock.go",
 			},
 			Check: func(p *Project) bool { return !p.Storage },
 		},
@@ -102,8 +102,8 @@ func NewProject(cfg *Config) *Project {
 		{
 			FilePaths: []string{
 				"/internal/queue/queue.go",
-				"/internal/queue/queue_sqs.go",
-				"/internal/queue/queue_mock.go",
+				"/internal/queue/sqs.go",
+				"/internal/queue/mock.go",
 			},
 			Check: func(p *Project) bool { return p.Queue == QueueNone },
 		},
