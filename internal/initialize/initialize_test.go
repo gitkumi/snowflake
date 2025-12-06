@@ -129,31 +129,6 @@ func TestGenerateMariaDB(t *testing.T) {
 	}
 }
 
-func TestGenerateWithHTML(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseSQLite3,
-		Queue:     initialize.QueueNone,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
-		Redis:     true,
-		ServeHTML: true,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
 func TestGenerateNoSMTP(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -303,12 +278,12 @@ func TestEnvFilesGenerated(t *testing.T) {
 
 func FuzzGenerate(f *testing.F) {
 	f.Add(
-		true, true, true, true,
+		true, true, true,
 		0, 0,
 	)
 
 	f.Fuzz(func(t *testing.T,
-		withSMTP, withStorage, withRedis, withServeHTML bool,
+		withSMTP, withStorage, withRedis bool,
 		dbTypeInt, jobTypeInt int,
 	) {
 		tmpDir := t.TempDir()
@@ -335,7 +310,6 @@ func FuzzGenerate(f *testing.F) {
 			OutputDir: tmpDir,
 			Database:  database,
 			Queue:     queue,
-			ServeHTML: withServeHTML,
 			SMTP:      withSMTP,
 			Storage:   withStorage,
 			Redis:     withRedis,

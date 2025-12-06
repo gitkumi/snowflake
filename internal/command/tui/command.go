@@ -47,7 +47,6 @@ func Command() *cobra.Command {
 						huh.NewOption("SMTP", "SMTP"),
 						huh.NewOption("S3", "Storage"),
 						huh.NewOption("Redis", "Redis"),
-						huh.NewOption("HTML", "HTML"),
 					).
 					Value(&selectedFeatures),
 			)
@@ -82,7 +81,6 @@ func Command() *cobra.Command {
 			cfg.SMTP = contains(selectedFeatures, "SMTP")
 			cfg.Storage = contains(selectedFeatures, "Storage")
 			cfg.Redis = contains(selectedFeatures, "Redis")
-			cfg.ServeHTML = contains(selectedFeatures, "HTML")
 
 			if err := initialize.Run(cfg); err != nil {
 				fmt.Printf("error creating project: %v\n", err)

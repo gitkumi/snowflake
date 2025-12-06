@@ -39,9 +39,6 @@ type Handlers struct {
 	{{- if ne .Database.String "none" }}
 	book   *handler.BookHandler
 	{{- end }}
-	{{- if .ServeHTML }}
-	html   *handler.HTMLHandler
-	{{- end }}
 }
 
 type Application struct {
@@ -92,17 +89,10 @@ func NewApplication(cfg *Config) (*Application, error) {
 	)
 	healthHandler := handler.NewHealthHandler(healthService)
 
-	{{- if .ServeHTML }}
-	htmlHandler := handler.NewHTMLHandler()
-	{{- end }}
-
 	handlers := &Handlers{
 		health: healthHandler,
 		{{- if ne .Database.String "none" }}
 		book: bookHandler,
-		{{- end }}
-		{{- if .ServeHTML }}
-		html: htmlHandler,
 		{{- end }}
 	}
 

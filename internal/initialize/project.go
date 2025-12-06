@@ -13,10 +13,9 @@ type Project struct {
 	Database Database
 	Queue    Queue
 
-	SMTP      bool
-	Storage   bool
-	Redis     bool
-	ServeHTML bool
+	SMTP    bool
+	Storage bool
+	Redis   bool
 
 	fileExclusions []*FileExclusion
 	fileRenames    []*FileRename
@@ -35,13 +34,12 @@ type FileExclusion struct {
 
 func NewProject(cfg *Config) *Project {
 	project := &Project{
-		Name:      cfg.Name,
-		Database:  cfg.Database,
-		Queue:     cfg.Queue,
-		SMTP:      cfg.SMTP,
-		Storage:   cfg.Storage,
-		Redis:     cfg.Redis,
-		ServeHTML: cfg.ServeHTML,
+		Name:     cfg.Name,
+		Database: cfg.Database,
+		Queue:    cfg.Queue,
+		SMTP:     cfg.SMTP,
+		Storage:  cfg.Storage,
+		Redis:    cfg.Redis,
 	}
 
 	project.fileExclusions = []*FileExclusion{
@@ -75,13 +73,6 @@ func NewProject(cfg *Config) *Project {
 				"/internal/middleware/rate_limit.go",
 			},
 			Check: func(p *Project) bool { return !p.Redis },
-		},
-		{
-			FilePaths: []string{
-				"/cmd/app/handler/html_handler.go",
-				"/cmd/app/html/hello.templ",
-			},
-			Check: func(p *Project) bool { return !p.ServeHTML },
 		},
 		{
 			FilePaths: []string{

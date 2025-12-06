@@ -22,10 +22,9 @@ type Config struct {
 	Database Database
 	Queue    Queue
 
-	SMTP      bool
-	Storage   bool
-	Redis     bool
-	ServeHTML bool
+	SMTP    bool
+	Storage bool
+	Redis   bool
 }
 
 func Run(cfg *Config) error {

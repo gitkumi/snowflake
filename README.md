@@ -45,12 +45,6 @@ Supports "sqlite3", "postgres", "mysql", "mariadb"
 - [sqlc](https://github.com/sqlc-dev/sqlc)
 - [goose](https://github.com/pressly/goose)
 
-#### Templating 
-
-Only if "Serve HTML" feature is enabled
-
-- [templ](https://templ.guide) 
-
 #### Testing
 
 - [gotestsum](https://github.com/gotestyourself/gotestsum)
