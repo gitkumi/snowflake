@@ -76,11 +76,13 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/cmd/app/sqlc.yaml",
+				"/sqlc.yaml",
+				"/sql/migrations/00001_books.sql",
+				"/sql/queries/books.sql",
+				"/sql/sql.go",
+				"/cmd/migrator/main.go",
+				"/internal/db/db.go",
 				"/cmd/app/devenv.yaml",
-				"/cmd/app/static/sql/migrations/00001_books.sql",
-				"/cmd/app/static/sql/queries/books.sql",
-				"/cmd/app/static/static.go",
 				"/cmd/app/application/db.go",
 				"/cmd/app/handler/book_handler.go",
 				"/cmd/app/handler/book_handler_test.go",

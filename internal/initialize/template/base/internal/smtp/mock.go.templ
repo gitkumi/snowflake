@@ -1,10 +1,7 @@
 package smtp
 
 import (
-	"{{ .Name }}/internal/env"
 	"fmt"
-	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -16,27 +13,10 @@ func NewMockMailer() *MockMailer {
 }
 
 func (f *MockMailer) Send(email Email) error {
-	rootPath, err := env.FindFilePath("go.mod")
-	if err != nil {
-		return err
-	}
-
-	dirPath := filepath.Join(rootPath, "..", ".snowflake", "mailer")
-	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		return err
-	}
-
-	filePath := filepath.Join(dirPath, "emails")
-
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
 	content := fmt.Sprintf("Time: %s\nTo: %s\nFrom: %s\nSubject: %s\nBody:\n%s\n\n",
 		time.Now().Format(time.RFC3339), email.To, "test@example.com", email.Subject, email.Body)
 
-	_, err = file.WriteString(content)
-	return err
+	fmt.Println(content)
+
+	return nil
 }

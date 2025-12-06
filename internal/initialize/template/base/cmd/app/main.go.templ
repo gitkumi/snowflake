@@ -7,9 +7,10 @@ import (
 
 	"{{ .Name }}/cmd/app/application"
 	"{{ .Name }}/cmd/app/env"
+	"github.com/joho/godotenv"
 	"github.com/lmittmann/tint"
 {{- if ne .Database.String "none" }}
-	_ "{{.Database.Import}}"
+	"{{ .Name }}/internal/db"
 {{- end }}
 {{- if .SMTP }}
 	"{{ .Name }}/internal/smtp"
@@ -25,8 +26,12 @@ import (
 {{- end }}
 )
 
+func init() {
+	_ = godotenv.Load(".env")
+}
+
 func main() {
-	vars, err := env.Load(".env")
+	vars, err := env.Load()
 	if err != nil {
 		log.Fatal("failed to read environment variables", err)
 	}
@@ -36,9 +41,8 @@ func main() {
 	})
 
 {{- if ne .Database.String "none" }}
-	db, err := application.NewDB(&application.DBConfig{
+	db, err := db.NewDB(&db.Config{
 		DatabaseConnString: vars.DatabaseConnString,
-		MigrateDatabase:    vars.MigrateDatabase,
 	})
 	if err != nil {
 		log.Fatal("failed to create DB", err)
@@ -91,11 +95,10 @@ func main() {
 {{- end }}
 
 	app, err := application.NewApplication(&application.Config{
-		Environment: vars.Environment,
-		BaseURL: vars.BaseURL,
-		Port:    vars.Port,
+		BaseURL:     vars.BaseURL,
+		Port:        vars.Port,
 		{{- if ne .Database.String "none" }}
-		DB:      db,
+		DB:          db,
 		{{- end }}
 		Router:  router,
 		{{- if .SMTP }}

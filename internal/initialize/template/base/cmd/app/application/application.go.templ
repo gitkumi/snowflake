@@ -3,7 +3,6 @@ package application
 import (
 	"{{ .Name }}/cmd/app/service"
 	"{{ .Name }}/cmd/app/handler"
-	"{{ .Name }}/internal/env"
 	"context"
 	"errors"
 	"fmt"
@@ -18,7 +17,7 @@ import (
 	"github.com/gin-gonic/gin"
 	{{- if ne .Database.String "none" }}
 	"database/sql"
-	"{{ .Name }}/cmd/app/repo"
+	"{{ .Name }}/internal/repo"
 	{{- end }}
 	{{- if .SMTP }}
 	"{{ .Name }}/internal/smtp"
@@ -42,7 +41,6 @@ type Handlers struct {
 }
 
 type Application struct {
-	Environment env.Environment
 	baseURL  string
 	port     int
 	handlers *Handlers
@@ -56,7 +54,6 @@ type Config struct {
 	Port                     int
 	Router                   *gin.Engine
 	Logger                   *slog.Logger
-	Environment              env.Environment
 {{- if ne .Database.String "none" }}
 	DB                       *sql.DB
 {{- end }}
@@ -97,12 +94,11 @@ func NewApplication(cfg *Config) (*Application, error) {
 	}
 
 	s := &Application{
-		Environment: cfg.Environment,
 		baseURL:  cfg.BaseURL,
 		Logger:   cfg.Logger,
 	Router:   cfg.Router,
-	handlers: handlers,
-	port:			cfg.Port,
+		handlers: handlers,
+		port:			cfg.Port,
 }
 
 	err := s.RegisterRoutes()

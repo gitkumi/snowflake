@@ -3,13 +3,15 @@ package application_test
 import (
 	"{{ .Name }}/cmd/app/application"
 	"{{ .Name }}/cmd/app/env"
+	"{{ .Name }}/internal/db"
 	"log"
 	"log/slog"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/lmittmann/tint"
 {{- if ne .Database.String "none"}}
-	"{{ .Name }}/cmd/app/repo"
+	"{{ .Name }}/internal/repo"
 	_ "{{ .Database.Import }}"
 	{{- if eq .Database.String "sqlite3" }}
 	"path/filepath"
@@ -29,15 +31,12 @@ import (
 {{- end }}
 )
 
-type TestApplication struct {
-	Application *application.Application
-	{{- if ne .Database.String "none" }}
-	Query       *repo.Queries
-	{{- end }}
+func init() {
+	_ = godotenv.Load(".env.test")
 }
 
 func Init() (*TestApplication, error) {
-	vars, err := env.Load(".env.test")
+	vars, err := env.Load()
 	if err != nil {
 		log.Fatal("failed to read environment variables", err)
 	}
@@ -56,9 +55,8 @@ func Init() (*TestApplication, error) {
 	dbConnString = filepath.Join(rootPath, "..", vars.DatabaseConnString)
 	{{- end }}
 	
-	db, err := application.NewDB(&application.DBConfig{
+	db, err := db.NewDB(&db.Config{
 		DatabaseConnString: dbConnString,
-		MigrateDatabase:    vars.MigrateDatabase,
 	})
 	if err != nil {
 		log.Fatal("failed to create DB", err)
@@ -86,7 +84,6 @@ func Init() (*TestApplication, error) {
 	{{- end }}
 
 	app, err := application.NewApplication(&application.Config{
-		Environment: vars.Environment,
 		BaseURL:     vars.BaseURL,
 		Port:        vars.Port,
 		Router:      router,

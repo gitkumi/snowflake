@@ -1,57 +1,6 @@
 APP_NAME := app
 BUILD_DIR := ../../bin
 
-{{- if ne .Database.String "none" }}
-export GOOSE_DBSTRING?={{.Database.ConnString .Name }}
-export GOOSE_DRIVER:={{.Database.Driver}}
-export GOOSE_MIGRATION_DIR:=./static/sql/migrations
-{{- end }}
-
-.PHONY: help
-help:
-	@echo "Available commands:"
-	@echo ""
-	@echo "  Tools:"
-	@echo "    tools.install Install required development tools"
-	@echo "    tools.check  Check if required tools are installed"
-	@echo ""
-	@echo "  Development:"
-	@echo "    dev          Start development server with hot reload"
-	@echo "    run          Run the application directly"
-	@echo "    build        Build the application"
-	@echo "    clean        Clean build artifacts"
-	@echo ""
-	@echo "  Testing:"
-	@echo "    test         Run tests"
-	@echo "    test.verbose Run tests with verbose output"
-	@echo "    test.coverage Run tests with coverage report"
-	@echo "    test.watch   Run tests in watch mode"
-	@echo ""
-	{{- if ne .Database.String "none" }}
-	@echo "  Database:"
-	@echo "    db           Show database migration status"
-	@echo "    db.up        Run database migrations"
-	@echo "    db.down      Rollback database migrations"
-	@echo "    db.reset     Reset and re-run all migrations"
-	@echo "    db.create    Create database"
-	@echo "    db.drop      Drop database"
-	@echo "    db.gen       Generate new migration file"
-	@echo ""
-	@echo "  Code Generation:"
-	@echo "    sqlc         Generate SQL code"
-	@echo ""
-	{{- end }}
-	{{- if .HasDevEnv }}
-	@echo "  Development Environment:"
-	@echo "    devenv.up    Start development environment"
-	@echo "    devenv.down  Stop development environment"
-	@echo "    devenv.logs  Show development environment logs"
-	@echo ""
-	{{- end }}
-	@echo "  Docker:"
-	@echo "    docker.build Build Docker image"
-	@echo "    docker.run   Run Docker container"
-
 .PHONY: run
 run:
 	go run *.go
@@ -62,9 +11,6 @@ dev:
 
 .PHONY: build
 build:
-{{- if ne .Database.String "none" }}
-	sqlc generate
-{{- end }}
 	go build -o $(BUILD_DIR)/$(APP_NAME) .
 
 .PHONY: test
@@ -85,37 +31,7 @@ test.coverage:
 test.watch:
 	gotestsum -f testname --watch ./...
 
-{{- if ne .Database.String "none" }}
 
-.PHONY: sqlc
-sqlc:
-	sqlc generate
-
-.PHONY: db
-db:
-	goose status
-
-.PHONY: db.gen
-db.gen:
-	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then \
-		echo "Usage: make db.gen <migration_name>"; \
-		exit 1; \
-	fi
-	goose create $(filter-out $@,$(MAKECMDGOALS)) sql
-
-.PHONY: db.up
-db.up:
-	goose up
-
-.PHONY: db.down
-db.down:
-	goose down
-
-.PHONY: db.reset
-db.reset:
-	goose reset
-	goose up
-{{- end }}
 
 {{- if eq .Database.String "mysql" }}
 
@@ -191,29 +107,7 @@ clean:
 	rm -f coverage.out coverage.html
 
 
-.PHONY: tools.install
-tools.install:
-	@echo "Installing development tools..."
-	@go install github.com/air-verse/air@latest
-	@go install gotest.tools/gotestsum@latest
-	{{- if ne .Database.String "none" }}
-	@go install github.com/pressly/goose/v3/cmd/goose@latest
-	@go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-	{{- end }}
-	@echo "Development tools installed!"
 
-.PHONY: tools.check
-tools.check:
-	@echo "Checking required tools..."
-	@command -v air >/dev/null 2>&1 || { echo "air is not installed. Run 'make tools.install'"; exit 1; }
-	@command -v gotestsum >/dev/null 2>&1 || { echo "gotestsum is not installed. Run 'make tools.install'"; exit 1; }
-	{{- if ne .Database.String "none" }}
-	@command -v goose >/dev/null 2>&1 || { echo "goose is not installed. Run 'make tools.install'"; exit 1; }
-	@command -v sqlc >/dev/null 2>&1 || { echo "sqlc is not installed. Run 'make tools.install'"; exit 1; }
-	{{- end }}
-	@command -v docker >/dev/null 2>&1 || { echo "docker is not installed"; exit 1; }
-	@command -v docker compose >/dev/null 2>&1 || { echo "docker compose is not installed"; exit 1; }
-	@echo "All required tools are installed!"
 
 %:
 	@:
