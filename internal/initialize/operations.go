@@ -65,9 +65,9 @@ func runPostCommands(project *Project, outputPath string, quiet bool) error {
 
 	if project.Database != DatabaseNone {
 		commands = append(commands, Command{
-			Message: "snowflake: make sqlc",
+			Message: "snowflake: make app.sqlc",
 			Name:    "make",
-			Args:    []string{"sqlc"},
+			Args:    []string{"app.sqlc"},
 		})
 	}
 

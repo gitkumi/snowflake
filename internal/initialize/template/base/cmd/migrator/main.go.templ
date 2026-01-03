@@ -1,8 +1,8 @@
 package main
 
 import (
+	"{{.Name}}/cmd/app/sql"
 	"{{.Name}}/internal/db"
-	"{{.Name}}/sql"
 	"os"
 
 	"log"
@@ -28,7 +28,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := goose.Up(db, "sql/migrations"); err != nil {
+	if err := goose.Up(db, "migrations"); err != nil {
 		log.Fatal(err)
 	}
 }

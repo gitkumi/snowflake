@@ -1,0 +1,175 @@
+package main
+
+import (
+	"context"
+{{- if ne .Database.String "none" }}
+	"database/sql"
+{{- end }}
+	"errors"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"{{ .Name }}/cmd/app/handlers"
+	"{{ .Name }}/cmd/app/service"
+{{- if ne .Database.String "none" }}
+	"{{ .Name }}/cmd/app/repo"
+{{- end }}
+{{- if .Storage }}
+	"{{ .Name }}/internal/storage"
+{{- end }}
+{{- if .Redis }}
+	"github.com/redis/go-redis/v9"
+{{- end }}
+{{- if eq .Queue "sqs" }}
+	"{{ .Name }}/internal/queue"
+{{- end }}
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+)
+
+// server holds all dependencies for the HTTP service
+type server struct {
+{{- if ne .Database.String "none" }}
+	db      *sql.DB
+{{- end }}
+{{- if .Storage }}
+	storage storage.Storage
+{{- end }}
+{{- if .Redis }}
+	redis   *redis.Client
+{{- end }}
+{{- if eq .Queue "sqs" }}
+	queue   queue.Queue
+{{- end }}
+	logger  *slog.Logger
+	
+	// Services
+{{- if ne .Database.String "none" }}
+	bookService   *service.BookService
+{{- end }}
+	healthService *service.HealthService
+	
+	baseURL string
+	port    int
+	router  *gin.Engine
+}
+
+// newServer creates a new server instance with all dependencies
+func newServer(
+{{- if ne .Database.String "none" }}
+	db *sql.DB,
+{{- end }}
+{{- if .Storage }}
+	storage storage.Storage,
+{{- end }}
+{{- if .Redis }}
+	redis *redis.Client,
+{{- end }}
+{{- if eq .Queue "sqs" }}
+	queue queue.Queue,
+{{- end }}
+	logger *slog.Logger,
+	baseURL string,
+	port int,
+	ginMode string,
+) *server {
+	gin.SetMode(ginMode)
+	
+	// Initialize services
+{{- if ne .Database.String "none" }}
+	queries := repo.New(db)
+	bookService := service.NewBookService(queries)
+{{- end }}
+	healthService := service.NewHealthService(
+		{{- if ne .Database.String "none" }}db,{{- end }}
+		{{- if .Storage }}storage,{{- end }}
+		{{- if .Redis }}redis,{{- end }}
+	)
+	
+	s := &server{
+{{- if ne .Database.String "none" }}
+		db:            db,
+{{- end }}
+{{- if .Storage }}
+		storage:       storage,
+{{- end }}
+{{- if .Redis }}
+		redis:         redis,
+{{- end }}
+{{- if eq .Queue "sqs" }}
+		queue:         queue,
+{{- end }}
+		logger:        logger,
+{{- if ne .Database.String "none" }}
+		bookService:   bookService,
+{{- end }}
+		healthService: healthService,
+		baseURL:       baseURL,
+		port:          port,
+	}
+	
+	// Setup router with routes
+	s.router = s.routes()
+	
+	return s
+}
+
+// routes sets up all HTTP routes for the service
+func (s *server) routes() *gin.Engine {
+	router := gin.Default()
+	router.Use(cors.Default())
+	
+	api := router.Group("/api")
+	{
+		api.GET("/health", handlers.HandleHealth(s.healthService))
+{{- if ne .Database.String "none" }}
+		api.GET("/books", handlers.HandleListBooks(s.bookService))
+		api.GET("/books/:id", handlers.HandleGetBook(s.bookService))
+		api.POST("/books", handlers.HandleCreateBook(s.bookService))
+		api.PATCH("/books/:id", handlers.HandleUpdateBook(s.bookService))
+		api.DELETE("/books/:id", handlers.HandleDeleteBook(s.bookService))
+{{- end }}
+	}
+	
+	return router
+}
+
+// run starts the HTTP server with graceful shutdown
+func (s *server) run() error {
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%d", s.port),
+		Handler:      s.router,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		<-ctx.Done()
+
+		s.logger.Info("shutting down server...")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			s.logger.Error("server shutdown error", "error", err)
+		}
+	}()
+
+	s.logger.Info("server starting", "address", fmt.Sprintf("http://%s:%d", s.baseURL, s.port))
+	fmt.Printf("\nServer started at http://%s:%d\n", s.baseURL, s.port)
+	
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("listen and serve: %w", err)
+	}
+	
+	return nil
+}

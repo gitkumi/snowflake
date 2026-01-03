@@ -12,29 +12,6 @@ tidy:
 	go mod tidy -v
 	go fmt ./...
 
-{{- if ne .Database.String "none" }}
-.PHONY: sqlc
-sqlc:
-	sqlc generate
-
-.PHONY: db
-db:
-	goose status
-
-.PHONY: db.up
-db.up:
-	goose up
-
-.PHONY: db.down
-db.down:
-	goose down
-
-.PHONY: db.reset
-db.reset:
-	goose reset
-	goose up
-{{- end }}
-
 .PHONY: tools.install
 tools.install:
 	@echo "Installing development tools..."

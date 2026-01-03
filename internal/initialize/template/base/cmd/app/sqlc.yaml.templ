@@ -1,12 +1,12 @@
 version: "2"
 sql:
 - engine: "{{.Database.SQLCEngine }}"
-  queries: "sql/queries/"
-  schema: "sql/migrations/"
+  queries: "./sql/queries/"
+  schema: "./sql/migrations/"
   gen:
     go:
       package: "repo"
-      out: "internal/repo"
+      out: "./repo"
       emit_exact_table_names: false
       emit_empty_slices: true
       emit_prepared_queries: true

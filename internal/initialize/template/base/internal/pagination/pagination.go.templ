@@ -1,0 +1,36 @@
+package pagination
+
+import (
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+)
+
+type Settings struct {
+	Page    int
+	PerPage int
+	Offset  int
+}
+
+func FromRequest(c *gin.Context) Settings {
+	page := 1
+	perPage := 10
+
+	if p := c.Query("page"); p != "" {
+		if parsed, err := strconv.Atoi(p); err == nil && parsed > 0 {
+			page = parsed
+		}
+	}
+
+	if pp := c.Query("per_page"); pp != "" {
+		if parsed, err := strconv.Atoi(pp); err == nil && parsed > 0 && parsed <= 100 {
+			perPage = parsed
+		}
+	}
+
+	return Settings{
+		Page:    page,
+		PerPage: perPage,
+		Offset:  (page - 1) * perPage,
+	}
+}
