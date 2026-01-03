@@ -12,14 +12,15 @@ import (
 
 func Command() *cobra.Command {
 	var (
-		quiet     bool
-		database  string
-		queue     string
-		outputDir string
-		git       bool
-		smtp      bool
-		storage   bool
-		redis     bool
+		quiet            bool
+		database         string
+		queue            string
+		containerRuntime string
+		outputDir        string
+		git              bool
+		smtp             bool
+		storage          bool
+		redis            bool
 	)
 
 	cmd := &cobra.Command{
@@ -60,16 +61,22 @@ func Command() *cobra.Command {
 				log.Fatalf("Invalid queue type: %s. Must be one of: %v", queue, initialize.AllQueues)
 			}
 
+			containerRuntimeEnum := initialize.ContainerRuntime(containerRuntime)
+			if !containerRuntimeEnum.IsValid() {
+				log.Fatalf("Invalid container runtime: %s. Must be one of: %v", containerRuntime, initialize.AllContainerRuntimes)
+			}
+
 			err := initialize.Run(&initialize.Config{
-				Quiet:     quiet,
-				Name:      args[0],
-				Database:  dbEnum,
-				Queue:     queueEnum,
-				Git:       git,
-				OutputDir: outputDir,
-				SMTP:      smtp,
-				Storage:   storage,
-				Redis:     redis,
+				Quiet:            quiet,
+				Name:             args[0],
+				Database:         dbEnum,
+				Queue:            queueEnum,
+				ContainerRuntime: containerRuntimeEnum,
+				Git:              git,
+				OutputDir:        outputDir,
+				SMTP:             smtp,
+				Storage:          storage,
+				Redis:            redis,
 			})
 			if err != nil {
 				log.Fatal(err.Error())
@@ -79,6 +86,7 @@ func Command() *cobra.Command {
 
 	cmd.Flags().StringVarP(&database, "database", "d", "none", fmt.Sprintf("Database type %v", initialize.AllDatabases))
 	cmd.Flags().StringVarP(&queue, "queue", "q", "none", fmt.Sprintf("Queue type %v", initialize.AllQueues))
+	cmd.Flags().StringVarP(&containerRuntime, "container", "c", "podman", fmt.Sprintf("Container runtime %v", initialize.AllContainerRuntimes))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "Disable project generation messages")
 	cmd.Flags().BoolVar(&git, "git", true, "Initialize git")

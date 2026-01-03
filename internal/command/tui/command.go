@@ -17,6 +17,7 @@ func Command() *cobra.Command {
 			projectName := ""
 			database := initialize.AllDatabases[0]
 			queue := initialize.AllQueues[0]
+			containerRuntime := initialize.AllContainerRuntimes[0] // Defaults to Podman
 			selectedFeatures := []string{"Git"}
 
 			projectNameGroup := huh.NewGroup(
@@ -61,11 +62,22 @@ func Command() *cobra.Command {
 					Value(&queue),
 			)
 
+			containerRuntimeGroup := huh.NewGroup(
+				huh.NewSelect[initialize.ContainerRuntime]().
+					Title("Select container runtime").
+					Options(
+						huh.NewOption("Podman", initialize.ContainerRuntimePodman),
+						huh.NewOption("Docker", initialize.ContainerRuntimeDocker),
+					).
+					Value(&containerRuntime),
+			)
+
 			initialForm := huh.NewForm(
 				projectNameGroup,
 				databaseGroup,
 				featuresGroup,
 				queueGroup,
+				containerRuntimeGroup,
 			)
 
 			if err := initialForm.Run(); err != nil {
@@ -76,6 +88,7 @@ func Command() *cobra.Command {
 			cfg.Name = projectName
 			cfg.Database = database
 			cfg.Queue = queue
+			cfg.ContainerRuntime = containerRuntime
 
 			cfg.Git = contains(selectedFeatures, "Git")
 			cfg.SMTP = contains(selectedFeatures, "SMTP")

@@ -119,3 +119,28 @@ func (t Queue) IsValid() bool {
 func (t Queue) String() string {
 	return string(t)
 }
+
+type ContainerRuntime string
+
+const (
+	ContainerRuntimePodman ContainerRuntime = "podman"
+	ContainerRuntimeDocker ContainerRuntime = "docker"
+)
+
+var AllContainerRuntimes = []ContainerRuntime{
+	ContainerRuntimePodman,
+	ContainerRuntimeDocker,
+}
+
+func (c ContainerRuntime) IsValid() bool {
+	for _, runtime := range AllContainerRuntimes {
+		if runtime == c {
+			return true
+		}
+	}
+	return false
+}
+
+func (c ContainerRuntime) String() string {
+	return string(c)
+}

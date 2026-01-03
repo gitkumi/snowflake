@@ -18,9 +18,10 @@ type Config struct {
 	OutputDir string
 	Git       bool
 
-	Name     string
-	Database Database
-	Queue    Queue
+	Name             string
+	Database         Database
+	Queue            Queue
+	ContainerRuntime ContainerRuntime
 
 	SMTP    bool
 	Storage bool
@@ -169,7 +170,7 @@ Run your new project:
 
 	if database == DatabasePostgres || database == DatabaseMySQL || database == DatabaseMariaDB || redis {
 		successMessage += `
-  $ make app.devenv.up # Initialize the docker dev environment
+  $ make app.devenv.up # Initialize the dev environment
   $ make app.dev`
 	} else {
 		successMessage += `

@@ -1,5 +1,6 @@
 APP_NAME := app
 BUILD_DIR := ../../bin
+CONTAINER_RUNTIME := {{ .ContainerRuntime.String }}
 
 .PHONY: run
 run:
@@ -58,13 +59,13 @@ db.reset:
 
 .PHONY: db.create
 db.create:
-	docker exec -i dev_{{ .Name }}_mysql \
+	$(CONTAINER_RUNTIME) exec -i dev_{{ .Name }}_mysql \
 		mysql -uroot -pmysql -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};" || \
 		echo "Database creation failed. Make sure MySQL is running."
 
 .PHONY: db.drop
 db.drop:
-	docker exec -i dev_{{ .Name }}_mysql \
+	$(CONTAINER_RUNTIME) exec -i dev_{{ .Name }}_mysql \
 		mysql -uroot -pmysql -e "DROP DATABASE IF EXISTS {{ .Name }};" || \
 		echo "Database drop failed. Make sure MySQL is running."
 {{- end }}
@@ -73,13 +74,13 @@ db.drop:
 
 .PHONY: db.create
 db.create:
-	docker exec -i dev_{{ .Name }}_mariadb \
+	$(CONTAINER_RUNTIME) exec -i dev_{{ .Name }}_mariadb \
 		mariadb -uroot -pmariadb -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};" || \
 		echo "Database creation failed. Make sure MariaDB is running."
 
 .PHONY: db.drop
 db.drop:
-	docker exec -i dev_{{ .Name }}_mariadb \
+	$(CONTAINER_RUNTIME) exec -i dev_{{ .Name }}_mariadb \
 		mariadb -uroot -pmariadb -e "DROP DATABASE IF EXISTS {{ .Name }};" || \
 		echo "Database drop failed. Make sure MariaDB is running."
 {{- end }}
@@ -88,38 +89,38 @@ db.drop:
 
 .PHONY: db.create
 db.create:
-	docker exec -i dev_{{ .Name }}_postgres \
+	$(CONTAINER_RUNTIME) exec -i dev_{{ .Name }}_postgres \
 		psql -U postgres -c "CREATE DATABASE {{ .Name }};" || \
 		echo "Database creation failed. Make sure PostgreSQL is running."
 
 .PHONY: db.drop
 db.drop:
-	docker exec -i dev_{{ .Name }}_postgres \
+	$(CONTAINER_RUNTIME) exec -i dev_{{ .Name }}_postgres \
 		psql -U postgres -c "DROP DATABASE IF EXISTS {{ .Name }};" || \
 		echo "Database drop failed. Make sure PostgreSQL is running."
 {{- end }}
 
 .PHONY: docker.build
 docker.build:
-	docker build -f Dockerfile -t {{ .Name }}-$(APP_NAME):latest ../..
+	$(CONTAINER_RUNTIME) build -f Dockerfile -t {{ .Name }}-$(APP_NAME):latest ../..
 
 .PHONY: docker.run
 docker.run:
-	docker run --rm -p 8080:8080 --env-file .env {{ .Name }}-$(APP_NAME):latest
+	$(CONTAINER_RUNTIME) run --rm -p 8080:8080 --env-file .env {{ .Name }}-$(APP_NAME):latest
 
 {{- if .HasDevEnv }}
 
 .PHONY: devenv.up
 devenv.up:
-	docker compose -f devenv.yaml up -d
+	$(CONTAINER_RUNTIME) compose -f devenv.yaml up -d
 
 .PHONY: devenv.down
 devenv.down:
-	docker compose -f devenv.yaml down -v
+	$(CONTAINER_RUNTIME) compose -f devenv.yaml down -v
 
 .PHONY: devenv.logs
 devenv.logs:
-	docker compose -f devenv.yaml logs -f
+	$(CONTAINER_RUNTIME) compose -f devenv.yaml logs -f
 {{- end }}
 
 .PHONY: clean

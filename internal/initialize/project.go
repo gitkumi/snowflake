@@ -9,9 +9,10 @@ import (
 )
 
 type Project struct {
-	Name     string
-	Database Database
-	Queue    Queue
+	Name             string
+	Database         Database
+	Queue            Queue
+	ContainerRuntime ContainerRuntime
 
 	SMTP    bool
 	Storage bool
@@ -34,12 +35,13 @@ type FileExclusion struct {
 
 func NewProject(cfg *Config) *Project {
 	project := &Project{
-		Name:     cfg.Name,
-		Database: cfg.Database,
-		Queue:    cfg.Queue,
-		SMTP:     cfg.SMTP,
-		Storage:  cfg.Storage,
-		Redis:    cfg.Redis,
+		Name:             cfg.Name,
+		Database:         cfg.Database,
+		Queue:            cfg.Queue,
+		ContainerRuntime: cfg.ContainerRuntime,
+		SMTP:             cfg.SMTP,
+		Storage:          cfg.Storage,
+		Redis:            cfg.Redis,
 	}
 
 	project.fileExclusions = []*FileExclusion{
