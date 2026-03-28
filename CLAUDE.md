@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Snowflake is a Go CLI that scaffolds opinionated Go web projects with selectable features.
+Snowflake is a Go CLI that scaffolds opinionated Go web projects with selectable features, and generates CRUD resources into existing projects.
 
 ## Commands
 
@@ -18,13 +18,32 @@ make run               # run the CLI
 - `main.go` / `cmd/cli/main.go` — Cobra CLI wiring
 - `internal/command/tui/` — interactive TUI (charmbracelet/huh)
 - `internal/command/run/` — non-interactive CLI flags
-- `internal/initialize/` — core generation logic
+- `internal/command/generate/` — `gen resource` and `gen migration` subcommands
+- `internal/initialize/` — core scaffolding logic
   - `types.go` — `Database`, `ContainerRuntime` enums
   - `initialize.go` — `Config` struct and `Run()` orchestrator
   - `project.go` — `Project` struct, file exclusions, file renames
   - `operations.go` — post-generation commands (go mod init, tidy, build, etc.)
   - `template/base/` — embedded Go template files (`.templ` suffix = snowflake template, stripped on output)
   - `template/fragments/database/` — per-database SQL migration/query fragments
+- `internal/generate/` — resource/migration generation into existing projects
+  - `generate.go` — `Run()` (full resource) and `RunMigration()` (migration only)
+  - `config.go` — reads `.snowflake.yaml` from project root
+  - `resource.go` — `Resource`/`Field` structs, field parsing, pluralization
+  - `typemap.go` — SQL type mapping per database dialect
+  - `migration.go` — timestamp-based migration numbering
+  - `template/` — embedded `.tmpl` files for migrations, queries, services, handlers
+
+## CLI usage
+
+```
+snowflake new                           # interactive project scaffold (TUI)
+snowflake run <name> [flags]            # non-interactive project scaffold
+snowflake gen resource <name> [fields]  # generate full CRUD resource
+snowflake gen migration <name> [fields] # generate migration only
+```
+
+Field types: `string`, `text`, `int`, `bigint`, `bool`, `float`, `timestamp`. Defaults to `string`.
 
 ## Adding a new feature
 
@@ -38,12 +57,21 @@ Follow the pattern of existing features (SMTP, Storage, Redis, Templ):
 6. **Post-commands** — If the feature needs a build step (like `templ generate` or `sqlc generate`), add it to `operations.go`. Order matters: generation steps must run before `go mod tidy`.
 7. **Tests** — Add `TestGenerateFeature` and `TestGenerateNoFeature` in `initialize_test.go`.
 
+## Adding a new gen subcommand
+
+1. Add a `Run*()` function in `internal/generate/generate.go`.
+2. Add a Cobra subcommand in `internal/command/generate/command.go` and register it in `Command()`.
+3. Add templates in `internal/generate/template/` if needed.
+4. Add tests in `internal/generate/generate_test.go`.
+
 ## Template naming
 
 Snowflake uses `.templ` as its own template suffix, which gets stripped to produce the output filename. To generate a file that itself has a `.templ` extension (e.g. for the templ library), name it `.templ.templ`.
 
 ## Testing
 
-Tests in `initialize_test.go` run the full generation pipeline (template rendering, go mod init, go mod tidy, build). They require `go`, `gofmt`, and `make` on PATH. Tests that enable database features also need `sqlc`. Tests that enable templ need the `templ` CLI.
+Tests in `initialize_test.go` run the full scaffolding pipeline (template rendering, go mod init, go mod tidy, build). They require `go`, `gofmt`, and `make` on PATH. Tests that enable database features also need `sqlc`. Tests that enable templ need the `templ` CLI.
+
+Tests in `internal/generate/` test resource and migration generation without requiring the full build toolchain.
 
 All tests use `Quiet: true` and `Git: false` to keep them fast and side-effect-free.
