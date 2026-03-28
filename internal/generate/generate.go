@@ -52,6 +52,9 @@ var funcMap = template.FuncMap{
 		}
 		return strings.Join(clauses, ",\n    ")
 	},
+	"hasParamsStruct": func(fields []Field) bool {
+		return len(fields) > 1
+	},
 }
 
 func RunMigration(name string, rawFields []string, projectDir string, quiet bool) error {

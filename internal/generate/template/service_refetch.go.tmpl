@@ -13,7 +13,7 @@ func New{{.NameTitle}}Service(q *repo.Queries) *{{.NameTitle}}Service {
 	return &{{.NameTitle}}Service{Query: q}
 }
 
-{{- if .Fields}}
+{{- if hasParamsStruct .Fields}}
 
 func (s *{{.NameTitle}}Service) Create{{.NameTitle}}(ctx context.Context, arg repo.Create{{.NameTitle}}Params) (repo.{{.NameTitle}}, error) {
 	result, err := s.Query.Create{{.NameTitle}}(ctx, arg)
@@ -28,14 +28,20 @@ func (s *{{.NameTitle}}Service) Create{{.NameTitle}}(ctx context.Context, arg re
 
 	return s.Query.Get{{.NameTitle}}(ctx, id)
 }
+{{- else if .Fields}}
 
-func (s *{{.NameTitle}}Service) Update{{.NameTitle}}(ctx context.Context, arg repo.Update{{.NameTitle}}Params) (repo.{{.NameTitle}}, error) {
-	err := s.Query.Update{{.NameTitle}}(ctx, arg)
+func (s *{{.NameTitle}}Service) Create{{.NameTitle}}(ctx context.Context, {{(index .Fields 0).Name}} {{(index .Fields 0).GoType}}) (repo.{{.NameTitle}}, error) {
+	result, err := s.Query.Create{{.NameTitle}}(ctx, {{(index .Fields 0).Name}})
 	if err != nil {
 		return repo.{{.NameTitle}}{}, err
 	}
 
-	return s.Query.Get{{.NameTitle}}(ctx, arg.ID)
+	id, err := result.LastInsertId()
+	if err != nil {
+		return repo.{{.NameTitle}}{}, err
+	}
+
+	return s.Query.Get{{.NameTitle}}(ctx, id)
 }
 {{- else}}
 
@@ -51,6 +57,18 @@ func (s *{{.NameTitle}}Service) Create{{.NameTitle}}(ctx context.Context) (repo.
 	}
 
 	return s.Query.Get{{.NameTitle}}(ctx, id)
+}
+{{- end}}
+
+{{- if .Fields}}
+
+func (s *{{.NameTitle}}Service) Update{{.NameTitle}}(ctx context.Context, arg repo.Update{{.NameTitle}}Params) (repo.{{.NameTitle}}, error) {
+	err := s.Query.Update{{.NameTitle}}(ctx, arg)
+	if err != nil {
+		return repo.{{.NameTitle}}{}, err
+	}
+
+	return s.Query.Get{{.NameTitle}}(ctx, arg.ID)
 }
 {{- end}}
 

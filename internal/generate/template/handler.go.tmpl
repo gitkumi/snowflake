@@ -36,7 +36,7 @@ func HandleList{{.NameTitlePlural}}({{.Name}}Service *service.{{.NameTitle}}Serv
 
 func HandleCreate{{.NameTitle}}({{.Name}}Service *service.{{.NameTitle}}Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-{{- if .Fields}}
+{{- if hasParamsStruct .Fields}}
 		var input repo.Create{{.NameTitle}}Params
 		if err := c.ShouldBindJSON(&input); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
@@ -44,6 +44,16 @@ func HandleCreate{{.NameTitle}}({{.Name}}Service *service.{{.NameTitle}}Service)
 		}
 
 		item, err := {{.Name}}Service.Create{{.NameTitle}}(c.Request.Context(), input)
+{{- else if .Fields}}
+		var input struct {
+			{{(index .Fields 0).NameTitle}} {{(index .Fields 0).GoType}} `json:"{{(index .Fields 0).Name}}" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&input); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
+			return
+		}
+
+		item, err := {{.Name}}Service.Create{{.NameTitle}}(c.Request.Context(), input.{{(index .Fields 0).NameTitle}})
 {{- else}}
 		item, err := {{.Name}}Service.Create{{.NameTitle}}(c.Request.Context())
 {{- end}}
