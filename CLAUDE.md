@@ -1,19 +1,49 @@
-# Repository Guidelines
+# CLAUDE.md
 
-## Project Structure & Module Organization
-Snowflake is a Go CLI generator; `main.go` wires the Cobra tree while `cmd/cli/main.go` exposes the packaged entry point. Command implementations live in `internal/command/{generate,run,tui,version}` and scaffolding assets reside under `internal/initialize` with reusable fragments in `internal/initialize/template`. Tests mirror their packages inside `internal/...`, and build outputs land in `bin/` or `dist/`. Target Go 1.25.0 per `go.mod` and `.tool-versions`.
+Snowflake is a Go CLI that scaffolds opinionated Go web projects with selectable features.
 
-## Build, Test, and Development Commands
-Key targets: `make run` executes the CLI; `make build` drops `bin/main`, while `make build-all` cross-compiles into `dist/` with checksums. Use `make test` (or `make test.coverage` for HTML output via `gotestsum`) before committing. `make audit` runs `go mod tidy -diff`, vet, staticcheck, and govulncheck—CI enforces it on every push. `make tidy` refreshes modules and formatting.
+## Commands
 
-## Coding Style & Naming Conventions
-Stick to idiomatic Go formatting (`gofmt`, tabs, camelCase) and run formatters before committing. Exported identifiers need doc comments and packages stay short nouns (`internal/command/run`). Keep new implementations under `internal/...` unless they are public, follow the existing Cobra file split of `command.go` plus verb-specific files, and run `make audit` before pushing to catch lint and security issues.
+```
+make test              # run all tests (uses gotestsum)
+make test.coverage     # run tests with HTML coverage report
+make build             # build to bin/main
+make audit             # tidy check + vet + staticcheck + govulncheck
+make tidy              # go mod tidy + go fmt
+make run               # run the CLI
+```
 
-## Testing Guidelines
-Place `_test.go` files next to the code they cover (e.g., `internal/initialize/initialize_test.go`) and use `TestXxx` naming with table-driven cases where branching exists. Execute `make test` routinely; inspect `coverage.html` from `make test.coverage` when touching scaffolding logic. Prefer shared fixtures in `internal/initialize/template` over duplicating test data.
+## Architecture
 
-## Commit & Pull Request Guidelines
-Write short, imperative commit subjects (<60 chars) and append issue refs like `(#54)` when relevant; avoid WIP chains by squashing locally. PR descriptions should state motivation, summarize changes, list tests run (`make audit`, `make test`), and flag follow-up work. Include screenshots or recordings when modifying TUI flows and wait for green CI before requesting review.
+- `main.go` / `cmd/cli/main.go` — Cobra CLI wiring
+- `internal/command/tui/` — interactive TUI (charmbracelet/huh)
+- `internal/command/run/` — non-interactive CLI flags
+- `internal/initialize/` — core generation logic
+  - `types.go` — `Database`, `Queue`, `ContainerRuntime` enums
+  - `initialize.go` — `Config` struct and `Run()` orchestrator
+  - `project.go` — `Project` struct, file exclusions, file renames
+  - `operations.go` — post-generation commands (go mod init, tidy, build, etc.)
+  - `template/base/` — embedded Go template files (`.templ` suffix = snowflake template, stripped on output)
+  - `template/fragments/database/` — per-database SQL migration/query fragments
 
-## Tooling & Environment Setup
-Install Go 1.25.0 via `asdf` (see `.tool-versions`). Ensure `sqlc`, `templ`, and `gotestsum` are available—mirror CI with `go install github.com/...`. Configure your editor to run `gofmt` on save and surface `go vet` diagnostics.
+## Adding a new feature
+
+Follow the pattern of existing features (SMTP, Storage, Redis, Templ):
+
+1. **Config + Project** — Add a `bool` field to `Config` in `initialize.go` and `Project` in `project.go`. Wire it in `NewProject`.
+2. **TUI** — Add an option to the `huh.NewMultiSelect` in `internal/command/tui/command.go`.
+3. **CLI** — Add a `--flag` in `internal/command/run/command.go`.
+4. **Template files** — Create files under `template/base/` with `.templ` suffix. Use `{{- if .FeatureName }}` guards in shared templates (server.go, main.go, env.go, Makefile, .env, etc.).
+5. **File exclusions** — Add a `FileExclusion` entry in `project.go` so files are skipped when the feature is disabled.
+6. **Post-commands** — If the feature needs a build step (like `templ generate` or `sqlc generate`), add it to `operations.go`. Order matters: generation steps must run before `go mod tidy`.
+7. **Tests** — Add `TestGenerateFeature` and `TestGenerateNoFeature` in `initialize_test.go`.
+
+## Template naming
+
+Snowflake uses `.templ` as its own template suffix, which gets stripped to produce the output filename. To generate a file that itself has a `.templ` extension (e.g. for the templ library), name it `.templ.templ`.
+
+## Testing
+
+Tests in `initialize_test.go` run the full generation pipeline (template rendering, go mod init, go mod tidy, build). They require `go`, `gofmt`, and `make` on PATH. Tests that enable database features also need `sqlc`. Tests that enable templ need the `templ` CLI.
+
+All tests use `Quiet: true` and `Git: false` to keep them fast and side-effect-free.
