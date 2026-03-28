@@ -98,8 +98,8 @@ func (d Database) Import() string {
 type KeyValueStore string
 
 const (
-	KeyValueStoreNone  KeyValueStore = "none"
-	KeyValueStoreRedis KeyValueStore = "redis"
+	KeyValueStoreNone   KeyValueStore = "none"
+	KeyValueStoreRedis  KeyValueStore = "redis"
 	KeyValueStoreValkey KeyValueStore = "valkey"
 )
 

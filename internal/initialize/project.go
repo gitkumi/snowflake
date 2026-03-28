@@ -38,10 +38,10 @@ func NewProject(cfg *Config) *Project {
 		Name:             cfg.Name,
 		Database:         cfg.Database,
 		ContainerRuntime: cfg.ContainerRuntime,
-		SMTP:          cfg.SMTP,
-		Storage:       cfg.Storage,
-		KeyValueStore: cfg.KeyValueStore,
-		Templ:         cfg.Templ,
+		SMTP:             cfg.SMTP,
+		Storage:          cfg.Storage,
+		KeyValueStore:    cfg.KeyValueStore,
+		Templ:            cfg.Templ,
 	}
 
 	project.fileExclusions = []*FileExclusion{

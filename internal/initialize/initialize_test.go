@@ -12,13 +12,13 @@ func TestGenerateNoDB(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseNone,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseNone,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
 		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
@@ -35,13 +35,13 @@ func TestGenerateSQLite3(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseSQLite3,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
 		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
@@ -58,13 +58,13 @@ func TestGeneratePostgres(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabasePostgres,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabasePostgres,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
 		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
@@ -81,13 +81,13 @@ func TestGenerateMySQL(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseMySQL,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseMySQL,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
 		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
@@ -104,13 +104,13 @@ func TestGenerateMariaDB(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseMariaDB,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseMariaDB,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
 		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
@@ -127,13 +127,13 @@ func TestGenerateNoSMTP(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseSQLite3,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      false,
-		Storage:   true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          false,
+		Storage:       true,
 		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
@@ -150,13 +150,13 @@ func TestGenerateNoStorage(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseSQLite3,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   false,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       false,
 		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
@@ -196,13 +196,13 @@ func TestGenerateNoRedis(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseSQLite3,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
 		KeyValueStore: initialize.KeyValueStoreNone,
 	})
 	if err != nil {
@@ -280,13 +280,13 @@ func TestEnvFilesGenerated(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseSQLite3,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
 		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
@@ -382,4 +382,3 @@ func abs(x int) int {
 	}
 	return x
 }
-
