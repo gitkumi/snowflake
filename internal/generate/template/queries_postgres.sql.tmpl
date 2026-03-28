@@ -1,0 +1,31 @@
+-- name: List{{.NameTitle}} :many
+SELECT * FROM {{.NamePlural}}
+ORDER BY created_at DESC
+LIMIT $1
+OFFSET $2;
+
+-- name: Count{{.NameTitle}} :one
+SELECT COUNT(*) AS count FROM {{.NamePlural}};
+
+-- name: Get{{.NameTitle}} :one
+SELECT * FROM {{.NamePlural}}
+WHERE id = $1
+LIMIT 1;
+
+-- name: Create{{.NameTitle}} :one
+INSERT INTO {{.NamePlural}} (
+  {{fieldNames .Fields}}
+) VALUES (
+  {{postgresParams .Fields 1}}
+)
+RETURNING *;
+
+-- name: Update{{.NameTitle}} :one
+UPDATE {{.NamePlural}}
+SET {{postgresSetClauses .Fields 1}}
+WHERE id = {{postgresNextParam .Fields 1}}
+RETURNING *;
+
+-- name: Delete{{.NameTitle}} :exec
+DELETE FROM {{.NamePlural}}
+WHERE id = $1;

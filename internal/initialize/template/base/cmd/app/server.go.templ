@@ -15,9 +15,6 @@ import (
 
 	"{{ .Name }}/cmd/app/handlers"
 	"{{ .Name }}/cmd/app/service"
-{{- if ne .Database.String "none" }}
-	"{{ .Name }}/cmd/app/repo"
-{{- end }}
 {{- if .Storage }}
 	"{{ .Name }}/internal/storage"
 {{- end }}
@@ -46,9 +43,6 @@ type server struct {
 	logger  *slog.Logger
 	
 	// Services
-{{- if ne .Database.String "none" }}
-	bookService   *service.BookService
-{{- end }}
 	healthService *service.HealthService
 	
 	baseURL string
@@ -77,10 +71,6 @@ func newServer(
 	gin.SetMode(ginMode)
 	
 	// Initialize services
-{{- if ne .Database.String "none" }}
-	queries := repo.New(db)
-	bookService := service.NewBookService(queries)
-{{- end }}
 	healthService := service.NewHealthService(
 		{{- if ne .Database.String "none" }}db,{{- end }}
 		{{- if .Storage }}storage,{{- end }}
@@ -101,9 +91,6 @@ func newServer(
 		valkey:        vk,
 {{- end }}
 		logger:        logger,
-{{- if ne .Database.String "none" }}
-		bookService:   bookService,
-{{- end }}
 		healthService: healthService,
 		baseURL:       baseURL,
 		port:          port,
@@ -127,13 +114,6 @@ func (s *server) routes() *gin.Engine {
 	api := router.Group("/api")
 	{
 		api.GET("/health", handlers.HandleHealth(s.healthService))
-{{- if ne .Database.String "none" }}
-		api.GET("/books", handlers.HandleListBooks(s.bookService))
-		api.GET("/books/:id", handlers.HandleGetBook(s.bookService))
-		api.POST("/books", handlers.HandleCreateBook(s.bookService))
-		api.PATCH("/books/:id", handlers.HandleUpdateBook(s.bookService))
-		api.DELETE("/books/:id", handlers.HandleDeleteBook(s.bookService))
-{{- end }}
 	}
 	
 	return router

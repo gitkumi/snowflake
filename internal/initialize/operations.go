@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 )
 
 type Command struct {
@@ -72,7 +74,7 @@ func runPostCommands(project *Project, outputPath string, quiet bool) error {
 		Args:    []string{"-w", "-s", "."},
 	})
 
-	if project.Database != DatabaseNone {
+	if project.Database != DatabaseNone && hasSQLFiles(filepath.Join(outputPath, "cmd", "app", "sql", "queries")) {
 		commands = append(commands, Command{
 			Message: "snowflake: make app.sqlc",
 			Name:    "make",
@@ -87,6 +89,19 @@ func runPostCommands(project *Project, outputPath string, quiet bool) error {
 	})
 
 	return runCommands(commands, outputPath, quiet)
+}
+
+func hasSQLFiles(dir string) bool {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return false
+	}
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".sql") {
+			return true
+		}
+	}
+	return false
 }
 
 func runGitCommands(outputPath string, quiet bool) error {

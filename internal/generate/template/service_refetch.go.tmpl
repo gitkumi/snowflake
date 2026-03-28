@@ -1,0 +1,55 @@
+package service
+
+import (
+	"{{.ModuleName}}/cmd/app/dto"
+	"{{.ModuleName}}/cmd/app/repo"
+	"context"
+)
+
+type {{.NameTitle}}Service struct {
+	Query *repo.Queries
+}
+
+func New{{.NameTitle}}Service(q *repo.Queries) *{{.NameTitle}}Service {
+	return &{{.NameTitle}}Service{Query: q}
+}
+
+func (s *{{.NameTitle}}Service) Create{{.NameTitle}}(ctx context.Context, input dto.Create{{.NameTitle}}) (repo.{{.NameTitle}}, error) {
+	result, err := s.Query.Create{{.NameTitle}}(ctx, input.ToCreate{{.NameTitle}}Params())
+	if err != nil {
+		return repo.{{.NameTitle}}{}, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return repo.{{.NameTitle}}{}, err
+	}
+
+	return s.Query.Get{{.NameTitle}}(ctx, id)
+}
+
+func (s *{{.NameTitle}}Service) Update{{.NameTitle}}(ctx context.Context, id int64, input dto.Update{{.NameTitle}}) (repo.{{.NameTitle}}, error) {
+	current, err := s.Query.Get{{.NameTitle}}(ctx, id)
+	if err != nil {
+		return repo.{{.NameTitle}}{}, err
+	}
+
+	err = s.Query.Update{{.NameTitle}}(ctx, input.ToUpdate{{.NameTitle}}Params(current))
+	if err != nil {
+		return repo.{{.NameTitle}}{}, err
+	}
+
+	return s.Query.Get{{.NameTitle}}(ctx, id)
+}
+
+func (s *{{.NameTitle}}Service) Delete{{.NameTitle}}(ctx context.Context, id int64) error {
+	return s.Query.Delete{{.NameTitle}}(ctx, id)
+}
+
+func (s *{{.NameTitle}}Service) Get{{.NameTitle}}(ctx context.Context, id int64) (repo.{{.NameTitle}}, error) {
+	return s.Query.Get{{.NameTitle}}(ctx, id)
+}
+
+func (s *{{.NameTitle}}Service) List{{.NameTitle}}(ctx context.Context, arg repo.List{{.NameTitle}}Params) ([]repo.{{.NameTitle}}, error) {
+	return s.Query.List{{.NameTitle}}(ctx, arg)
+}

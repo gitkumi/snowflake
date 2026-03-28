@@ -11,7 +11,7 @@ import (
 //go:embed all:base
 var BaseFiles embed.FS
 
-//go:embed fragments/database/*
+//go:embed all:fragments/database
 var DatabaseFragments embed.FS
 
 func loadFragments(fsys fs.FS, dir string, prefix string) (map[string]string, error) {

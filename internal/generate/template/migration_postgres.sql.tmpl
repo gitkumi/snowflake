@@ -1,0 +1,34 @@
+-- +goose Up
+-- +goose StatementBegin
+CREATE TABLE {{.NamePlural}} (
+  id BIGSERIAL PRIMARY KEY,
+{{- range $i, $f := .Fields}}
+{{- if eq $i 0}}
+  {{$f.Name}} {{$f.SQLType}} NOT NULL,
+{{- else}}
+  {{$f.Name}} {{$f.SQLType}},
+{{- end}}
+{{- end}}
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE OR REPLACE FUNCTION update_{{.NamePlural}}_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_{{.NamePlural}}_updated_at
+    BEFORE UPDATE ON {{.NamePlural}}
+    FOR EACH ROW
+    EXECUTE FUNCTION update_{{.NamePlural}}_updated_at();
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+DROP TABLE {{.NamePlural}};
+DROP FUNCTION IF EXISTS update_{{.NamePlural}}_updated_at();
+-- +goose StatementEnd

@@ -73,15 +73,10 @@ func NewProject(cfg *Config) *Project {
 		{
 			FilePaths: []string{
 				"/cmd/app/sqlc.yaml",
-				"/cmd/app/sql/migrations/00001_books.sql",
-				"/cmd/app/sql/queries/books.sql",
 				"/cmd/app/sql/sql.go",
 				"/cmd/migrator/main.go",
 				"/internal/db/db.go",
 				"/cmd/app/devenv.yaml",
-				"/cmd/app/handlers/book_handler.go",
-				"/cmd/app/service/book_service.go",
-				"/cmd/app/dto/book.go",
 				"/cmd/app/dto/dto.go",
 			},
 			Check: func(p *Project) bool { return p.Database == DatabaseNone },

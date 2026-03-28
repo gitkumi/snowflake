@@ -1,11 +1,14 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE books (
+CREATE TABLE {{.NamePlural}} (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  author VARCHAR(255),
-  isbn VARCHAR(20),
-  genre VARCHAR(100),
+{{- range $i, $f := .Fields}}
+{{- if eq $i 0}}
+  {{$f.Name}} {{$f.SQLType}} NOT NULL,
+{{- else}}
+  {{$f.Name}} {{$f.SQLType}},
+{{- end}}
+{{- end}}
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -13,6 +16,5 @@ CREATE TABLE books (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE books;
+DROP TABLE {{.NamePlural}};
 -- +goose StatementEnd
-

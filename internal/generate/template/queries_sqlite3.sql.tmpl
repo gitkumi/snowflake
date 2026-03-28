@@ -1,0 +1,30 @@
+-- name: List{{.NameTitle}} :many
+SELECT * FROM {{.NamePlural}}
+ORDER BY created_at DESC
+LIMIT ?
+OFFSET ?;
+
+-- name: Count{{.NameTitle}} :one
+SELECT COUNT(*) AS count FROM {{.NamePlural}};
+
+-- name: Get{{.NameTitle}} :one
+SELECT * FROM {{.NamePlural}}
+WHERE id = ? LIMIT 1;
+
+-- name: Create{{.NameTitle}} :one
+INSERT INTO {{.NamePlural}} (
+  {{fieldNames .Fields}}
+) VALUES (
+  {{questionParams .Fields}}
+)
+RETURNING *;
+
+-- name: Update{{.NameTitle}} :one
+UPDATE {{.NamePlural}}
+SET {{questionSetClauses .Fields}}
+WHERE id = ?
+RETURNING *;
+
+-- name: Delete{{.NameTitle}} :exec
+DELETE FROM {{.NamePlural}}
+WHERE id = ?;
