@@ -47,7 +47,7 @@ tools.install:
 	@go install gotest.tools/gotestsum@latest
 	@go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 	@go install github.com/a-h/templ/cmd/templ@latest
-	@echo "Development tools installed!"
+	@echo "Development tools installed! Please reshim."
 
 .PHONY: versions
 versions:
