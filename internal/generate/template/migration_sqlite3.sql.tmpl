@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE {{.NamePlural}} (
+CREATE TABLE {{.PluralName}} (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
 {{- range $i, $f := .Fields}}
 {{- if eq $i 0}}
@@ -13,10 +13,10 @@ CREATE TABLE {{.NamePlural}} (
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TRIGGER update_{{.NamePlural}}_updated_at
-AFTER UPDATE ON {{.NamePlural}}
+CREATE TRIGGER update_{{.PluralName}}_updated_at
+AFTER UPDATE ON {{.PluralName}}
 BEGIN
-    UPDATE {{.NamePlural}}
+    UPDATE {{.PluralName}}
     SET updated_at = CURRENT_TIMESTAMP
     WHERE id = OLD.id;
 END;
@@ -24,5 +24,5 @@ END;
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE {{.NamePlural}};
+DROP TABLE {{.PluralName}};
 -- +goose StatementEnd

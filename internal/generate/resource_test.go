@@ -106,13 +106,10 @@ func TestNewResource(t *testing.T) {
 	if r.Name != "post" {
 		t.Errorf("expected Name 'post', got %q", r.Name)
 	}
-	if r.NamePlural != "posts" {
-		t.Errorf("expected NamePlural 'posts', got %q", r.NamePlural)
+	if r.PluralName != "posts" {
+		t.Errorf("expected PluralName 'posts', got %q", r.PluralName)
 	}
 	if r.NameTitle != "Post" {
 		t.Errorf("expected NameTitle 'Post', got %q", r.NameTitle)
-	}
-	if r.NameTitlePlural != "Posts" {
-		t.Errorf("expected NameTitlePlural 'Posts', got %q", r.NameTitlePlural)
 	}
 }

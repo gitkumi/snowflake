@@ -1,35 +1,35 @@
 -- name: List{{.NameTitle}} :many
-SELECT * FROM {{.NamePlural}}
+SELECT * FROM {{.PluralName}}
 ORDER BY created_at DESC
 LIMIT ?
 OFFSET ?;
 
 -- name: Count{{.NameTitle}} :one
-SELECT COUNT(*) AS count FROM {{.NamePlural}};
+SELECT COUNT(*) AS count FROM {{.PluralName}};
 
 -- name: Get{{.NameTitle}} :one
-SELECT * FROM {{.NamePlural}}
+SELECT * FROM {{.PluralName}}
 WHERE id = ? LIMIT 1;
 
 {{- if .Fields}}
 
 -- name: Create{{.NameTitle}} :execresult
-INSERT INTO {{.NamePlural}} (
+INSERT INTO {{.PluralName}} (
   {{fieldNames .Fields}}
 ) VALUES (
   {{questionParams .Fields}}
 );
 
 -- name: Update{{.NameTitle}} :exec
-UPDATE {{.NamePlural}}
+UPDATE {{.PluralName}}
 SET {{questionSetClauses .Fields}}
 WHERE id = ?;
 {{- else}}
 
 -- name: Create{{.NameTitle}} :execresult
-INSERT INTO {{.NamePlural}} () VALUES ();
+INSERT INTO {{.PluralName}} () VALUES ();
 {{- end}}
 
 -- name: Delete{{.NameTitle}} :exec
-DELETE FROM {{.NamePlural}}
+DELETE FROM {{.PluralName}}
 WHERE id = ?;

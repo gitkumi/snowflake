@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func HandleList{{.NameTitlePlural}}({{.Name}}Service *service.{{.NameTitle}}Service) gin.HandlerFunc {
+func HandleList{{.NameTitle}}({{.Name}}Service *service.{{.NameTitle}}Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		p := pagination.FromRequest(c)
 
@@ -26,7 +26,7 @@ func HandleList{{.NameTitlePlural}}({{.Name}}Service *service.{{.NameTitle}}Serv
 {{- end}}
 		})
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list {{.NamePlural}}"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list {{.Name}}"})
 			return
 		}
 

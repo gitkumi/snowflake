@@ -7,13 +7,13 @@ import (
 )
 
 type Resource struct {
-	Name            string
-	NamePlural      string
-	NameTitle       string
-	NameTitlePlural string
-	ModuleName      string
-	Database        string
-	Fields          []Field
+	Name      string
+	NameTitle string
+	PluralName string
+
+	ModuleName string
+	Database   string
+	Fields     []Field
 }
 
 type Field struct {
@@ -25,19 +25,36 @@ type Field struct {
 }
 
 func NewResource(name string, fields []Field, cfg *ProjectConfig) *Resource {
-	title := toTitle(name)
-	plural := pluralize(name)
-	titlePlural := toTitle(plural)
-
 	return &Resource{
-		Name:            name,
-		NamePlural:      plural,
-		NameTitle:       title,
-		NameTitlePlural: titlePlural,
-		ModuleName:      cfg.Module,
-		Database:        cfg.Database,
-		Fields:          fields,
+		Name:       name,
+		NameTitle:  toTitle(name),
+		PluralName: pluralize(name),
+		ModuleName: cfg.Module,
+		Database:   cfg.Database,
+		Fields:     fields,
 	}
+}
+
+func pluralize(s string) string {
+	if s == "" {
+		return s
+	}
+	if strings.HasSuffix(s, "s") || strings.HasSuffix(s, "x") || strings.HasSuffix(s, "z") ||
+		strings.HasSuffix(s, "ch") || strings.HasSuffix(s, "sh") {
+		return s + "es"
+	}
+	if strings.HasSuffix(s, "y") && len(s) > 1 && !isVowel(rune(s[len(s)-2])) {
+		return s[:len(s)-1] + "ies"
+	}
+	return s + "s"
+}
+
+func isVowel(r rune) bool {
+	switch r {
+	case 'a', 'e', 'i', 'o', 'u':
+		return true
+	}
+	return false
 }
 
 func ParseFields(rawFields []string, database string) ([]Field, error) {
@@ -84,30 +101,3 @@ func toTitle(s string) string {
 	return string(runes)
 }
 
-func pluralize(s string) string {
-	if s == "" {
-		return s
-	}
-
-	if strings.HasSuffix(s, "s") || strings.HasSuffix(s, "x") || strings.HasSuffix(s, "z") ||
-		strings.HasSuffix(s, "ch") || strings.HasSuffix(s, "sh") {
-		return s + "es"
-	}
-
-	if strings.HasSuffix(s, "y") && len(s) > 1 {
-		prev := rune(s[len(s)-2])
-		if !isVowel(prev) {
-			return s[:len(s)-1] + "ies"
-		}
-	}
-
-	return s + "s"
-}
-
-func isVowel(r rune) bool {
-	switch unicode.ToLower(r) {
-	case 'a', 'e', 'i', 'o', 'u':
-		return true
-	}
-	return false
-}

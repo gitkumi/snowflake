@@ -1,6 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE {{.NamePlural}} (
+CREATE TABLE {{.PluralName}} (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
 {{- range $i, $f := .Fields}}
 {{- if eq $i 0}}
@@ -16,5 +16,5 @@ CREATE TABLE {{.NamePlural}} (
 
 -- +goose Down
 -- +goose StatementBegin
-DROP TABLE {{.NamePlural}};
+DROP TABLE {{.PluralName}};
 -- +goose StatementEnd

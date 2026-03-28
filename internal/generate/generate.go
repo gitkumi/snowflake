@@ -78,7 +78,7 @@ func RunMigration(name string, rawFields []string, projectDir string, quiet bool
 		return fmt.Errorf("failed to parse templates: %w", err)
 	}
 
-	outputPath := MigrationFilePath(migrationsDir, migNum, resource.NamePlural)
+	outputPath := MigrationFilePath(migrationsDir, migNum, resource.PluralName)
 
 	var buf bytes.Buffer
 	if err := tmpl.ExecuteTemplate(&buf, migrationTemplateName(cfg.Database), resource); err != nil {
@@ -128,11 +128,11 @@ func Run(resourceName string, rawFields []string, projectDir string, quiet bool)
 	}{
 		{
 			templateName: migrationTemplateName(cfg.Database),
-			outputPath:   MigrationFilePath(migrationsDir, migNum, resource.NamePlural),
+			outputPath:   MigrationFilePath(migrationsDir, migNum, resource.PluralName),
 		},
 		{
 			templateName: queriesTemplateName(cfg.Database),
-			outputPath:   filepath.Join(projectDir, "cmd", "app", "sql", "queries", resource.NamePlural+".sql"),
+			outputPath:   filepath.Join(projectDir, "cmd", "app", "sql", "queries", resource.PluralName+".sql"),
 		},
 		{
 			templateName: serviceTemplateName(cfg.Database),
@@ -247,11 +247,11 @@ func printInstructions(r *Resource) {
 	fmt.Printf("       queries := repo.New(db)     // if not already present\n")
 	fmt.Printf("       %sService := service.New%sService(queries)\n", r.Name, r.NameTitle)
 	fmt.Printf("\n  4. Add to routes():\n")
-	fmt.Printf("       api.GET(\"/%s\", handlers.HandleList%s(s.%sService))\n", r.NamePlural, r.NameTitlePlural, r.Name)
-	fmt.Printf("       api.GET(\"/%s/:id\", handlers.HandleGet%s(s.%sService))\n", r.NamePlural, r.NameTitle, r.Name)
-	fmt.Printf("       api.POST(\"/%s\", handlers.HandleCreate%s(s.%sService))\n", r.NamePlural, r.NameTitle, r.Name)
+	fmt.Printf("       api.GET(\"/%s\", handlers.HandleList%s(s.%sService))\n", r.PluralName, r.NameTitle, r.Name)
+	fmt.Printf("       api.GET(\"/%s/:id\", handlers.HandleGet%s(s.%sService))\n", r.PluralName, r.NameTitle, r.Name)
+	fmt.Printf("       api.POST(\"/%s\", handlers.HandleCreate%s(s.%sService))\n", r.PluralName, r.NameTitle, r.Name)
 	if len(r.Fields) > 0 {
-		fmt.Printf("       api.PATCH(\"/%s/:id\", handlers.HandleUpdate%s(s.%sService))\n", r.NamePlural, r.NameTitle, r.Name)
+		fmt.Printf("       api.PATCH(\"/%s/:id\", handlers.HandleUpdate%s(s.%sService))\n", r.PluralName, r.NameTitle, r.Name)
 	}
-	fmt.Printf("       api.DELETE(\"/%s/:id\", handlers.HandleDelete%s(s.%sService))\n", r.NamePlural, r.NameTitle, r.Name)
+	fmt.Printf("       api.DELETE(\"/%s/:id\", handlers.HandleDelete%s(s.%sService))\n", r.PluralName, r.NameTitle, r.Name)
 }
