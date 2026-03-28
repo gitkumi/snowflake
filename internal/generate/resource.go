@@ -39,11 +39,25 @@ func pluralize(s string) string {
 	if s == "" {
 		return s
 	}
-	if strings.HasSuffix(s, "s") || strings.HasSuffix(s, "x") || strings.HasSuffix(s, "z") ||
-		strings.HasSuffix(s, "ch") || strings.HasSuffix(s, "sh") {
+
+	lastSeparator := strings.LastIndexAny(s, "_-")
+	if lastSeparator >= 0 {
+		return s[:lastSeparator+1] + pluralizeWord(s[lastSeparator+1:])
+	}
+
+	return pluralizeWord(s)
+}
+
+func pluralizeWord(s string) string {
+	lower := strings.ToLower(s)
+	if strings.HasSuffix(lower, "z") {
+		return s + "zes"
+	}
+	if strings.HasSuffix(lower, "s") || strings.HasSuffix(lower, "x") ||
+		strings.HasSuffix(lower, "ch") || strings.HasSuffix(lower, "sh") {
 		return s + "es"
 	}
-	if strings.HasSuffix(s, "y") && len(s) > 1 && !isVowel(rune(s[len(s)-2])) {
+	if strings.HasSuffix(lower, "y") && len(s) > 1 && !isVowel(rune(lower[len(lower)-2])) {
 		return s[:len(s)-1] + "ies"
 	}
 	return s + "s"
@@ -96,7 +110,23 @@ func toTitle(s string) string {
 	if s == "" {
 		return s
 	}
-	runes := []rune(s)
-	runes[0] = unicode.ToUpper(runes[0])
-	return string(runes)
+
+	parts := strings.FieldsFunc(s, func(r rune) bool {
+		return r == '_' || r == '-'
+	})
+	if len(parts) == 0 {
+		return s
+	}
+
+	var builder strings.Builder
+	for _, part := range parts {
+		runes := []rune(part)
+		if len(runes) == 0 {
+			continue
+		}
+		runes[0] = unicode.ToUpper(runes[0])
+		builder.WriteString(string(runes))
+	}
+
+	return builder.String()
 }

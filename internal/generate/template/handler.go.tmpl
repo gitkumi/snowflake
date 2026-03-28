@@ -136,3 +136,13 @@ func HandleDelete{{.NameTitle}}({{.Name}}Service *service.{{.NameTitle}}Service)
 		c.Status(http.StatusNoContent)
 	}
 }
+
+func Register{{.NameTitle}}Routes(api *gin.RouterGroup, {{.Name}}Service *service.{{.NameTitle}}Service) {
+	api.GET("/{{.PluralName}}", HandleList{{.NameTitle}}({{.Name}}Service))
+	api.GET("/{{.PluralName}}/:id", HandleGet{{.NameTitle}}({{.Name}}Service))
+	api.POST("/{{.PluralName}}", HandleCreate{{.NameTitle}}({{.Name}}Service))
+{{- if .Fields}}
+	api.PATCH("/{{.PluralName}}/:id", HandleUpdate{{.NameTitle}}({{.Name}}Service))
+{{- end}}
+	api.DELETE("/{{.PluralName}}/:id", HandleDelete{{.NameTitle}}({{.Name}}Service))
+}

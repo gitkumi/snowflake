@@ -1,31 +1,12 @@
 package initialize
 
 import (
-	"fmt"
-	"os"
-	"path"
-	"path/filepath"
 	"strings"
 )
 
 type Project struct {
-	Name             string
-	Database         Database
-	ContainerRuntime ContainerRuntime
-
-	SMTP          bool
-	Storage       bool
-	KeyValueStore KeyValueStore
-	Templ         bool
-
-	fileExclusions []*FileExclusion
-	fileRenames    []*FileRename
-}
-
-type FileRename struct {
-	OldPath string
-	NewPath string
-	Check   func(*Project) bool
+	*Config
+	fileExclusions []FileExclusion
 }
 
 type FileExclusion struct {
@@ -35,16 +16,10 @@ type FileExclusion struct {
 
 func NewProject(cfg *Config) *Project {
 	project := &Project{
-		Name:             cfg.Name,
-		Database:         cfg.Database,
-		ContainerRuntime: cfg.ContainerRuntime,
-		SMTP:             cfg.SMTP,
-		Storage:          cfg.Storage,
-		KeyValueStore:    cfg.KeyValueStore,
-		Templ:            cfg.Templ,
+		Config: cfg,
 	}
 
-	project.fileExclusions = []*FileExclusion{
+	project.fileExclusions = []FileExclusion{
 		{
 			FilePaths: []string{
 				"/cmd/app/devenv.yaml",
@@ -74,6 +49,7 @@ func NewProject(cfg *Config) *Project {
 			FilePaths: []string{
 				"/cmd/app/sqlc.yaml",
 				"/cmd/app/sql/sql.go",
+				"/cmd/app/generated_routes.go",
 				"/cmd/migrator/main.go",
 				"/internal/db/db.go",
 				"/cmd/app/devenv.yaml",
@@ -89,17 +65,11 @@ func NewProject(cfg *Config) *Project {
 		},
 	}
 
-	project.fileRenames = []*FileRename{}
-
 	return project
 }
 
 func (p *Project) HasKeyValueStore() bool {
-	return p.KeyValueStore != KeyValueStoreNone && p.KeyValueStore != ""
-}
-
-func (p *Project) UsesDockerOnDev() bool {
-	return p.HasKeyValueStore() || p.Database != DatabaseNone
+	return p.KeyValueStore != KeyValueStoreNone
 }
 
 func (p *Project) HasDevEnv() bool {
@@ -118,38 +88,4 @@ func (p *Project) ExcludeFile(templateFileName string) bool {
 	}
 
 	return false
-}
-
-func (p *Project) RenameFiles(outputPath string) error {
-	oldDirs := make(map[string]bool)
-
-	for _, rename := range p.fileRenames {
-		if !rename.Check(p) {
-			continue
-		}
-
-		fullOldPath := filepath.Join(outputPath, rename.OldPath)
-		fullNewPath := filepath.Join(outputPath, rename.NewPath)
-
-		// Track the old directory for potential removal if empty later
-		oldDir := path.Dir(fullOldPath)
-		oldDirs[oldDir] = true
-
-		// Check if source file exists, skip if it doesn't (could be excluded)
-		if _, err := os.Stat(fullOldPath); os.IsNotExist(err) {
-			continue
-		} else if err != nil {
-			return fmt.Errorf("failed to check if file exists %s: %v", fullOldPath, err)
-		}
-
-		if err := os.MkdirAll(filepath.Dir(fullNewPath), 0755); err != nil {
-			return fmt.Errorf("failed to create directory %s: %v", filepath.Dir(fullNewPath), err)
-		}
-
-		if err := os.Rename(fullOldPath, fullNewPath); err != nil {
-			return fmt.Errorf("failed to rename file %s to %s: %v", fullOldPath, fullNewPath, err)
-		}
-	}
-
-	return RemoveEmptyDirs(oldDirs)
 }

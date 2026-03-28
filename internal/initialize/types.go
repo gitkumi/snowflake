@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Database string
@@ -145,4 +146,37 @@ func (c ContainerRuntime) IsValid() bool {
 
 func (c ContainerRuntime) String() string {
 	return string(c)
+}
+
+func ParseDatabase(value string) (Database, error) {
+	database := Database(strings.TrimSpace(value))
+	if database == "" {
+		database = DatabaseNone
+	}
+	if !database.IsValid() {
+		return "", fmt.Errorf("invalid database type: %s. Must be one of: %v", value, AllDatabases)
+	}
+	return database, nil
+}
+
+func ParseKeyValueStore(value string) (KeyValueStore, error) {
+	store := KeyValueStore(strings.TrimSpace(value))
+	if store == "" {
+		store = KeyValueStoreNone
+	}
+	if !store.IsValid() {
+		return "", fmt.Errorf("invalid key-value store: %s. Must be one of: %v", value, AllKeyValueStores)
+	}
+	return store, nil
+}
+
+func ParseContainerRuntime(value string) (ContainerRuntime, error) {
+	runtime := ContainerRuntime(strings.TrimSpace(value))
+	if runtime == "" {
+		runtime = ContainerRuntimePodman
+	}
+	if !runtime.IsValid() {
+		return "", fmt.Errorf("invalid container runtime: %s. Must be one of: %v", value, AllContainerRuntimes)
+	}
+	return runtime, nil
 }

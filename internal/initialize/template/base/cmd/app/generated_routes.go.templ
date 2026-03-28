@@ -1,0 +1,17 @@
+package main
+
+import (
+	"database/sql"
+
+	"{{ .Name }}/cmd/app/repo"
+	// snowflake:imports
+
+	"github.com/gin-gonic/gin"
+)
+
+func registerGeneratedRoutes(api *gin.RouterGroup, db *sql.DB) {
+	queries := repo.New(db)
+	_ = queries
+	_ = api
+	// snowflake:routes
+}

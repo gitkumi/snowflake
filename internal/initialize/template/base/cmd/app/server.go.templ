@@ -14,10 +14,6 @@ import (
 	"time"
 
 	"{{ .Name }}/cmd/app/handlers"
-	"{{ .Name }}/cmd/app/service"
-{{- if .Storage }}
-	"{{ .Name }}/internal/storage"
-{{- end }}
 {{- if eq .KeyValueStore "redis" }}
 	"github.com/redis/go-redis/v9"
 {{- else if eq .KeyValueStore "valkey" }}
@@ -32,19 +28,12 @@ type server struct {
 {{- if ne .Database.String "none" }}
 	db      *sql.DB
 {{- end }}
-{{- if .Storage }}
-	storage storage.Storage
-{{- end }}
 {{- if eq .KeyValueStore "redis" }}
 	redis   *redis.Client
 {{- else if eq .KeyValueStore "valkey" }}
 	valkey  valkey.Client
 {{- end }}
 	logger  *slog.Logger
-	
-	// Services
-	healthService *service.HealthService
-	
 	baseURL string
 	port    int
 	router  *gin.Engine
@@ -54,9 +43,6 @@ type server struct {
 func newServer(
 {{- if ne .Database.String "none" }}
 	db *sql.DB,
-{{- end }}
-{{- if .Storage }}
-	storage storage.Storage,
 {{- end }}
 {{- if eq .KeyValueStore "redis" }}
 	redis *redis.Client,
@@ -69,21 +55,10 @@ func newServer(
 	ginMode string,
 ) *server {
 	gin.SetMode(ginMode)
-	
-	// Initialize services
-	healthService := service.NewHealthService(
-		{{- if ne .Database.String "none" }}db,{{- end }}
-		{{- if .Storage }}storage,{{- end }}
-		{{- if eq .KeyValueStore "redis" }}redis,{{- end }}
-		{{- if eq .KeyValueStore "valkey" }}vk,{{- end }}
-	)
-	
+
 	s := &server{
 {{- if ne .Database.String "none" }}
 		db:            db,
-{{- end }}
-{{- if .Storage }}
-		storage:       storage,
 {{- end }}
 {{- if eq .KeyValueStore "redis" }}
 		redis:         redis,
@@ -91,14 +66,13 @@ func newServer(
 		valkey:        vk,
 {{- end }}
 		logger:        logger,
-		healthService: healthService,
 		baseURL:       baseURL,
 		port:          port,
 	}
-	
+
 	// Setup router with routes
 	s.router = s.routes()
-	
+
 	return s
 }
 
@@ -113,9 +87,21 @@ func (s *server) routes() *gin.Engine {
 
 	api := router.Group("/api")
 	{
-		api.GET("/health", handlers.HandleHealth(s.healthService))
+		api.GET("/health", handlers.HandleHealth(handlers.HealthDependencies{
+{{- if ne .Database.String "none" }}
+			DB: s.db,
+{{- end }}
+{{- if eq .KeyValueStore "redis" }}
+			Redis: s.redis,
+{{- else if eq .KeyValueStore "valkey" }}
+			Valkey: s.valkey,
+{{- end }}
+		}))
+{{- if ne .Database.String "none" }}
+		registerGeneratedRoutes(api, s.db)
+{{- end }}
 	}
-	
+
 	return router
 }
 
@@ -146,10 +132,10 @@ func (s *server) run() error {
 
 	s.logger.Info("server starting", "address", fmt.Sprintf("http://%s:%d", s.baseURL, s.port))
 	fmt.Printf("\nServer started at http://%s:%d\n", s.baseURL, s.port)
-	
+
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("listen and serve: %w", err)
 	}
-	
+
 	return nil
 }

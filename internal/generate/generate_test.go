@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -26,6 +27,7 @@ func TestGenerateResource(t *testing.T) {
 			expectedFiles := []string{
 				"cmd/app/service/post_service.go",
 				"cmd/app/handlers/post_handler.go",
+				"cmd/app/generated_routes.go",
 			}
 
 			for _, f := range expectedFiles {
@@ -57,6 +59,15 @@ func TestGenerateResource(t *testing.T) {
 			queriesFile := filepath.Join(projectDir, "cmd", "app", "sql", "queries", "posts.sql")
 			if _, err := os.Stat(queriesFile); os.IsNotExist(err) {
 				t.Error("queries file not generated")
+			}
+
+			routesFile := filepath.Join(projectDir, "cmd", "app", "generated_routes.go")
+			routesContent, err := os.ReadFile(routesFile)
+			if err != nil {
+				t.Fatalf("failed to read generated routes file: %v", err)
+			}
+			if !strings.Contains(string(routesContent), "handlers.RegisterPostRoutes(api, postService)") {
+				t.Errorf("generated routes file did not register the resource:\n%s", routesContent)
 			}
 		})
 	}
