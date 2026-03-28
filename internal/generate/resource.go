@@ -7,8 +7,8 @@ import (
 )
 
 type Resource struct {
-	Name      string
-	NameTitle string
+	Name       string
+	NameTitle  string
 	PluralName string
 
 	ModuleName string
@@ -100,4 +100,3 @@ func toTitle(s string) string {
 	runes[0] = unicode.ToUpper(runes[0])
 	return string(runes)
 }
-
