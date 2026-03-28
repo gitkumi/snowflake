@@ -51,17 +51,26 @@ func runPostCommands(project *Project, outputPath string, quiet bool) error {
 			Name:    "go",
 			Args:    []string{"mod", "init", project.Name},
 		},
-		{
-			Message: "snowflake: go mod tidy",
-			Name:    "go",
-			Args:    []string{"mod", "tidy"},
-		},
-		{
-			Message: "snowflake: gofmt",
-			Name:    "gofmt",
-			Args:    []string{"-w", "-s", "."},
-		},
 	}
+
+	// templ generate must run before go mod tidy so _templ.go files exist
+	if project.Templ {
+		commands = append(commands, Command{
+			Message: "snowflake: make app.templ",
+			Name:    "make",
+			Args:    []string{"app.templ"},
+		})
+	}
+
+	commands = append(commands, Command{
+		Message: "snowflake: go mod tidy",
+		Name:    "go",
+		Args:    []string{"mod", "tidy"},
+	}, Command{
+		Message: "snowflake: gofmt",
+		Name:    "gofmt",
+		Args:    []string{"-w", "-s", "."},
+	})
 
 	if project.Database != DatabaseNone {
 		commands = append(commands, Command{

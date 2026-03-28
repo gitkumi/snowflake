@@ -225,6 +225,69 @@ func TestGenerateQueueSQS(t *testing.T) {
 	}
 }
 
+func TestGenerateTempl(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := initialize.Run(&initialize.Config{
+		Quiet:     true,
+		Name:      "acme",
+		Database:  initialize.DatabaseNone,
+		Queue:     initialize.QueueNone,
+		OutputDir: tmpDir,
+		Git:       false,
+		Templ:     true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+		t.Fatal("project directory not created")
+	}
+
+	// Check templ files exist
+	templFiles := []string{
+		filepath.Join(projectDir, "internal", "html", "pages", "index.templ"),
+		filepath.Join(projectDir, "cmd", "app", "handlers", "page_handler.go"),
+	}
+	for _, f := range templFiles {
+		if _, err := os.Stat(f); os.IsNotExist(err) {
+			t.Fatalf("templ file not created at %s", f)
+		}
+	}
+}
+
+func TestGenerateNoTempl(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := initialize.Run(&initialize.Config{
+		Quiet:     true,
+		Name:      "acme",
+		Database:  initialize.DatabaseNone,
+		Queue:     initialize.QueueNone,
+		OutputDir: tmpDir,
+		Git:       false,
+		Templ:     false,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+
+	// Check templ files do NOT exist
+	templFiles := []string{
+		filepath.Join(projectDir, "internal", "html", "pages", "index.templ"),
+		filepath.Join(projectDir, "cmd", "app", "handlers", "page_handler.go"),
+	}
+	for _, f := range templFiles {
+		if _, err := os.Stat(f); !os.IsNotExist(err) {
+			t.Fatalf("templ file should not exist at %s", f)
+		}
+	}
+}
+
 func TestEnvFilesGenerated(t *testing.T) {
 	tmpDir := t.TempDir()
 

@@ -26,6 +26,7 @@ type Config struct {
 	SMTP    bool
 	Storage bool
 	Redis   bool
+	Templ   bool
 }
 
 func Run(cfg *Config) error {

@@ -21,6 +21,7 @@ func Command() *cobra.Command {
 		smtp             bool
 		storage          bool
 		redis            bool
+		templ            bool
 	)
 
 	cmd := &cobra.Command{
@@ -77,6 +78,7 @@ func Command() *cobra.Command {
 				SMTP:             smtp,
 				Storage:          storage,
 				Redis:            redis,
+				Templ:            templ,
 			})
 			if err != nil {
 				log.Fatal(err.Error())
@@ -93,6 +95,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&smtp, "smtp", false, "Add SMTP")
 	cmd.Flags().BoolVar(&storage, "storage", false, "Add Storage (S3)")
 	cmd.Flags().BoolVar(&redis, "redis", false, "Add Redis (comes with ratelimit middleware)")
+	cmd.Flags().BoolVar(&templ, "templ", false, "Add HTML (templ)")
 
 	return cmd
 }

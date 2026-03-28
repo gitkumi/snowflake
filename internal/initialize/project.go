@@ -17,6 +17,7 @@ type Project struct {
 	SMTP    bool
 	Storage bool
 	Redis   bool
+	Templ   bool
 
 	fileExclusions []*FileExclusion
 	fileRenames    []*FileRename
@@ -42,6 +43,7 @@ func NewProject(cfg *Config) *Project {
 		SMTP:             cfg.SMTP,
 		Storage:          cfg.Storage,
 		Redis:            cfg.Redis,
+		Templ:            cfg.Templ,
 	}
 
 	project.fileExclusions = []*FileExclusion{
@@ -99,6 +101,13 @@ func NewProject(cfg *Config) *Project {
 				"/internal/queue/mock.go",
 			},
 			Check: func(p *Project) bool { return p.Queue == QueueNone },
+		},
+		{
+			FilePaths: []string{
+				"/internal/html/pages/index.templ",
+				"/cmd/app/handlers/page_handler.go",
+			},
+			Check: func(p *Project) bool { return !p.Templ },
 		},
 	}
 

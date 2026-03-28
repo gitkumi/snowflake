@@ -124,6 +124,10 @@ func (s *server) routes() *gin.Engine {
 	router := gin.Default()
 	router.Use(cors.Default())
 	
+{{- if .Templ }}
+	router.GET("/", handlers.HandleIndex())
+{{- end }}
+
 	api := router.Group("/api")
 	{
 		api.GET("/health", handlers.HandleHealth(s.healthService))

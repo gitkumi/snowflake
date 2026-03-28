@@ -1,0 +1,19 @@
+package handlers
+
+import (
+	"net/http"
+
+	"{{ .Name }}/internal/html/pages"
+
+	"github.com/gin-gonic/gin"
+)
+
+func HandleIndex() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Status(http.StatusOK)
+		c.Header("Content-Type", "text/html; charset=utf-8")
+		if err := pages.Index().Render(c.Request.Context(), c.Writer); err != nil {
+			c.String(http.StatusInternalServerError, "failed to render page")
+		}
+	}
+}

@@ -1,0 +1,18 @@
+package pages
+
+templ Index() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{{ .Name }}</title>
+		</head>
+		<body>
+			<main>
+				<h1>Welcome to {{ .Name }}</h1>
+				<p>Edit this page at <code>internal/html/pages/index.templ</code></p>
+			</main>
+		</body>
+	</html>
+}

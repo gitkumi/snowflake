@@ -10,8 +10,18 @@ run:
 dev:
 	air
 
+{{- if .Templ }}
+
+.PHONY: templ
+templ:
+	cd ../.. && templ generate
+{{- end }}
+
 .PHONY: build
 build:
+{{- if .Templ }}
+	cd ../.. && templ generate
+{{- end }}
 	go build -o $(BUILD_DIR)/$(APP_NAME) .
 
 .PHONY: test
