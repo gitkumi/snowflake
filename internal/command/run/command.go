@@ -14,13 +14,13 @@ func Command() *cobra.Command {
 	var (
 		quiet            bool
 		database         string
+		keyValueStore    string
 		queue            string
 		containerRuntime string
 		outputDir        string
 		git              bool
 		smtp             bool
 		storage          bool
-		redis            bool
 		templ            bool
 	)
 
@@ -67,17 +67,22 @@ func Command() *cobra.Command {
 				log.Fatalf("Invalid container runtime: %s. Must be one of: %v", containerRuntime, initialize.AllContainerRuntimes)
 			}
 
+			kvsEnum := initialize.KeyValueStore(keyValueStore)
+			if !kvsEnum.IsValid() {
+				log.Fatalf("Invalid key-value store: %s. Must be one of: %v", keyValueStore, initialize.AllKeyValueStores)
+			}
+
 			err := initialize.Run(&initialize.Config{
 				Quiet:            quiet,
 				Name:             args[0],
 				Database:         dbEnum,
+				KeyValueStore:    kvsEnum,
 				Queue:            queueEnum,
 				ContainerRuntime: containerRuntimeEnum,
 				Git:              git,
 				OutputDir:        outputDir,
 				SMTP:             smtp,
 				Storage:          storage,
-				Redis:            redis,
 				Templ:            templ,
 			})
 			if err != nil {
@@ -92,9 +97,9 @@ func Command() *cobra.Command {
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "Disable project generation messages")
 	cmd.Flags().BoolVar(&git, "git", true, "Initialize git")
+	cmd.Flags().StringVar(&keyValueStore, "kvs", "none", fmt.Sprintf("Key-value store %v", initialize.AllKeyValueStores))
 	cmd.Flags().BoolVar(&smtp, "smtp", false, "Add SMTP")
 	cmd.Flags().BoolVar(&storage, "storage", false, "Add Storage (S3)")
-	cmd.Flags().BoolVar(&redis, "redis", false, "Add Redis (comes with ratelimit middleware)")
 	cmd.Flags().BoolVar(&templ, "templ", false, "Add HTML (templ)")
 
 	return cmd

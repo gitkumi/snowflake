@@ -23,10 +23,10 @@ type Config struct {
 	Queue            Queue
 	ContainerRuntime ContainerRuntime
 
-	SMTP    bool
-	Storage bool
-	Redis   bool
-	Templ   bool
+	SMTP          bool
+	Storage       bool
+	KeyValueStore KeyValueStore
+	Templ         bool
 }
 
 func Run(cfg *Config) error {
@@ -57,7 +57,7 @@ func Run(cfg *Config) error {
 		}
 	}
 
-	printSuccessMessage(project.Name, project.Database, project.Redis, cfg.Quiet)
+	printSuccessMessage(project.Name, project.Database, project.Redis(), cfg.Quiet)
 
 	return nil
 }

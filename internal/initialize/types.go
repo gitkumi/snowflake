@@ -120,6 +120,33 @@ func (t Queue) String() string {
 	return string(t)
 }
 
+type KeyValueStore string
+
+const (
+	KeyValueStoreNone  KeyValueStore = "none"
+	KeyValueStoreRedis KeyValueStore = "redis"
+	KeyValueStoreValkey KeyValueStore = "valkey"
+)
+
+var AllKeyValueStores = []KeyValueStore{
+	KeyValueStoreNone,
+	KeyValueStoreRedis,
+	KeyValueStoreValkey,
+}
+
+func (k KeyValueStore) IsValid() bool {
+	for _, kvs := range AllKeyValueStores {
+		if kvs == k {
+			return true
+		}
+	}
+	return false
+}
+
+func (k KeyValueStore) String() string {
+	return string(k)
+}
+
 type ContainerRuntime string
 
 const (

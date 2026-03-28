@@ -7,6 +7,15 @@
       - "6379:6379"
 {{- end }}
 
+{{- define "valkey" }}
+  valkey:
+    image: valkey/valkey:8
+    container_name: dev_{{ .Name}}_valkey
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+{{- end }}
+
 {{- define "postgres" }}
   db:
     image: postgres:17
@@ -67,8 +76,10 @@ services:
 {{- $volName = printf "mariadb_%s_data" .Name }}
 {{- end }}
 
-{{- if .Redis }}
+{{- if eq .KeyValueStore.String "redis" }}
 {{ template "redis" . }}
+{{- else if eq .KeyValueStore.String "valkey" }}
+{{ template "valkey" . }}
 {{- end }}
 
 {{- if $volName }}

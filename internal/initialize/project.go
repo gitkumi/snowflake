@@ -14,10 +14,10 @@ type Project struct {
 	Queue            Queue
 	ContainerRuntime ContainerRuntime
 
-	SMTP    bool
-	Storage bool
-	Redis   bool
-	Templ   bool
+	SMTP          bool
+	Storage       bool
+	KeyValueStore KeyValueStore
+	Templ         bool
 
 	fileExclusions []*FileExclusion
 	fileRenames    []*FileRename
@@ -40,10 +40,10 @@ func NewProject(cfg *Config) *Project {
 		Database:         cfg.Database,
 		Queue:            cfg.Queue,
 		ContainerRuntime: cfg.ContainerRuntime,
-		SMTP:             cfg.SMTP,
-		Storage:          cfg.Storage,
-		Redis:            cfg.Redis,
-		Templ:            cfg.Templ,
+		SMTP:          cfg.SMTP,
+		Storage:       cfg.Storage,
+		KeyValueStore: cfg.KeyValueStore,
+		Templ:         cfg.Templ,
 	}
 
 	project.fileExclusions = []*FileExclusion{
@@ -53,7 +53,7 @@ func NewProject(cfg *Config) *Project {
 				"/cmd/app/Dockerfile",
 			},
 			Check: func(p *Project) bool {
-				return p.Database == DatabaseSQLite3 && !p.Redis
+				return p.Database == DatabaseSQLite3 && !p.Redis()
 			},
 		},
 		{
@@ -76,7 +76,7 @@ func NewProject(cfg *Config) *Project {
 			FilePaths: []string{
 				"/internal/middleware/rate_limit.go",
 			},
-			Check: func(p *Project) bool { return !p.Redis },
+			Check: func(p *Project) bool { return !p.Redis() },
 		},
 		{
 			FilePaths: []string{
@@ -116,12 +116,16 @@ func NewProject(cfg *Config) *Project {
 	return project
 }
 
+func (p *Project) Redis() bool {
+	return p.KeyValueStore != KeyValueStoreNone
+}
+
 func (p *Project) UsesDockerOnDev() bool {
-	return p.Redis || p.Database != DatabaseNone
+	return p.Redis() || p.Database != DatabaseNone
 }
 
 func (p *Project) HasDevEnv() bool {
-	return !(p.Database == DatabaseSQLite3 && !p.Redis)
+	return !(p.Database == DatabaseSQLite3 && !p.Redis())
 }
 
 func (p *Project) ExcludeFile(templateFileName string) bool {

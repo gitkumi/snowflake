@@ -19,6 +19,7 @@ func Command() *cobra.Command {
 			cfg := &initialize.Config{}
 			projectPath := ""
 			database := initialize.AllDatabases[0]
+			keyValueStore := initialize.AllKeyValueStores[0]
 			queue := initialize.AllQueues[0]
 			containerRuntime := initialize.AllContainerRuntimes[0] // Defaults to Podman
 			selectedFeatures := []string{"Git"}
@@ -28,6 +29,18 @@ func Command() *cobra.Command {
 					Title("Project path").
 					Placeholder("./acme").
 					Value(&projectPath),
+			)
+
+			featuresGroup := huh.NewGroup(
+				huh.NewMultiSelect[string]().
+					Title("Add features").
+					Options(
+						huh.NewOption("Git", "Git"),
+						huh.NewOption("SMTP", "SMTP"),
+						huh.NewOption("S3-compatible", "Storage"),
+						huh.NewOption("HTML (templ)", "Templ"),
+					).
+					Value(&selectedFeatures),
 			)
 
 			databaseGroup := huh.NewGroup(
@@ -43,17 +56,15 @@ func Command() *cobra.Command {
 					Value(&database),
 			)
 
-			featuresGroup := huh.NewGroup(
-				huh.NewMultiSelect[string]().
-					Title("Add features").
+			keyValueStoreGroup := huh.NewGroup(
+				huh.NewSelect[initialize.KeyValueStore]().
+					Title("Select key-value store").
 					Options(
-						huh.NewOption("Git", "Git"),
-						huh.NewOption("SMTP", "SMTP"),
-						huh.NewOption("S3", "Storage"),
-						huh.NewOption("Redis", "Redis"),
-						huh.NewOption("HTML (templ)", "Templ"),
+						huh.NewOption("None", initialize.KeyValueStoreNone),
+						huh.NewOption("Redis", initialize.KeyValueStoreRedis),
+						huh.NewOption("Valkey", initialize.KeyValueStoreValkey),
 					).
-					Value(&selectedFeatures),
+					Value(&keyValueStore),
 			)
 
 			queueGroup := huh.NewGroup(
@@ -79,6 +90,7 @@ func Command() *cobra.Command {
 			initialForm := huh.NewForm(
 				projectPathGroup,
 				databaseGroup,
+				keyValueStoreGroup,
 				featuresGroup,
 				queueGroup,
 				containerRuntimeGroup,
@@ -98,13 +110,13 @@ func Command() *cobra.Command {
 			cfg.Name = name
 			cfg.OutputDir = outputDir
 			cfg.Database = database
+			cfg.KeyValueStore = keyValueStore
 			cfg.Queue = queue
 			cfg.ContainerRuntime = containerRuntime
 
 			cfg.Git = contains(selectedFeatures, "Git")
 			cfg.SMTP = contains(selectedFeatures, "SMTP")
 			cfg.Storage = contains(selectedFeatures, "Storage")
-			cfg.Redis = contains(selectedFeatures, "Redis")
 			cfg.Templ = contains(selectedFeatures, "Templ")
 
 			if err := initialize.Run(cfg); err != nil {

@@ -21,7 +21,7 @@ func TestGenerateNoDB(t *testing.T) {
 		Git:       false,
 		SMTP:      true,
 		Storage:   true,
-		Redis:     true,
+		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -45,7 +45,7 @@ func TestGenerateSQLite3(t *testing.T) {
 		Git:       false,
 		SMTP:      true,
 		Storage:   true,
-		Redis:     true,
+		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -69,7 +69,7 @@ func TestGeneratePostgres(t *testing.T) {
 		Git:       false,
 		SMTP:      true,
 		Storage:   true,
-		Redis:     true,
+		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -93,7 +93,7 @@ func TestGenerateMySQL(t *testing.T) {
 		Git:       false,
 		SMTP:      true,
 		Storage:   true,
-		Redis:     true,
+		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -117,7 +117,7 @@ func TestGenerateMariaDB(t *testing.T) {
 		Git:       false,
 		SMTP:      true,
 		Storage:   true,
-		Redis:     true,
+		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -141,7 +141,7 @@ func TestGenerateNoSMTP(t *testing.T) {
 		Git:       false,
 		SMTP:      false,
 		Storage:   true,
-		Redis:     true,
+		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -165,7 +165,31 @@ func TestGenerateNoStorage(t *testing.T) {
 		Git:       false,
 		SMTP:      true,
 		Storage:   false,
-		Redis:     true,
+		KeyValueStore: initialize.KeyValueStoreRedis,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+		t.Fatal("project directory not created")
+	}
+}
+
+func TestGenerateValkey(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := initialize.Run(&initialize.Config{
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseSQLite3,
+		Queue:         initialize.QueueNone,
+		OutputDir:     tmpDir,
+		Git:           false,
+		SMTP:          true,
+		Storage:       true,
+		KeyValueStore: initialize.KeyValueStoreValkey,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -189,7 +213,7 @@ func TestGenerateNoRedis(t *testing.T) {
 		Git:       false,
 		SMTP:      true,
 		Storage:   true,
-		Redis:     false,
+		KeyValueStore: initialize.KeyValueStoreNone,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -213,7 +237,7 @@ func TestGenerateQueueSQS(t *testing.T) {
 		Git:       false,
 		SMTP:      true,
 		Storage:   true,
-		Redis:     true,
+		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -300,7 +324,7 @@ func TestEnvFilesGenerated(t *testing.T) {
 		Git:       false,
 		SMTP:      true,
 		Storage:   true,
-		Redis:     true,
+		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -341,13 +365,13 @@ func TestEnvFilesGenerated(t *testing.T) {
 
 func FuzzGenerate(f *testing.F) {
 	f.Add(
-		true, true, true,
-		0, 0,
+		true, true,
+		0, 0, 0,
 	)
 
 	f.Fuzz(func(t *testing.T,
-		withSMTP, withStorage, withRedis bool,
-		dbTypeInt, jobTypeInt int,
+		withSMTP, withStorage bool,
+		dbTypeInt, jobTypeInt, kvsTypeInt int,
 	) {
 		tmpDir := t.TempDir()
 
@@ -362,20 +386,26 @@ func FuzzGenerate(f *testing.F) {
 			initialize.QueueSQS,
 			initialize.QueueNone,
 		}
+		keyValueStores := []initialize.KeyValueStore{
+			initialize.KeyValueStoreNone,
+			initialize.KeyValueStoreRedis,
+			initialize.KeyValueStoreValkey,
+		}
 
 		database := databases[abs(dbTypeInt)%len(databases)]
 		queue := queues[abs(jobTypeInt)%len(queues)]
+		kvs := keyValueStores[abs(kvsTypeInt)%len(keyValueStores)]
 
 		err := initialize.Run(&initialize.Config{
-			Git:       false,
-			Quiet:     true,
-			Name:      "acme",
-			OutputDir: tmpDir,
-			Database:  database,
-			Queue:     queue,
-			SMTP:      withSMTP,
-			Storage:   withStorage,
-			Redis:     withRedis,
+			Git:           false,
+			Quiet:         true,
+			Name:          "acme",
+			OutputDir:     tmpDir,
+			Database:      database,
+			Queue:         queue,
+			KeyValueStore: kvs,
+			SMTP:          withSMTP,
+			Storage:       withStorage,
 		})
 		if err != nil {
 			t.Logf("initialize.Run returned error: %v", err)
