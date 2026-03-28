@@ -52,25 +52,6 @@ var funcMap = template.FuncMap{
 		}
 		return strings.Join(clauses, ",\n    ")
 	},
-	"nullConvert": func(f Field, varName string) string {
-		switch f.NullType {
-		case "sql.NullString":
-			return fmt.Sprintf("sql.NullString{String: %s.%s, Valid: %s.%s != \"\"}", varName, f.NameTitle, varName, f.NameTitle)
-		case "sql.NullInt64":
-			return fmt.Sprintf("sql.NullInt64{Int64: %s.%s, Valid: %s.%s != 0}", varName, f.NameTitle, varName, f.NameTitle)
-		case "sql.NullBool":
-			return fmt.Sprintf("sql.NullBool{Bool: %s.%s, Valid: true}", varName, f.NameTitle)
-		case "sql.NullFloat64":
-			return fmt.Sprintf("sql.NullFloat64{Float64: %s.%s, Valid: %s.%s != 0}", varName, f.NameTitle, varName, f.NameTitle)
-		case "sql.NullTime":
-			return fmt.Sprintf("sql.NullTime{Time: %s.%s, Valid: !%s.%s.IsZero()}", varName, f.NameTitle, varName, f.NameTitle)
-		default:
-			return fmt.Sprintf("%s.%s", varName, f.NameTitle)
-		}
-	},
-	"hasOptionalFields": func(fields []Field) bool {
-		return len(fields) > 1
-	},
 }
 
 func Run(resourceName string, rawFields []string, projectDir string, quiet bool) error {
@@ -109,10 +90,6 @@ func Run(resourceName string, rawFields []string, projectDir string, quiet bool)
 		{
 			templateName: queriesTemplateName(cfg.Database),
 			outputPath:   filepath.Join(projectDir, "cmd", "app", "sql", "queries", resource.NamePlural+".sql"),
-		},
-		{
-			templateName: "dto.go.tmpl",
-			outputPath:   filepath.Join(projectDir, "cmd", "app", "dto", resource.Name+".go"),
 		},
 		{
 			templateName: serviceTemplateName(cfg.Database),

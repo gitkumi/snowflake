@@ -3,7 +3,6 @@ package generate
 type TypeInfo struct {
 	SQLTypes map[string]string
 	GoType   string
-	NullType string
 }
 
 var typeMapping = map[string]TypeInfo{
@@ -14,8 +13,7 @@ var typeMapping = map[string]TypeInfo{
 			"mariadb":  "VARCHAR(255)",
 			"sqlite3":  "TEXT",
 		},
-		GoType:   "string",
-		NullType: "sql.NullString",
+		GoType: "string",
 	},
 	"text": {
 		SQLTypes: map[string]string{
@@ -24,8 +22,7 @@ var typeMapping = map[string]TypeInfo{
 			"mariadb":  "TEXT",
 			"sqlite3":  "TEXT",
 		},
-		GoType:   "string",
-		NullType: "sql.NullString",
+		GoType: "string",
 	},
 	"int": {
 		SQLTypes: map[string]string{
@@ -34,8 +31,7 @@ var typeMapping = map[string]TypeInfo{
 			"mariadb":  "INT",
 			"sqlite3":  "INTEGER",
 		},
-		GoType:   "int64",
-		NullType: "sql.NullInt64",
+		GoType: "int64",
 	},
 	"bigint": {
 		SQLTypes: map[string]string{
@@ -44,8 +40,7 @@ var typeMapping = map[string]TypeInfo{
 			"mariadb":  "BIGINT",
 			"sqlite3":  "INTEGER",
 		},
-		GoType:   "int64",
-		NullType: "sql.NullInt64",
+		GoType: "int64",
 	},
 	"bool": {
 		SQLTypes: map[string]string{
@@ -54,8 +49,7 @@ var typeMapping = map[string]TypeInfo{
 			"mariadb":  "BOOLEAN",
 			"sqlite3":  "BOOLEAN",
 		},
-		GoType:   "bool",
-		NullType: "sql.NullBool",
+		GoType: "bool",
 	},
 	"float": {
 		SQLTypes: map[string]string{
@@ -64,8 +58,7 @@ var typeMapping = map[string]TypeInfo{
 			"mariadb":  "FLOAT",
 			"sqlite3":  "REAL",
 		},
-		GoType:   "float64",
-		NullType: "sql.NullFloat64",
+		GoType: "float64",
 	},
 	"timestamp": {
 		SQLTypes: map[string]string{
@@ -74,7 +67,6 @@ var typeMapping = map[string]TypeInfo{
 			"mariadb":  "DATETIME",
 			"sqlite3":  "DATETIME",
 		},
-		GoType:   "time.Time",
-		NullType: "sql.NullTime",
+		GoType: "time.Time",
 	},
 }

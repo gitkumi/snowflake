@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"{{.ModuleName}}/cmd/app/dto"
-	"{{.ModuleName}}/cmd/app/service"
 	"{{.ModuleName}}/cmd/app/repo"
+	"{{.ModuleName}}/cmd/app/service"
 	"{{.ModuleName}}/internal/pagination"
 
 	"github.com/gin-gonic/gin"
@@ -37,7 +36,7 @@ func HandleList{{.NameTitlePlural}}({{.Name}}Service *service.{{.NameTitle}}Serv
 
 func HandleCreate{{.NameTitle}}({{.Name}}Service *service.{{.NameTitle}}Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var input dto.Create{{.NameTitle}}
+		var input repo.Create{{.NameTitle}}Params
 		if err := c.ShouldBindJSON(&input); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 			return
@@ -83,13 +82,14 @@ func HandleUpdate{{.NameTitle}}({{.Name}}Service *service.{{.NameTitle}}Service)
 			return
 		}
 
-		var input dto.Update{{.NameTitle}}
+		var input repo.Update{{.NameTitle}}Params
 		if err := c.ShouldBindJSON(&input); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		input.ID = id
 
-		item, err := {{.Name}}Service.Update{{.NameTitle}}(c.Request.Context(), id, input)
+		item, err := {{.Name}}Service.Update{{.NameTitle}}(c.Request.Context(), input)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				c.JSON(http.StatusNotFound, gin.H{"error": "{{.Name}} not found"})

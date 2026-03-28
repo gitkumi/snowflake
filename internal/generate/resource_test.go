@@ -99,7 +99,7 @@ func TestParseFieldsEmptyName(t *testing.T) {
 
 func TestNewResource(t *testing.T) {
 	cfg := &SnowflakeConfig{Module: "acme", Database: "postgres"}
-	fields := []Field{{Name: "title", NameTitle: "Title", Type: "string", SQLType: "TEXT", GoType: "string", NullType: "sql.NullString"}}
+	fields := []Field{{Name: "title", NameTitle: "Title", Type: "string", SQLType: "TEXT", GoType: "string"}}
 
 	r := NewResource("post", fields, cfg)
 

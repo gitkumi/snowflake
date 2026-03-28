@@ -23,7 +23,6 @@ func TestGenerateResource(t *testing.T) {
 
 			// Verify generated files exist
 			expectedFiles := []string{
-				"cmd/app/dto/post.go",
 				"cmd/app/service/post_service.go",
 				"cmd/app/handlers/post_handler.go",
 			}
@@ -110,7 +109,6 @@ func setupProjectDir(t *testing.T, projectDir string, database string) {
 	dirs := []string{
 		"cmd/app/sql/migrations",
 		"cmd/app/sql/queries",
-		"cmd/app/dto",
 		"cmd/app/service",
 		"cmd/app/handlers",
 	}

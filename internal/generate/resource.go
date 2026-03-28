@@ -22,7 +22,6 @@ type Field struct {
 	Type      string
 	SQLType   string
 	GoType    string
-	NullType  string
 }
 
 func NewResource(name string, fields []Field, cfg *SnowflakeConfig) *Resource {
@@ -71,7 +70,6 @@ func ParseFields(rawFields []string, database string) ([]Field, error) {
 			Type:      typeName,
 			SQLType:   sqlType,
 			GoType:    mapping.GoType,
-			NullType:  mapping.NullType,
 		})
 	}
 	return fields, nil

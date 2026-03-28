@@ -1,7 +1,6 @@
 package service
 
 import (
-	"{{.ModuleName}}/cmd/app/dto"
 	"{{.ModuleName}}/cmd/app/repo"
 	"context"
 )
@@ -14,17 +13,12 @@ func New{{.NameTitle}}Service(q *repo.Queries) *{{.NameTitle}}Service {
 	return &{{.NameTitle}}Service{Query: q}
 }
 
-func (s *{{.NameTitle}}Service) Create{{.NameTitle}}(ctx context.Context, input dto.Create{{.NameTitle}}) (repo.{{.NameTitle}}, error) {
-	return s.Query.Create{{.NameTitle}}(ctx, input.ToCreate{{.NameTitle}}Params())
+func (s *{{.NameTitle}}Service) Create{{.NameTitle}}(ctx context.Context, arg repo.Create{{.NameTitle}}Params) (repo.{{.NameTitle}}, error) {
+	return s.Query.Create{{.NameTitle}}(ctx, arg)
 }
 
-func (s *{{.NameTitle}}Service) Update{{.NameTitle}}(ctx context.Context, id int64, input dto.Update{{.NameTitle}}) (repo.{{.NameTitle}}, error) {
-	current, err := s.Query.Get{{.NameTitle}}(ctx, id)
-	if err != nil {
-		return repo.{{.NameTitle}}{}, err
-	}
-
-	return s.Query.Update{{.NameTitle}}(ctx, input.ToUpdate{{.NameTitle}}Params(current))
+func (s *{{.NameTitle}}Service) Update{{.NameTitle}}(ctx context.Context, arg repo.Update{{.NameTitle}}Params) (repo.{{.NameTitle}}, error) {
+	return s.Query.Update{{.NameTitle}}(ctx, arg)
 }
 
 func (s *{{.NameTitle}}Service) Delete{{.NameTitle}}(ctx context.Context, id int64) error {

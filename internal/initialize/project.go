@@ -77,7 +77,6 @@ func NewProject(cfg *Config) *Project {
 				"/cmd/migrator/main.go",
 				"/internal/db/db.go",
 				"/cmd/app/devenv.yaml",
-				"/cmd/app/dto/dto.go",
 			},
 			Check: func(p *Project) bool { return p.Database == DatabaseNone },
 		},
