@@ -61,6 +61,46 @@ func TestGenerateResource(t *testing.T) {
 	}
 }
 
+func TestGenerateMigration(t *testing.T) {
+	databases := []string{"postgres", "mysql", "mariadb", "sqlite3"}
+
+	for _, db := range databases {
+		t.Run(db, func(t *testing.T) {
+			projectDir := t.TempDir()
+			setupProjectDir(t, projectDir, db)
+
+			err := RunMigration("create_posts", []string{"title:string", "body:text"}, projectDir, true)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			migrationsDir := filepath.Join(projectDir, "cmd", "app", "sql", "migrations")
+			entries, err := os.ReadDir(migrationsDir)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			foundMigration := false
+			for _, e := range entries {
+				if filepath.Ext(e.Name()) == ".sql" {
+					foundMigration = true
+					break
+				}
+			}
+			if !foundMigration {
+				t.Error("no migration file generated")
+			}
+
+			// Verify no other files were generated
+			servicePath := filepath.Join(projectDir, "cmd", "app", "service")
+			entries, _ = os.ReadDir(servicePath)
+			for _, e := range entries {
+				t.Errorf("unexpected file in service dir: %s", e.Name())
+			}
+		})
+	}
+}
+
 func TestGenerateResourceNoDB(t *testing.T) {
 	projectDir := t.TempDir()
 	setupProjectDir(t, projectDir, "none")

@@ -54,6 +54,54 @@ var funcMap = template.FuncMap{
 	},
 }
 
+func RunMigration(name string, rawFields []string, projectDir string, quiet bool) error {
+	cfg, err := LoadConfig(projectDir)
+	if err != nil {
+		return err
+	}
+
+	if cfg.Database == "none" {
+		return fmt.Errorf("cannot generate migrations: project has no database configured")
+	}
+
+	fields, err := ParseFields(rawFields, cfg.Database)
+	if err != nil {
+		return err
+	}
+
+	resource := NewResource(name, fields, cfg)
+
+	migrationsDir := filepath.Join(projectDir, "cmd", "app", "sql", "migrations")
+	migNum := MigrationNumber()
+
+	tmpl, err := template.New("").Funcs(funcMap).ParseFS(generatetemplate.Files, "*.tmpl")
+	if err != nil {
+		return fmt.Errorf("failed to parse templates: %w", err)
+	}
+
+	outputPath := MigrationFilePath(migrationsDir, migNum, resource.NamePlural)
+
+	var buf bytes.Buffer
+	if err := tmpl.ExecuteTemplate(&buf, migrationTemplateName(cfg.Database), resource); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(outputPath), 0777); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	if err := os.WriteFile(outputPath, buf.Bytes(), 0666); err != nil {
+		return fmt.Errorf("failed to write %s: %w", outputPath, err)
+	}
+
+	if !quiet {
+		rel, _ := filepath.Rel(projectDir, outputPath)
+		fmt.Printf("  created %s\n", rel)
+	}
+
+	return nil
+}
+
 func Run(resourceName string, rawFields []string, projectDir string, quiet bool) error {
 	cfg, err := LoadConfig(projectDir)
 	if err != nil {
