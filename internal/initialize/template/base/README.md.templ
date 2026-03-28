@@ -16,6 +16,26 @@ Note: Be sure to check the docs of each tools.
 - `make audit` - Code quality checks
 - `make tidy` - Format and tidy code
 - `make tools.install` - Install required tools
-- `make tools.check` - Check if required tools is installed
+- `make tools.check` - Check if required tools are installed
 
-**App-specific:** See `cmd/app/Makefile` for development commands.
+**App:**
+- `make app.run` - Run the app
+- `make app.dev` - Run with hot reload (air)
+- `make app.build` - Build the app
+- `make app.test` - Run tests
+- `make app.clean` - Remove build artifacts
+{{- if .Templ }}
+- `make app.templ` - Generate templ files
+{{- end }}
+{{- if ne .Database.String "none" }}
+- `make app.sqlc` - Generate sqlc code
+- `make app.db.up` - Run database migrations
+- `make app.db.down` - Rollback last migration
+- `make app.db.reset` - Reset and re-run all migrations
+{{- end }}
+{{- if .HasDevEnv }}
+- `make app.devenv.up` - Start dev environment containers
+- `make app.devenv.down` - Stop dev environment containers
+{{- end }}
+- `make app.docker.build` - Build Docker image
+- `make app.docker.run` - Run Docker container

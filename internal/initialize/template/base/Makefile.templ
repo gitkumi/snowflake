@@ -1,8 +1,13 @@
+APP_NAME := app
+APP_DIR := cmd/app
+BUILD_DIR := bin
+CONTAINER_RUNTIME := {{ .ContainerRuntime.String }}
+
 .PHONY: audit
 audit:
 	go mod tidy -diff
 	go mod verify
-	test -z "$(shell gofmt -l .)" 
+	test -z "$(shell gofmt -l .)"
 	go vet ./...
 	go run honnef.co/go/tools/cmd/staticcheck@latest -checks=all,-ST1000,-U1000 ./...
 	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
@@ -42,7 +47,135 @@ tools.check:
 	@command -v {{ .ContainerRuntime.String }} compose >/dev/null 2>&1 || { echo "{{ .ContainerRuntime.String }} compose is not installed"; exit 1; }
 	@echo "All required tools are installed!"
 
-# Delegate app.* commands to cmd/app/Makefile
-.PHONY: app.%
-app.%:
-	@$(MAKE) -C cmd/app $*
+.PHONY: app.run
+app.run:
+	go run ./$(APP_DIR)
+
+.PHONY: app.dev
+app.dev:
+	cd $(APP_DIR) && air
+
+{{- if .Templ }}
+
+.PHONY: app.templ
+app.templ:
+	templ generate
+{{- end }}
+
+.PHONY: app.build
+app.build:{{- if .Templ }} app.templ{{- end }}
+	go build -o $(BUILD_DIR)/$(APP_NAME) ./$(APP_DIR)
+
+.PHONY: app.test
+app.test:
+	gotestsum -f testname ./...
+
+.PHONY: app.test.verbose
+app.test.verbose:
+	gotestsum -f standard-verbose ./...
+
+.PHONY: app.test.coverage
+app.test.coverage:
+	gotestsum --format testname -- -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
+.PHONY: app.test.watch
+app.test.watch:
+	gotestsum -f testname --watch ./...
+
+{{- if ne .Database.String "none" }}
+
+.PHONY: app.sqlc
+app.sqlc:
+	cd $(APP_DIR) && sqlc generate
+
+.PHONY: app.db
+app.db:
+	cd $(APP_DIR) && goose status
+
+.PHONY: app.db.up
+app.db.up:
+	cd $(APP_DIR) && goose up
+
+.PHONY: app.db.down
+app.db.down:
+	cd $(APP_DIR) && goose down
+
+.PHONY: app.db.reset
+app.db.reset:
+	cd $(APP_DIR) && goose reset && goose up
+{{- end }}
+
+{{- if eq .Database.String "mysql" }}
+
+.PHONY: app.db.create
+app.db.create:
+	$(CONTAINER_RUNTIME) exec -i dev_{{ .Name }}_mysql \
+		mysql -uroot -pmysql -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};" || \
+		echo "Database creation failed. Make sure MySQL is running."
+
+.PHONY: app.db.drop
+app.db.drop:
+	$(CONTAINER_RUNTIME) exec -i dev_{{ .Name }}_mysql \
+		mysql -uroot -pmysql -e "DROP DATABASE IF EXISTS {{ .Name }};" || \
+		echo "Database drop failed. Make sure MySQL is running."
+{{- end }}
+
+{{- if eq .Database.String "mariadb" }}
+
+.PHONY: app.db.create
+app.db.create:
+	$(CONTAINER_RUNTIME) exec -i dev_{{ .Name }}_mariadb \
+		mariadb -uroot -pmariadb -e "CREATE DATABASE IF NOT EXISTS {{ .Name }};" || \
+		echo "Database creation failed. Make sure MariaDB is running."
+
+.PHONY: app.db.drop
+app.db.drop:
+	$(CONTAINER_RUNTIME) exec -i dev_{{ .Name }}_mariadb \
+		mariadb -uroot -pmariadb -e "DROP DATABASE IF EXISTS {{ .Name }};" || \
+		echo "Database drop failed. Make sure MariaDB is running."
+{{- end }}
+
+{{- if eq .Database.String "postgres" }}
+
+.PHONY: app.db.create
+app.db.create:
+	$(CONTAINER_RUNTIME) exec -i dev_{{ .Name }}_postgres \
+		psql -U postgres -c "CREATE DATABASE {{ .Name }};" || \
+		echo "Database creation failed. Make sure PostgreSQL is running."
+
+.PHONY: app.db.drop
+app.db.drop:
+	$(CONTAINER_RUNTIME) exec -i dev_{{ .Name }}_postgres \
+		psql -U postgres -c "DROP DATABASE IF EXISTS {{ .Name }};" || \
+		echo "Database drop failed. Make sure PostgreSQL is running."
+{{- end }}
+
+.PHONY: app.docker.build
+app.docker.build:
+	$(CONTAINER_RUNTIME) build -f $(APP_DIR)/Dockerfile -t {{ .Name }}-$(APP_NAME):latest .
+
+.PHONY: app.docker.run
+app.docker.run:
+	$(CONTAINER_RUNTIME) run --rm -p 8080:8080 --env-file $(APP_DIR)/.env {{ .Name }}-$(APP_NAME):latest
+
+{{- if .HasDevEnv }}
+
+.PHONY: app.devenv.up
+app.devenv.up:
+	$(CONTAINER_RUNTIME) compose -f $(APP_DIR)/devenv.yaml up -d
+
+.PHONY: app.devenv.down
+app.devenv.down:
+	$(CONTAINER_RUNTIME) compose -f $(APP_DIR)/devenv.yaml down -v
+
+.PHONY: app.devenv.logs
+app.devenv.logs:
+	$(CONTAINER_RUNTIME) compose -f $(APP_DIR)/devenv.yaml logs -f
+{{- end }}
+
+.PHONY: app.clean
+app.clean:
+	rm -f $(BUILD_DIR)/$(APP_NAME)
+	rm -f coverage.out coverage.html
