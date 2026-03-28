@@ -2,6 +2,9 @@ package tui
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/charmbracelet/huh"
 	"github.com/gitkumi/snowflake/internal/initialize"
@@ -14,17 +17,17 @@ func Command() *cobra.Command {
 		Short: "Create a new project using the TUI",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := &initialize.Config{}
-			projectName := ""
+			projectPath := ""
 			database := initialize.AllDatabases[0]
 			queue := initialize.AllQueues[0]
 			containerRuntime := initialize.AllContainerRuntimes[0] // Defaults to Podman
 			selectedFeatures := []string{"Git"}
 
-			projectNameGroup := huh.NewGroup(
+			projectPathGroup := huh.NewGroup(
 				huh.NewInput().
-					Title("Enter project name").
-					Placeholder("acme").
-					Value(&projectName),
+					Title("Project path").
+					Placeholder("./acme").
+					Value(&projectPath),
 			)
 
 			databaseGroup := huh.NewGroup(
@@ -74,7 +77,7 @@ func Command() *cobra.Command {
 			)
 
 			initialForm := huh.NewForm(
-				projectNameGroup,
+				projectPathGroup,
 				databaseGroup,
 				featuresGroup,
 				queueGroup,
@@ -86,7 +89,14 @@ func Command() *cobra.Command {
 				return
 			}
 
-			cfg.Name = projectName
+			name, outputDir, err := ParseProjectPath(projectPath)
+			if err != nil {
+				fmt.Printf("error parsing project path: %v\n", err)
+				return
+			}
+
+			cfg.Name = name
+			cfg.OutputDir = outputDir
 			cfg.Database = database
 			cfg.Queue = queue
 			cfg.ContainerRuntime = containerRuntime
@@ -104,6 +114,29 @@ func Command() *cobra.Command {
 	}
 
 	return cmd
+}
+
+func ParseProjectPath(input string) (name string, outputDir string, err error) {
+	input = strings.TrimSpace(input)
+	if input == "" {
+		return "", "", fmt.Errorf("project path cannot be empty")
+	}
+
+	cleaned := filepath.Clean(input)
+	if cleaned == "." || cleaned == "/" {
+		return "", "", fmt.Errorf("project path must include a project name")
+	}
+
+	resolved := cleaned
+	if !filepath.IsAbs(resolved) {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return "", "", fmt.Errorf("failed to get current directory: %w", err)
+		}
+		resolved = filepath.Join(cwd, resolved)
+	}
+
+	return filepath.Base(resolved), filepath.Dir(resolved), nil
 }
 
 func contains(slice []string, item string) bool {
