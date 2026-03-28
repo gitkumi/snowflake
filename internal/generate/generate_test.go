@@ -1,13 +1,14 @@
 package generate
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
 func TestGenerateResource(t *testing.T) {
-	databases := []string{"postgres", "mysql", "mariadb", "sqlite3"}
+	databases := []string{"postgres", "mysql", "sqlite3"}
 
 	for _, db := range databases {
 		t.Run(db, func(t *testing.T) {
@@ -62,7 +63,7 @@ func TestGenerateResource(t *testing.T) {
 }
 
 func TestGenerateMigration(t *testing.T) {
-	databases := []string{"postgres", "mysql", "mariadb", "sqlite3"}
+	databases := []string{"postgres", "mysql", "sqlite3"}
 
 	for _, db := range databases {
 		t.Run(db, func(t *testing.T) {
@@ -103,11 +104,16 @@ func TestGenerateMigration(t *testing.T) {
 
 func TestGenerateResourceNoDB(t *testing.T) {
 	projectDir := t.TempDir()
-	setupProjectDir(t, projectDir, "none")
+
+	// go.mod only, no sqlc.yaml
+	goMod := "module acme\n\ngo 1.22\n"
+	if err := os.WriteFile(filepath.Join(projectDir, "go.mod"), []byte(goMod), 0666); err != nil {
+		t.Fatal(err)
+	}
 
 	err := Run("post", []string{"title:string"}, projectDir, true)
 	if err == nil {
-		t.Fatal("expected error for database 'none'")
+		t.Fatal("expected error when sqlc.yaml is missing")
 	}
 }
 
@@ -127,25 +133,33 @@ func TestGenerateResourceNoFields(t *testing.T) {
 	}
 }
 
-func TestGenerateResourceNoConfig(t *testing.T) {
+func TestGenerateResourceNoGoMod(t *testing.T) {
 	projectDir := t.TempDir()
 
 	err := Run("post", []string{"title:string"}, projectDir, true)
 	if err == nil {
-		t.Fatal("expected error when .snowflake.yaml is missing")
+		t.Fatal("expected error when go.mod is missing")
 	}
 }
 
 func setupProjectDir(t *testing.T, projectDir string, database string) {
 	t.Helper()
 
-	// Create .snowflake.yaml
-	config := "name: acme\ndatabase: " + database + "\n"
-	if err := os.WriteFile(filepath.Join(projectDir, ".snowflake.yaml"), []byte(config), 0666); err != nil {
+	// Map database to sqlc engine name
+	engineMap := map[string]string{
+		"postgres": "postgresql",
+		"mysql":    "mysql",
+		"sqlite3":  "sqlite",
+	}
+	engine := engineMap[database]
+
+	// Create go.mod
+	goMod := "module acme\n\ngo 1.22\n"
+	if err := os.WriteFile(filepath.Join(projectDir, "go.mod"), []byte(goMod), 0666); err != nil {
 		t.Fatal(err)
 	}
 
-	// Create directories
+	// Create sqlc.yaml
 	dirs := []string{
 		"cmd/app/sql/migrations",
 		"cmd/app/sql/queries",
@@ -156,5 +170,19 @@ func setupProjectDir(t *testing.T, projectDir string, database string) {
 		if err := os.MkdirAll(filepath.Join(projectDir, d), 0777); err != nil {
 			t.Fatal(err)
 		}
+	}
+
+	sqlcYaml := fmt.Sprintf(`version: "2"
+sql:
+- engine: "%s"
+  queries: "./sql/queries/"
+  schema: "./sql/migrations/"
+  gen:
+    go:
+      package: "repo"
+      out: "./repo"
+`, engine)
+	if err := os.WriteFile(filepath.Join(projectDir, "cmd", "app", "sqlc.yaml"), []byte(sqlcYaml), 0666); err != nil {
+		t.Fatal(err)
 	}
 }

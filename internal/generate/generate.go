@@ -60,10 +60,6 @@ func RunMigration(name string, rawFields []string, projectDir string, quiet bool
 		return err
 	}
 
-	if cfg.Database == "none" {
-		return fmt.Errorf("cannot generate migrations: project has no database configured")
-	}
-
 	fields, err := ParseFields(rawFields, cfg.Database)
 	if err != nil {
 		return err
@@ -106,10 +102,6 @@ func Run(resourceName string, rawFields []string, projectDir string, quiet bool)
 	cfg, err := LoadConfig(projectDir)
 	if err != nil {
 		return err
-	}
-
-	if cfg.Database == "none" {
-		return fmt.Errorf("cannot generate resources: project has no database configured")
 	}
 
 	fields, err := ParseFields(rawFields, cfg.Database)
@@ -220,8 +212,6 @@ func serviceTemplateName(database string) string {
 	switch database {
 	case "mysql", "mariadb":
 		return "service_refetch.go.tmpl"
-	case "postgres", "sqlite3":
-		return "service_returning.go.tmpl"
 	default:
 		return "service_returning.go.tmpl"
 	}
@@ -257,6 +247,8 @@ func printInstructions(r *Resource) {
 	fmt.Printf("       api.GET(\"/%s\", handlers.HandleList%s(s.%sService))\n", r.NamePlural, r.NameTitlePlural, r.Name)
 	fmt.Printf("       api.GET(\"/%s/:id\", handlers.HandleGet%s(s.%sService))\n", r.NamePlural, r.NameTitle, r.Name)
 	fmt.Printf("       api.POST(\"/%s\", handlers.HandleCreate%s(s.%sService))\n", r.NamePlural, r.NameTitle, r.Name)
-	fmt.Printf("       api.PATCH(\"/%s/:id\", handlers.HandleUpdate%s(s.%sService))\n", r.NamePlural, r.NameTitle, r.Name)
+	if len(r.Fields) > 0 {
+		fmt.Printf("       api.PATCH(\"/%s/:id\", handlers.HandleUpdate%s(s.%sService))\n", r.NamePlural, r.NameTitle, r.Name)
+	}
 	fmt.Printf("       api.DELETE(\"/%s/:id\", handlers.HandleDelete%s(s.%sService))\n", r.NamePlural, r.NameTitle, r.Name)
 }

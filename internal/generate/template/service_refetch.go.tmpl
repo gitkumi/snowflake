@@ -13,6 +13,8 @@ func New{{.NameTitle}}Service(q *repo.Queries) *{{.NameTitle}}Service {
 	return &{{.NameTitle}}Service{Query: q}
 }
 
+{{- if .Fields}}
+
 func (s *{{.NameTitle}}Service) Create{{.NameTitle}}(ctx context.Context, arg repo.Create{{.NameTitle}}Params) (repo.{{.NameTitle}}, error) {
 	result, err := s.Query.Create{{.NameTitle}}(ctx, arg)
 	if err != nil {
@@ -35,6 +37,22 @@ func (s *{{.NameTitle}}Service) Update{{.NameTitle}}(ctx context.Context, arg re
 
 	return s.Query.Get{{.NameTitle}}(ctx, arg.ID)
 }
+{{- else}}
+
+func (s *{{.NameTitle}}Service) Create{{.NameTitle}}(ctx context.Context) (repo.{{.NameTitle}}, error) {
+	result, err := s.Query.Create{{.NameTitle}}(ctx)
+	if err != nil {
+		return repo.{{.NameTitle}}{}, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return repo.{{.NameTitle}}{}, err
+	}
+
+	return s.Query.Get{{.NameTitle}}(ctx, id)
+}
+{{- end}}
 
 func (s *{{.NameTitle}}Service) Delete{{.NameTitle}}(ctx context.Context, id int64) error {
 	return s.Query.Delete{{.NameTitle}}(ctx, id)

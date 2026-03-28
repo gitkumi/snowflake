@@ -36,6 +36,7 @@ func HandleList{{.NameTitlePlural}}({{.Name}}Service *service.{{.NameTitle}}Serv
 
 func HandleCreate{{.NameTitle}}({{.Name}}Service *service.{{.NameTitle}}Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
+{{- if .Fields}}
 		var input repo.Create{{.NameTitle}}Params
 		if err := c.ShouldBindJSON(&input); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
@@ -43,6 +44,9 @@ func HandleCreate{{.NameTitle}}({{.Name}}Service *service.{{.NameTitle}}Service)
 		}
 
 		item, err := {{.Name}}Service.Create{{.NameTitle}}(c.Request.Context(), input)
+{{- else}}
+		item, err := {{.Name}}Service.Create{{.NameTitle}}(c.Request.Context())
+{{- end}}
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create {{.Name}}"})
 			return
@@ -73,6 +77,7 @@ func HandleGet{{.NameTitle}}({{.Name}}Service *service.{{.NameTitle}}Service) gi
 		c.JSON(http.StatusOK, gin.H{"data": item})
 	}
 }
+{{- if .Fields}}
 
 func HandleUpdate{{.NameTitle}}({{.Name}}Service *service.{{.NameTitle}}Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -102,6 +107,7 @@ func HandleUpdate{{.NameTitle}}({{.Name}}Service *service.{{.NameTitle}}Service)
 		c.JSON(http.StatusOK, gin.H{"data": item})
 	}
 }
+{{- end}}
 
 func HandleDelete{{.NameTitle}}({{.Name}}Service *service.{{.NameTitle}}Service) gin.HandlerFunc {
 	return func(c *gin.Context) {

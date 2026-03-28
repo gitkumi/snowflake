@@ -24,7 +24,7 @@ type Field struct {
 	GoType    string
 }
 
-func NewResource(name string, fields []Field, cfg *SnowflakeConfig) *Resource {
+func NewResource(name string, fields []Field, cfg *ProjectConfig) *Resource {
 	title := toTitle(name)
 	plural := pluralize(name)
 	titlePlural := toTitle(plural)

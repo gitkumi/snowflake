@@ -13,6 +13,8 @@ func New{{.NameTitle}}Service(q *repo.Queries) *{{.NameTitle}}Service {
 	return &{{.NameTitle}}Service{Query: q}
 }
 
+{{- if .Fields}}
+
 func (s *{{.NameTitle}}Service) Create{{.NameTitle}}(ctx context.Context, arg repo.Create{{.NameTitle}}Params) (repo.{{.NameTitle}}, error) {
 	return s.Query.Create{{.NameTitle}}(ctx, arg)
 }
@@ -20,6 +22,12 @@ func (s *{{.NameTitle}}Service) Create{{.NameTitle}}(ctx context.Context, arg re
 func (s *{{.NameTitle}}Service) Update{{.NameTitle}}(ctx context.Context, arg repo.Update{{.NameTitle}}Params) (repo.{{.NameTitle}}, error) {
 	return s.Query.Update{{.NameTitle}}(ctx, arg)
 }
+{{- else}}
+
+func (s *{{.NameTitle}}Service) Create{{.NameTitle}}(ctx context.Context) (repo.{{.NameTitle}}, error) {
+	return s.Query.Create{{.NameTitle}}(ctx)
+}
+{{- end}}
 
 func (s *{{.NameTitle}}Service) Delete{{.NameTitle}}(ctx context.Context, id int64) error {
 	return s.Query.Delete{{.NameTitle}}(ctx, id)

@@ -11,6 +11,8 @@ SELECT COUNT(*) AS count FROM {{.NamePlural}};
 SELECT * FROM {{.NamePlural}}
 WHERE id = ? LIMIT 1;
 
+{{- if .Fields}}
+
 -- name: Create{{.NameTitle}} :one
 INSERT INTO {{.NamePlural}} (
   {{fieldNames .Fields}}
@@ -24,6 +26,12 @@ UPDATE {{.NamePlural}}
 SET {{questionSetClauses .Fields}}
 WHERE id = ?
 RETURNING *;
+{{- else}}
+
+-- name: Create{{.NameTitle}} :one
+INSERT INTO {{.NamePlural}} DEFAULT VALUES
+RETURNING *;
+{{- end}}
 
 -- name: Delete{{.NameTitle}} :exec
 DELETE FROM {{.NamePlural}}
