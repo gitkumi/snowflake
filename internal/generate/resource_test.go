@@ -16,11 +16,12 @@ func TestPluralize(t *testing.T) {
 		{"box", "boxes"},
 		{"church", "churches"},
 		{"dish", "dishes"},
-		{"quiz", "quizes"},
+		{"quiz", "quizzes"},
 		{"key", "keys"},
 		{"day", "days"},
 		{"toy", "toys"},
 		{"user", "users"},
+		{"blog_post", "blog_posts"},
 	}
 
 	for _, tt := range tests {
@@ -40,6 +41,8 @@ func TestToTitle(t *testing.T) {
 	}{
 		{"post", "Post"},
 		{"user", "User"},
+		{"blog_post", "BlogPost"},
+		{"user-profile", "UserProfile"},
 		{"", ""},
 	}
 

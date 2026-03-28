@@ -1,224 +1,155 @@
 package initialize_test
 
 import (
+	"fmt"
+	"go/parser"
+	"go/token"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/gitkumi/snowflake/internal/initialize"
 )
 
-func TestGenerateNoDB(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:         true,
-		Name:          "acme",
-		Database:      initialize.DatabaseNone,
-		OutputDir:     tmpDir,
-		Git:           false,
-		SMTP:          true,
-		Storage:       true,
-		KeyValueStore: initialize.KeyValueStoreRedis,
-	})
-	if err != nil {
-		t.Fatal(err)
+func TestGenerateVariants(t *testing.T) {
+	tests := []struct {
+		name string
+		cfg  initialize.Config
+	}{
+		{
+			name: "no_db",
+			cfg: initialize.Config{
+				Quiet:         true,
+				Name:          "acme",
+				Database:      initialize.DatabaseNone,
+				Git:           false,
+				SMTP:          true,
+				Storage:       true,
+				KeyValueStore: initialize.KeyValueStoreRedis,
+			},
+		},
+		{
+			name: "sqlite3",
+			cfg: initialize.Config{
+				Quiet:         true,
+				Name:          "acme",
+				Database:      initialize.DatabaseSQLite3,
+				Git:           false,
+				SMTP:          true,
+				Storage:       true,
+				KeyValueStore: initialize.KeyValueStoreRedis,
+			},
+		},
+		{
+			name: "postgres",
+			cfg: initialize.Config{
+				Quiet:         true,
+				Name:          "acme",
+				Database:      initialize.DatabasePostgres,
+				Git:           false,
+				SMTP:          true,
+				Storage:       true,
+				KeyValueStore: initialize.KeyValueStoreRedis,
+			},
+		},
+		{
+			name: "mysql",
+			cfg: initialize.Config{
+				Quiet:         true,
+				Name:          "acme",
+				Database:      initialize.DatabaseMySQL,
+				Git:           false,
+				SMTP:          true,
+				Storage:       true,
+				KeyValueStore: initialize.KeyValueStoreRedis,
+			},
+		},
+		{
+			name: "mariadb",
+			cfg: initialize.Config{
+				Quiet:         true,
+				Name:          "acme",
+				Database:      initialize.DatabaseMariaDB,
+				Git:           false,
+				SMTP:          true,
+				Storage:       true,
+				KeyValueStore: initialize.KeyValueStoreRedis,
+			},
+		},
+		{
+			name: "no_smtp",
+			cfg: initialize.Config{
+				Quiet:         true,
+				Name:          "acme",
+				Database:      initialize.DatabaseSQLite3,
+				Git:           false,
+				SMTP:          false,
+				Storage:       true,
+				KeyValueStore: initialize.KeyValueStoreRedis,
+			},
+		},
+		{
+			name: "no_storage",
+			cfg: initialize.Config{
+				Quiet:         true,
+				Name:          "acme",
+				Database:      initialize.DatabaseSQLite3,
+				Git:           false,
+				SMTP:          true,
+				Storage:       false,
+				KeyValueStore: initialize.KeyValueStoreRedis,
+			},
+		},
+		{
+			name: "valkey",
+			cfg: initialize.Config{
+				Quiet:         true,
+				Name:          "acme",
+				Database:      initialize.DatabaseSQLite3,
+				Git:           false,
+				SMTP:          true,
+				Storage:       true,
+				KeyValueStore: initialize.KeyValueStoreValkey,
+			},
+		},
+		{
+			name: "no_redis",
+			cfg: initialize.Config{
+				Quiet:         true,
+				Name:          "acme",
+				Database:      initialize.DatabaseSQLite3,
+				Git:           false,
+				SMTP:          true,
+				Storage:       true,
+				KeyValueStore: initialize.KeyValueStoreNone,
+			},
+		},
 	}
 
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := tt.cfg
+			cfg.OutputDir = t.TempDir()
 
-func TestGenerateSQLite3(t *testing.T) {
-	tmpDir := t.TempDir()
+			if err := initialize.Generate(&cfg); err != nil {
+				t.Fatal(err)
+			}
 
-	err := initialize.Run(&initialize.Config{
-		Quiet:         true,
-		Name:          "acme",
-		Database:      initialize.DatabaseSQLite3,
-		OutputDir:     tmpDir,
-		Git:           false,
-		SMTP:          true,
-		Storage:       true,
-		KeyValueStore: initialize.KeyValueStoreRedis,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
-func TestGeneratePostgres(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:         true,
-		Name:          "acme",
-		Database:      initialize.DatabasePostgres,
-		OutputDir:     tmpDir,
-		Git:           false,
-		SMTP:          true,
-		Storage:       true,
-		KeyValueStore: initialize.KeyValueStoreRedis,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
-func TestGenerateMySQL(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:         true,
-		Name:          "acme",
-		Database:      initialize.DatabaseMySQL,
-		OutputDir:     tmpDir,
-		Git:           false,
-		SMTP:          true,
-		Storage:       true,
-		KeyValueStore: initialize.KeyValueStoreRedis,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
-func TestGenerateMariaDB(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:         true,
-		Name:          "acme",
-		Database:      initialize.DatabaseMariaDB,
-		OutputDir:     tmpDir,
-		Git:           false,
-		SMTP:          true,
-		Storage:       true,
-		KeyValueStore: initialize.KeyValueStoreRedis,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
-func TestGenerateNoSMTP(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:         true,
-		Name:          "acme",
-		Database:      initialize.DatabaseSQLite3,
-		OutputDir:     tmpDir,
-		Git:           false,
-		SMTP:          false,
-		Storage:       true,
-		KeyValueStore: initialize.KeyValueStoreRedis,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
-func TestGenerateNoStorage(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:         true,
-		Name:          "acme",
-		Database:      initialize.DatabaseSQLite3,
-		OutputDir:     tmpDir,
-		Git:           false,
-		SMTP:          true,
-		Storage:       false,
-		KeyValueStore: initialize.KeyValueStoreRedis,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
-func TestGenerateValkey(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:         true,
-		Name:          "acme",
-		Database:      initialize.DatabaseSQLite3,
-		OutputDir:     tmpDir,
-		Git:           false,
-		SMTP:          true,
-		Storage:       true,
-		KeyValueStore: initialize.KeyValueStoreValkey,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
-func TestGenerateNoRedis(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:         true,
-		Name:          "acme",
-		Database:      initialize.DatabaseSQLite3,
-		OutputDir:     tmpDir,
-		Git:           false,
-		SMTP:          true,
-		Storage:       true,
-		KeyValueStore: initialize.KeyValueStoreNone,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
+			projectDir := filepath.Join(cfg.OutputDir, cfg.Name)
+			if _, err := os.Stat(projectDir); os.IsNotExist(err) {
+				t.Fatal("project directory not created")
+			}
+		})
 	}
 }
 
 func TestGenerateTempl(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	err := initialize.Run(&initialize.Config{
+	err := initialize.Generate(&initialize.Config{
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseNone,
@@ -250,7 +181,7 @@ func TestGenerateTempl(t *testing.T) {
 func TestGenerateNoTempl(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	err := initialize.Run(&initialize.Config{
+	err := initialize.Generate(&initialize.Config{
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseNone,
@@ -279,7 +210,7 @@ func TestGenerateNoTempl(t *testing.T) {
 func TestEnvFilesGenerated(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	err := initialize.Run(&initialize.Config{
+	err := initialize.Generate(&initialize.Config{
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
@@ -326,6 +257,25 @@ func TestEnvFilesGenerated(t *testing.T) {
 	}
 }
 
+func TestGenerateDatabaseScaffoldInternalImportsResolve(t *testing.T) {
+	cfg := initialize.Config{
+		Quiet:     true,
+		Name:      "acme",
+		Database:  initialize.DatabaseSQLite3,
+		OutputDir: t.TempDir(),
+		Git:       false,
+	}
+
+	if err := initialize.Generate(&cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(cfg.OutputDir, cfg.Name)
+	if err := assertInternalImportsResolve(projectDir, cfg.Name); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func FuzzGenerate(f *testing.F) {
 	f.Add(
 		true, true,
@@ -354,7 +304,7 @@ func FuzzGenerate(f *testing.F) {
 		database := databases[abs(dbTypeInt)%len(databases)]
 		kvs := keyValueStores[abs(kvsTypeInt)%len(keyValueStores)]
 
-		err := initialize.Run(&initialize.Config{
+		err := initialize.Generate(&initialize.Config{
 			Git:           false,
 			Quiet:         true,
 			Name:          "acme",
@@ -365,7 +315,7 @@ func FuzzGenerate(f *testing.F) {
 			Storage:       withStorage,
 		})
 		if err != nil {
-			t.Logf("initialize.Run returned error: %v", err)
+			t.Logf("initialize.Generate returned error: %v", err)
 			return
 		}
 
@@ -374,6 +324,63 @@ func FuzzGenerate(f *testing.F) {
 			t.Fatal("project directory not created")
 		}
 	})
+}
+
+func assertInternalImportsResolve(projectDir string, module string) error {
+	fset := token.NewFileSet()
+
+	return filepath.WalkDir(projectDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || !strings.HasSuffix(path, ".go") {
+			return nil
+		}
+
+		file, err := parser.ParseFile(fset, path, nil, parser.ImportsOnly)
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", path, err)
+		}
+
+		for _, spec := range file.Imports {
+			importPath, err := strconv.Unquote(spec.Path.Value)
+			if err != nil {
+				return fmt.Errorf("unquote import in %s: %w", path, err)
+			}
+			if !strings.HasPrefix(importPath, module+"/") {
+				continue
+			}
+
+			pkgDir := filepath.Join(projectDir, filepath.FromSlash(strings.TrimPrefix(importPath, module+"/")))
+			if err := assertPackageExists(pkgDir); err != nil {
+				relPath, relErr := filepath.Rel(projectDir, path)
+				if relErr != nil {
+					relPath = path
+				}
+				return fmt.Errorf("%s imports missing package %q: %w", relPath, importPath, err)
+			}
+		}
+
+		return nil
+	})
+}
+
+func assertPackageExists(pkgDir string) error {
+	entries, err := os.ReadDir(pkgDir)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		if strings.HasSuffix(entry.Name(), ".go") {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("no Go files found in %s", pkgDir)
 }
 
 func abs(x int) int {

@@ -1,41 +1,58 @@
 package handlers
 
 import (
+{{- if ne .Database.String "none" }}
+	"database/sql"
+{{- end }}
 	"net/http"
-
-	"{{ .Name }}/cmd/app/service"
+{{- if eq .KeyValueStore "redis" }}
+	"github.com/redis/go-redis/v9"
+{{- else if eq .KeyValueStore "valkey" }}
+	"github.com/valkey-io/valkey-go"
+{{- end }}
 
 	"github.com/gin-gonic/gin"
 )
 
-func HandleHealth(healthService *service.HealthService) gin.HandlerFunc {
+type HealthDependencies struct {
+{{- if ne .Database.String "none" }}
+	DB *sql.DB
+{{- end }}
+{{- if eq .KeyValueStore "redis" }}
+	Redis *redis.Client
+{{- else if eq .KeyValueStore "valkey" }}
+	Valkey valkey.Client
+{{- end }}
+}
+
+func HandleHealth(deps HealthDependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		response := gin.H{
 			"status": "ok",
 		}
-		
+
 {{- if ne .Database.String "none" }}
-		if err := healthService.DB.Ping(); err != nil {
+		if err := deps.DB.Ping(); err != nil {
 			response["db"] = "error"
 		} else {
 			response["db"] = "ok"
 		}
 {{- end }}
-		
+
 {{- if eq .KeyValueStore "redis" }}
-		if redisStatus, err := healthService.Redis.Ping(c.Request.Context()).Result(); err != nil {
+		if redisStatus, err := deps.Redis.Ping(c.Request.Context()).Result(); err != nil {
 			response["redis"] = "error"
 		} else {
 			response["redis"] = redisStatus
 		}
 {{- else if eq .KeyValueStore "valkey" }}
-		if err := healthService.Valkey.Do(c.Request.Context(), healthService.Valkey.B().Ping().Build()).Error(); err != nil {
+		if err := deps.Valkey.Do(c.Request.Context(), deps.Valkey.B().Ping().Build()).Error(); err != nil {
 			response["valkey"] = "error"
 		} else {
 			response["valkey"] = "PONG"
 		}
 {{- end }}
-		
+
 		c.JSON(http.StatusOK, response)
 	}
 }

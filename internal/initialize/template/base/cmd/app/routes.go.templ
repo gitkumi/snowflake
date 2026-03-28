@@ -1,0 +1,16 @@
+package main
+
+import (
+{{- if ne .Database.String "none" }}
+	"database/sql"
+{{- end }}
+
+	"github.com/gin-gonic/gin"
+)
+
+func registerRoutes(api *gin.RouterGroup{{- if ne .Database.String "none" }}, db *sql.DB{{- end }}) {
+	_ = api
+{{- if ne .Database.String "none" }}
+	_ = db
+{{- end }}
+}

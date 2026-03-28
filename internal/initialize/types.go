@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Database string
@@ -145,4 +146,32 @@ func (c ContainerRuntime) IsValid() bool {
 
 func (c ContainerRuntime) String() string {
 	return string(c)
+}
+
+type enum interface {
+	~string
+	IsValid() bool
+}
+
+func parseEnum[T enum](value string, defaultValue T, typeName string, allValues any) (T, error) {
+	v := T(strings.TrimSpace(value))
+	if v == "" {
+		v = defaultValue
+	}
+	if !v.IsValid() {
+		return "", fmt.Errorf("invalid %s: %s. Must be one of: %v", typeName, value, allValues)
+	}
+	return v, nil
+}
+
+func ParseDatabase(value string) (Database, error) {
+	return parseEnum[Database](value, DatabaseNone, "database type", AllDatabases)
+}
+
+func ParseKeyValueStore(value string) (KeyValueStore, error) {
+	return parseEnum[KeyValueStore](value, KeyValueStoreNone, "key-value store", AllKeyValueStores)
+}
+
+func ParseContainerRuntime(value string) (ContainerRuntime, error) {
+	return parseEnum[ContainerRuntime](value, ContainerRuntimePodman, "container runtime", AllContainerRuntimes)
 }

@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"text/template"
 
 	initializetemplate "github.com/gitkumi/snowflake/internal/initialize/template"
@@ -28,21 +27,25 @@ type Config struct {
 	Templ         bool
 }
 
-func Run(cfg *Config) error {
-	project := NewProject(cfg)
-	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
-	templateFiles := initializetemplate.BaseFiles
+// Generate creates the project files without running any external commands.
+func Generate(cfg *Config) error {
+	project, outputPath, err := prepare(cfg)
+	if err != nil {
+		return err
+	}
 
 	databaseFragments, err := initializetemplate.CreateDatabaseFragments(string(project.Database))
 	if err != nil {
 		return err
 	}
 
-	if err := createFiles(project, outputPath, templateFiles, databaseFragments, cfg.Quiet); err != nil {
-		return err
-	}
+	return createFiles(project, outputPath, initializetemplate.BaseFiles, databaseFragments, cfg.Quiet)
+}
 
-	if err := project.RenameFiles(outputPath); err != nil {
+// Finalize runs post-generation commands for a previously generated project.
+func Finalize(cfg *Config) error {
+	project, outputPath, err := prepare(cfg)
+	if err != nil {
 		return err
 	}
 
@@ -61,23 +64,29 @@ func Run(cfg *Config) error {
 	return nil
 }
 
-func createTemplateFuncs() template.FuncMap {
-	return template.FuncMap{
-		"lower":     strings.ToLower,
-		"upper":     strings.ToUpper,
-		"trim":      strings.TrimSpace,
-		"replace":   strings.ReplaceAll,
-		"contains":  strings.Contains,
-		"hasPrefix": strings.HasPrefix,
-		"hasSuffix": strings.HasSuffix,
-		"join":      strings.Join,
+func Run(cfg *Config) error {
+	if err := Generate(cfg); err != nil {
+		return err
 	}
+
+	return Finalize(cfg)
+}
+
+func prepare(cfg *Config) (*Project, string, error) {
+	if err := normalizeConfig(cfg); err != nil {
+		return nil, "", err
+	}
+
+	project := NewProject(cfg)
+	outputPath := filepath.Join(cfg.OutputDir, cfg.Name)
+
+	return project, outputPath, nil
 }
 
 func processTemplate(templateContent []byte, templateFileName string,
 	databaseFragments map[string]string, project *Project, buf *bytes.Buffer) ([]byte, error) {
 
-	rootTemplate := template.New(filepath.Base(templateFileName)).Funcs(createTemplateFuncs())
+	rootTemplate := template.New(filepath.Base(templateFileName))
 
 	// Add database fragments as sub-templates
 	for name, fragment := range databaseFragments {
@@ -108,13 +117,6 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 		fmt.Println("Generating files...")
 	}
 
-	// Create a buffer pool for template rendering
-	bufPool := sync.Pool{
-		New: func() interface{} {
-			return new(bytes.Buffer)
-		},
-	}
-
 	err := fs.WalkDir(templateFiles, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -136,10 +138,8 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 			return err
 		}
 
-		buf := bufPool.Get().(*bytes.Buffer)
-		defer bufPool.Put(buf)
-
-		processedContent, err := processTemplate(content, templateFileName, databaseFragments, project, buf)
+		var buf bytes.Buffer
+		processedContent, err := processTemplate(content, templateFileName, databaseFragments, project, &buf)
 		if err != nil {
 			return err
 		}
@@ -154,6 +154,57 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 	})
 
 	return err
+}
+
+func normalizeConfig(cfg *Config) error {
+	if cfg == nil {
+		return fmt.Errorf("config cannot be nil")
+	}
+
+	cfg.Name = strings.TrimSpace(cfg.Name)
+	if cfg.Name == "" {
+		return fmt.Errorf("project name cannot be empty")
+	}
+
+	if cfg.Database == "" {
+		cfg.Database = DatabaseNone
+	}
+	if cfg.KeyValueStore == "" {
+		cfg.KeyValueStore = KeyValueStoreNone
+	}
+	if cfg.ContainerRuntime == "" {
+		cfg.ContainerRuntime = ContainerRuntimePodman
+	}
+
+	if !cfg.Database.IsValid() {
+		return fmt.Errorf("invalid database type: %s. Must be one of: %v", cfg.Database, AllDatabases)
+	}
+	if !cfg.KeyValueStore.IsValid() {
+		return fmt.Errorf("invalid key-value store: %s. Must be one of: %v", cfg.KeyValueStore, AllKeyValueStores)
+	}
+	if !cfg.ContainerRuntime.IsValid() {
+		return fmt.Errorf("invalid container runtime: %s. Must be one of: %v", cfg.ContainerRuntime, AllContainerRuntimes)
+	}
+
+	if strings.TrimSpace(cfg.OutputDir) == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("failed to get current directory: %w", err)
+		}
+		cfg.OutputDir = cwd
+	} else if cfg.OutputDir = filepath.Clean(cfg.OutputDir); !filepath.IsAbs(cfg.OutputDir) {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("failed to get current directory: %w", err)
+		}
+		cfg.OutputDir = filepath.Join(cwd, cfg.OutputDir)
+	}
+
+	if err := os.MkdirAll(cfg.OutputDir, 0755); err != nil {
+		return fmt.Errorf("failed to create output directory %s: %w", cfg.OutputDir, err)
+	}
+
+	return nil
 }
 
 func printSuccessMessage(projectName string, database Database, hasKeyValueStore bool, quiet bool) {

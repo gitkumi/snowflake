@@ -3,8 +3,6 @@ package run
 import (
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 
 	"github.com/gitkumi/snowflake/internal/initialize"
 	"github.com/spf13/cobra"
@@ -28,45 +26,22 @@ func Command() *cobra.Command {
 		Short: "Create a new project using command-line flags",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if outputDir == "" {
-				cwd, err := os.Getwd()
-				if err != nil {
-					log.Fatal(err)
-				}
-				outputDir = cwd
+			dbEnum, err := initialize.ParseDatabase(database)
+			if err != nil {
+				log.Fatal(err)
 			}
 
-			if !filepath.IsAbs(outputDir) {
-				cwd, err := os.Getwd()
-				if err != nil {
-					log.Fatal(err)
-				}
-				outputDir = filepath.Join(cwd, outputDir)
+			containerRuntimeEnum, err := initialize.ParseContainerRuntime(containerRuntime)
+			if err != nil {
+				log.Fatal(err)
 			}
 
-			// Ensure output directory exists
-			if _, err := os.Stat(outputDir); os.IsNotExist(err) {
-				if err := os.MkdirAll(outputDir, 0755); err != nil {
-					log.Fatalf("Failed to create output directory: %v", err)
-				}
+			kvsEnum, err := initialize.ParseKeyValueStore(keyValueStore)
+			if err != nil {
+				log.Fatal(err)
 			}
 
-			dbEnum := initialize.Database(database)
-			if !dbEnum.IsValid() {
-				log.Fatalf("Invalid database type: %s. Must be one of: %v", database, initialize.AllDatabases)
-			}
-
-			containerRuntimeEnum := initialize.ContainerRuntime(containerRuntime)
-			if !containerRuntimeEnum.IsValid() {
-				log.Fatalf("Invalid container runtime: %s. Must be one of: %v", containerRuntime, initialize.AllContainerRuntimes)
-			}
-
-			kvsEnum := initialize.KeyValueStore(keyValueStore)
-			if !kvsEnum.IsValid() {
-				log.Fatalf("Invalid key-value store: %s. Must be one of: %v", keyValueStore, initialize.AllKeyValueStores)
-			}
-
-			err := initialize.Run(&initialize.Config{
+			err = initialize.Run(&initialize.Config{
 				Quiet:            quiet,
 				Name:             args[0],
 				Database:         dbEnum,

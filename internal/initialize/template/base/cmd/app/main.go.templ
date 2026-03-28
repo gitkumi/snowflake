@@ -29,10 +29,7 @@ func init() {
 }
 
 func main() {
-	vars, err := env.Load()
-	if err != nil {
-		log.Fatal("failed to read environment variables: ", err)
-	}
+	vars := env.Load()
 
 	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{
 		Level: slog.LevelDebug,
@@ -73,6 +70,7 @@ func main() {
 	// 	Region:      vars.S3Region,
 	// 	Bucket:      vars.S3Bucket,
 	// })
+	_ = stor // TODO: remove this when you use storage
 {{- end }}
 
 {{- if eq .KeyValueStore "redis" }}
@@ -96,9 +94,6 @@ func main() {
 	srv := newServer(
 {{- if ne .Database.String "none" }}
 		database,
-{{- end }}
-{{- if .Storage }}
-		stor,
 {{- end }}
 {{- if eq .KeyValueStore "redis" }}
 		rdb,

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -57,6 +58,11 @@ func TestGenerateResource(t *testing.T) {
 			queriesFile := filepath.Join(projectDir, "cmd", "app", "sql", "queries", "posts.sql")
 			if _, err := os.Stat(queriesFile); os.IsNotExist(err) {
 				t.Error("queries file not generated")
+			}
+
+			routesFile := filepath.Join(projectDir, "cmd", "app", "generated_routes.go")
+			if _, err := os.Stat(routesFile); !os.IsNotExist(err) {
+				t.Errorf("unexpected generated routes file created: %s", routesFile)
 			}
 		})
 	}
@@ -142,6 +148,33 @@ func TestGenerateResourceNoGoMod(t *testing.T) {
 	}
 }
 
+func TestRouteInstructions(t *testing.T) {
+	projectDir := t.TempDir()
+	setupProjectDir(t, projectDir, "postgres")
+
+	cfg, err := LoadConfig(projectDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	resource := NewResource("post", nil, cfg)
+	instructions := routeInstructions(projectDir, cfg, resource)
+
+	for _, want := range []string{
+		`Add these imports to cmd/app/routes.go:`,
+		`"acme/cmd/app/handlers"`,
+		`"acme/cmd/app/repo"`,
+		`"acme/cmd/app/service"`,
+		`queries := repo.New(db)`,
+		`postService := service.NewPostService(queries)`,
+		`handlers.RegisterPostRoutes(api, postService)`,
+	} {
+		if !strings.Contains(instructions, want) {
+			t.Errorf("expected route instructions to contain %q, got:\n%s", want, instructions)
+		}
+	}
+}
+
 func setupProjectDir(t *testing.T, projectDir string, database string) {
 	t.Helper()
 
@@ -183,6 +216,23 @@ sql:
       out: "./repo"
 `, engine)
 	if err := os.WriteFile(filepath.Join(projectDir, "cmd", "app", "sqlc.yaml"), []byte(sqlcYaml), 0666); err != nil {
+		t.Fatal(err)
+	}
+
+	routesGo := `package main
+
+import (
+	"database/sql"
+
+	"github.com/gin-gonic/gin"
+)
+
+func registerRoutes(api *gin.RouterGroup, db *sql.DB) {
+	_ = api
+	_ = db
+}
+`
+	if err := os.WriteFile(filepath.Join(projectDir, "cmd", "app", "routes.go"), []byte(routesGo), 0666); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -57,112 +57,64 @@ var funcMap = template.FuncMap{
 	},
 }
 
+type generatedTarget struct {
+	templateName string
+	outputPath   string
+}
+
+type generationContext struct {
+	config    *ProjectConfig
+	resource  *Resource
+	templates *template.Template
+}
+
 func RunMigration(name string, rawFields []string, projectDir string, quiet bool) error {
-	cfg, err := LoadConfig(projectDir)
+	ctx, err := prepareGeneration(name, rawFields, projectDir)
 	if err != nil {
 		return err
 	}
-
-	fields, err := ParseFields(rawFields, cfg.Database)
-	if err != nil {
-		return err
-	}
-
-	resource := NewResource(name, fields, cfg)
 
 	migrationsDir := filepath.Join(projectDir, "cmd", "app", "sql", "migrations")
 	migNum := MigrationNumber()
-
-	tmpl, err := template.New("").Funcs(funcMap).ParseFS(generatetemplate.Files, "*.tmpl")
-	if err != nil {
-		return fmt.Errorf("failed to parse templates: %w", err)
-	}
-
-	outputPath := MigrationFilePath(migrationsDir, migNum, resource.PluralName)
-
-	var buf bytes.Buffer
-	if err := tmpl.ExecuteTemplate(&buf, migrationTemplateName(cfg.Database), resource); err != nil {
-		return fmt.Errorf("failed to execute template: %w", err)
-	}
-
-	if err := os.MkdirAll(filepath.Dir(outputPath), 0777); err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
-	}
-
-	if err := os.WriteFile(outputPath, buf.Bytes(), 0666); err != nil {
-		return fmt.Errorf("failed to write %s: %w", outputPath, err)
-	}
-
-	if !quiet {
-		rel, _ := filepath.Rel(projectDir, outputPath)
-		fmt.Printf("  created %s\n", rel)
-	}
-
-	return nil
+	_, err = renderTargets(ctx.templates, ctx.resource, []generatedTarget{
+		{
+			templateName: migrationTemplateName(ctx.config.Database),
+			outputPath:   MigrationFilePath(migrationsDir, migNum, ctx.resource.PluralName),
+		},
+	}, projectDir, quiet)
+	return err
 }
 
 func Run(resourceName string, rawFields []string, projectDir string, quiet bool) error {
-	cfg, err := LoadConfig(projectDir)
+	ctx, err := prepareGeneration(resourceName, rawFields, projectDir)
 	if err != nil {
 		return err
 	}
-
-	fields, err := ParseFields(rawFields, cfg.Database)
-	if err != nil {
-		return err
-	}
-
-	resource := NewResource(resourceName, fields, cfg)
 
 	migrationsDir := filepath.Join(projectDir, "cmd", "app", "sql", "migrations")
 	migNum := MigrationNumber()
-
-	tmpl, err := template.New("").Funcs(funcMap).ParseFS(generatetemplate.Files, "*.tmpl")
-	if err != nil {
-		return fmt.Errorf("failed to parse templates: %w", err)
-	}
-
-	files := []struct {
-		templateName string
-		outputPath   string
-	}{
+	files := []generatedTarget{
 		{
-			templateName: migrationTemplateName(cfg.Database),
-			outputPath:   MigrationFilePath(migrationsDir, migNum, resource.PluralName),
+			templateName: migrationTemplateName(ctx.config.Database),
+			outputPath:   MigrationFilePath(migrationsDir, migNum, ctx.resource.PluralName),
 		},
 		{
-			templateName: queriesTemplateName(cfg.Database),
-			outputPath:   filepath.Join(projectDir, "cmd", "app", "sql", "queries", resource.PluralName+".sql"),
+			templateName: queriesTemplateName(ctx.config.Database),
+			outputPath:   filepath.Join(projectDir, "cmd", "app", "sql", "queries", ctx.resource.PluralName+".sql"),
 		},
 		{
-			templateName: serviceTemplateName(cfg.Database),
-			outputPath:   filepath.Join(projectDir, "cmd", "app", "service", resource.Name+"_service.go"),
+			templateName: serviceTemplateName(ctx.config.Database),
+			outputPath:   filepath.Join(projectDir, "cmd", "app", "service", ctx.resource.Name+"_service.go"),
 		},
 		{
 			templateName: "handler.go.tmpl",
-			outputPath:   filepath.Join(projectDir, "cmd", "app", "handlers", resource.Name+"_handler.go"),
+			outputPath:   filepath.Join(projectDir, "cmd", "app", "handlers", ctx.resource.Name+"_handler.go"),
 		},
 	}
 
-	var buf bytes.Buffer
-	for _, f := range files {
-		buf.Reset()
-		if err := tmpl.ExecuteTemplate(&buf, f.templateName, resource); err != nil {
-			return fmt.Errorf("failed to execute template %s: %w", f.templateName, err)
-		}
-
-		if err := os.MkdirAll(filepath.Dir(f.outputPath), 0777); err != nil {
-			return fmt.Errorf("failed to create directory: %w", err)
-		}
-
-		if err := os.WriteFile(f.outputPath, buf.Bytes(), 0666); err != nil {
-			return fmt.Errorf("failed to write %s: %w", f.outputPath, err)
-		}
-
-		if !quiet {
-			rel, _ := filepath.Rel(projectDir, f.outputPath)
-			fmt.Printf("  created %s\n", rel)
-		}
+	goFiles, err := renderTargets(ctx.templates, ctx.resource, files, projectDir, quiet)
+	if err != nil {
+		return err
 	}
 
 	if err := runGenCommand("sqlc", []string{"generate"}, filepath.Join(projectDir, "cmd", "app"), quiet); err != nil {
@@ -171,19 +123,84 @@ func Run(resourceName string, rawFields []string, projectDir string, quiet bool)
 		}
 	}
 
-	goFiles := []string{}
-	for _, f := range files {
-		if strings.HasSuffix(f.outputPath, ".go") {
-			goFiles = append(goFiles, f.outputPath)
-		}
-	}
 	if len(goFiles) > 0 {
-		args := append([]string{"-w", "-s"}, goFiles...)
+		args := append([]string{"-w", "-s"}, uniquePaths(goFiles)...)
 		_ = runGenCommand("gofmt", args, projectDir, true)
 	}
 
 	if !quiet {
-		printInstructions(resource)
+		printSuccess(projectDir, ctx.config, ctx.resource)
+	}
+
+	return nil
+}
+
+func prepareGeneration(name string, rawFields []string, projectDir string) (*generationContext, error) {
+	cfg, err := LoadConfig(projectDir)
+	if err != nil {
+		return nil, err
+	}
+
+	fields, err := ParseFields(rawFields, cfg.Database)
+	if err != nil {
+		return nil, err
+	}
+
+	templates, err := parseTemplates()
+	if err != nil {
+		return nil, err
+	}
+
+	return &generationContext{
+		config:    cfg,
+		resource:  NewResource(name, fields, cfg),
+		templates: templates,
+	}, nil
+}
+
+func parseTemplates() (*template.Template, error) {
+	tmpl, err := template.New("").Funcs(funcMap).ParseFS(generatetemplate.Files, "*.tmpl")
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse templates: %w", err)
+	}
+	return tmpl, nil
+}
+
+func renderTargets(tmpl *template.Template, data any, targets []generatedTarget, projectDir string, quiet bool) ([]string, error) {
+	var (
+		buf     bytes.Buffer
+		goFiles []string
+	)
+
+	for _, target := range targets {
+		if err := renderTarget(tmpl, data, target, projectDir, quiet, &buf); err != nil {
+			return nil, err
+		}
+		if strings.HasSuffix(target.outputPath, ".go") {
+			goFiles = append(goFiles, target.outputPath)
+		}
+	}
+
+	return goFiles, nil
+}
+
+func renderTarget(tmpl *template.Template, data any, target generatedTarget, projectDir string, quiet bool, buf *bytes.Buffer) error {
+	buf.Reset()
+	if err := tmpl.ExecuteTemplate(buf, target.templateName, data); err != nil {
+		return fmt.Errorf("failed to execute template %s: %w", target.templateName, err)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(target.outputPath), 0777); err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	if err := os.WriteFile(target.outputPath, buf.Bytes(), 0666); err != nil {
+		return fmt.Errorf("failed to write %s: %w", target.outputPath, err)
+	}
+
+	if !quiet {
+		rel, _ := filepath.Rel(projectDir, target.outputPath)
+		fmt.Printf("  created %s\n", rel)
 	}
 
 	return nil
@@ -236,22 +253,86 @@ func runGenCommand(name string, args []string, dir string, quiet bool) error {
 	return cmd.Run()
 }
 
-func printInstructions(r *Resource) {
-	fmt.Printf("\nResource %q generated!\n", r.Name)
-	fmt.Printf("\nAdd the following to cmd/app/server.go:\n")
-	fmt.Printf("\n  1. Add import (if not already present):\n")
-	fmt.Printf("       \"%s/cmd/app/repo\"\n", r.ModuleName)
-	fmt.Printf("\n  2. Add to server struct:\n")
-	fmt.Printf("       %sService *service.%sService\n", r.Name, r.NameTitle)
-	fmt.Printf("\n  3. Add to newServer():\n")
-	fmt.Printf("       queries := repo.New(db)     // if not already present\n")
-	fmt.Printf("       %sService := service.New%sService(queries)\n", r.Name, r.NameTitle)
-	fmt.Printf("\n  4. Add to routes():\n")
-	fmt.Printf("       api.GET(\"/%s\", handlers.HandleList%s(s.%sService))\n", r.PluralName, r.NameTitle, r.Name)
-	fmt.Printf("       api.GET(\"/%s/:id\", handlers.HandleGet%s(s.%sService))\n", r.PluralName, r.NameTitle, r.Name)
-	fmt.Printf("       api.POST(\"/%s\", handlers.HandleCreate%s(s.%sService))\n", r.PluralName, r.NameTitle, r.Name)
-	if len(r.Fields) > 0 {
-		fmt.Printf("       api.PATCH(\"/%s/:id\", handlers.HandleUpdate%s(s.%sService))\n", r.PluralName, r.NameTitle, r.Name)
+func printSuccess(projectDir string, cfg *ProjectConfig, r *Resource) {
+	fmt.Printf("\nResource %q generated.\n", r.Name)
+	fmt.Printf("\n%s\n", routeInstructions(projectDir, cfg, r))
+}
+
+func routeInstructions(projectDir string, cfg *ProjectConfig, resource *Resource) string {
+	content, err := os.ReadFile(filepath.Join(projectDir, "cmd", "app", "routes.go"))
+	if err != nil {
+		content = nil
 	}
-	fmt.Printf("       api.DELETE(\"/%s/:id\", handlers.HandleDelete%s(s.%sService))\n", r.PluralName, r.NameTitle, r.Name)
+	return buildRouteInstructions(string(content), cfg, resource)
+}
+
+func buildRouteInstructions(content string, cfg *ProjectConfig, resource *Resource) string {
+	queriesLine := "queries := repo.New(db)"
+	serviceLine := fmt.Sprintf("%sService := service.New%sService(queries)", resource.Name, resource.NameTitle)
+	registerLine := fmt.Sprintf("handlers.Register%sRoutes(api, %sService)", resource.NameTitle, resource.Name)
+
+	needsQueries := !strings.Contains(content, queriesLine)
+	needsService := !strings.Contains(content, serviceLine)
+	needsRegister := !strings.Contains(content, registerLine)
+
+	var imports []string
+	if needsRegister && !hasImport(content, cfg.Module+"/cmd/app/handlers") {
+		imports = append(imports, fmt.Sprintf("%q", cfg.Module+"/cmd/app/handlers"))
+	}
+	if needsQueries && !hasImport(content, cfg.Module+"/cmd/app/repo") {
+		imports = append(imports, fmt.Sprintf("%q", cfg.Module+"/cmd/app/repo"))
+	}
+	if needsService && !hasImport(content, cfg.Module+"/cmd/app/service") {
+		imports = append(imports, fmt.Sprintf("%q", cfg.Module+"/cmd/app/service"))
+	}
+
+	var sections []string
+	if len(imports) > 0 {
+		sections = append(sections, "Add these imports to cmd/app/routes.go:\n"+indentLines(imports))
+	}
+
+	var lines []string
+	if needsQueries {
+		lines = append(lines, queriesLine)
+	}
+	if needsService {
+		lines = append(lines, serviceLine)
+	}
+	if needsRegister {
+		lines = append(lines, registerLine)
+	}
+	if len(lines) > 0 {
+		sections = append(sections, "Add this inside registerRoutes in cmd/app/routes.go:\n"+indentLines(lines))
+	}
+
+	if len(sections) == 0 {
+		return "Routes for this resource already appear to be declared in cmd/app/routes.go."
+	}
+
+	return strings.Join(sections, "\n\n")
+}
+
+func hasImport(content string, path string) bool {
+	return strings.Contains(content, fmt.Sprintf("%q", path))
+}
+
+func indentLines(lines []string) string {
+	indented := make([]string, len(lines))
+	for i, line := range lines {
+		indented[i] = "    " + line
+	}
+	return strings.Join(indented, "\n")
+}
+
+func uniquePaths(paths []string) []string {
+	seen := make(map[string]struct{}, len(paths))
+	result := make([]string, 0, len(paths))
+	for _, path := range paths {
+		if _, ok := seen[path]; ok {
+			continue
+		}
+		seen[path] = struct{}{}
+		result = append(result, path)
+	}
+	return result
 }
