@@ -3,7 +3,6 @@ package initialize_test
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/gitkumi/snowflake/internal/initialize"
@@ -16,7 +15,6 @@ func TestGenerateNoDB(t *testing.T) {
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseNone,
-		Queue:     initialize.QueueNone,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -40,7 +38,6 @@ func TestGenerateSQLite3(t *testing.T) {
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseSQLite3,
-		Queue:     initialize.QueueNone,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -64,7 +61,6 @@ func TestGeneratePostgres(t *testing.T) {
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabasePostgres,
-		Queue:     initialize.QueueNone,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -88,7 +84,6 @@ func TestGenerateMySQL(t *testing.T) {
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseMySQL,
-		Queue:     initialize.QueueNone,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -112,7 +107,6 @@ func TestGenerateMariaDB(t *testing.T) {
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseMariaDB,
-		Queue:     initialize.QueueNone,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -136,7 +130,6 @@ func TestGenerateNoSMTP(t *testing.T) {
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseSQLite3,
-		Queue:     initialize.QueueNone,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      false,
@@ -160,7 +153,6 @@ func TestGenerateNoStorage(t *testing.T) {
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseSQLite3,
-		Queue:     initialize.QueueNone,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -184,7 +176,6 @@ func TestGenerateValkey(t *testing.T) {
 		Quiet:         true,
 		Name:          "acme",
 		Database:      initialize.DatabaseSQLite3,
-		Queue:         initialize.QueueNone,
 		OutputDir:     tmpDir,
 		Git:           false,
 		SMTP:          true,
@@ -208,36 +199,11 @@ func TestGenerateNoRedis(t *testing.T) {
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseSQLite3,
-		Queue:     initialize.QueueNone,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
 		Storage:   true,
 		KeyValueStore: initialize.KeyValueStoreNone,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	projectDir := filepath.Join(tmpDir, "acme")
-	if _, err := os.Stat(projectDir); os.IsNotExist(err) {
-		t.Fatal("project directory not created")
-	}
-}
-
-func TestGenerateQueueSQS(t *testing.T) {
-	tmpDir := t.TempDir()
-
-	err := initialize.Run(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseSQLite3,
-		Queue:     initialize.QueueSQS,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Storage:   true,
-		KeyValueStore: initialize.KeyValueStoreRedis,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -256,7 +222,6 @@ func TestGenerateTempl(t *testing.T) {
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseNone,
-		Queue:     initialize.QueueNone,
 		OutputDir: tmpDir,
 		Git:       false,
 		Templ:     true,
@@ -289,7 +254,6 @@ func TestGenerateNoTempl(t *testing.T) {
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseNone,
-		Queue:     initialize.QueueNone,
 		OutputDir: tmpDir,
 		Git:       false,
 		Templ:     false,
@@ -319,7 +283,6 @@ func TestEnvFilesGenerated(t *testing.T) {
 		Quiet:     true,
 		Name:      "acme",
 		Database:  initialize.DatabaseSQLite3,
-		Queue:     initialize.QueueNone,
 		OutputDir: tmpDir,
 		Git:       false,
 		SMTP:      true,
@@ -366,12 +329,12 @@ func TestEnvFilesGenerated(t *testing.T) {
 func FuzzGenerate(f *testing.F) {
 	f.Add(
 		true, true,
-		0, 0, 0,
+		0, 0,
 	)
 
 	f.Fuzz(func(t *testing.T,
 		withSMTP, withStorage bool,
-		dbTypeInt, jobTypeInt, kvsTypeInt int,
+		dbTypeInt, kvsTypeInt int,
 	) {
 		tmpDir := t.TempDir()
 
@@ -382,10 +345,6 @@ func FuzzGenerate(f *testing.F) {
 			initialize.DatabaseMariaDB,
 			initialize.DatabaseNone,
 		}
-		queues := []initialize.Queue{
-			initialize.QueueSQS,
-			initialize.QueueNone,
-		}
 		keyValueStores := []initialize.KeyValueStore{
 			initialize.KeyValueStoreNone,
 			initialize.KeyValueStoreRedis,
@@ -393,7 +352,6 @@ func FuzzGenerate(f *testing.F) {
 		}
 
 		database := databases[abs(dbTypeInt)%len(databases)]
-		queue := queues[abs(jobTypeInt)%len(queues)]
 		kvs := keyValueStores[abs(kvsTypeInt)%len(keyValueStores)]
 
 		err := initialize.Run(&initialize.Config{
@@ -402,7 +360,6 @@ func FuzzGenerate(f *testing.F) {
 			Name:          "acme",
 			OutputDir:     tmpDir,
 			Database:      database,
-			Queue:         queue,
 			KeyValueStore: kvs,
 			SMTP:          withSMTP,
 			Storage:       withStorage,
@@ -426,6 +383,3 @@ func abs(x int) int {
 	return x
 }
 
-func containsStr(s, substr string) bool {
-	return strings.Contains(s, substr)
-}

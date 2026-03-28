@@ -76,9 +76,9 @@ services:
 {{- $volName = printf "mariadb_%s_data" .Name }}
 {{- end }}
 
-{{- if eq .KeyValueStore.String "redis" }}
+{{- if eq .KeyValueStore "redis" }}
 {{ template "redis" . }}
-{{- else if eq .KeyValueStore.String "valkey" }}
+{{- else if eq .KeyValueStore "valkey" }}
 {{ template "valkey" . }}
 {{- end }}
 

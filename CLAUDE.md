@@ -19,7 +19,7 @@ make run               # run the CLI
 - `internal/command/tui/` — interactive TUI (charmbracelet/huh)
 - `internal/command/run/` — non-interactive CLI flags
 - `internal/initialize/` — core generation logic
-  - `types.go` — `Database`, `Queue`, `ContainerRuntime` enums
+  - `types.go` — `Database`, `ContainerRuntime` enums
   - `initialize.go` — `Config` struct and `Run()` orchestrator
   - `project.go` — `Project` struct, file exclusions, file renames
   - `operations.go` — post-generation commands (go mod init, tidy, build, etc.)

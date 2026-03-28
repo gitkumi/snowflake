@@ -11,7 +11,6 @@ import (
 type Project struct {
 	Name             string
 	Database         Database
-	Queue            Queue
 	ContainerRuntime ContainerRuntime
 
 	SMTP          bool
@@ -38,7 +37,6 @@ func NewProject(cfg *Config) *Project {
 	project := &Project{
 		Name:             cfg.Name,
 		Database:         cfg.Database,
-		Queue:            cfg.Queue,
 		ContainerRuntime: cfg.ContainerRuntime,
 		SMTP:          cfg.SMTP,
 		Storage:       cfg.Storage,
@@ -53,7 +51,7 @@ func NewProject(cfg *Config) *Project {
 				"/cmd/app/Dockerfile",
 			},
 			Check: func(p *Project) bool {
-				return p.Database == DatabaseSQLite3 && !p.Redis()
+				return p.Database == DatabaseSQLite3 && !p.HasKeyValueStore()
 			},
 		},
 		{
@@ -74,12 +72,6 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/internal/middleware/rate_limit.go",
-			},
-			Check: func(p *Project) bool { return !p.Redis() },
-		},
-		{
-			FilePaths: []string{
 				"/cmd/app/sqlc.yaml",
 				"/cmd/app/sql/migrations/00001_books.sql",
 				"/cmd/app/sql/queries/books.sql",
@@ -96,14 +88,6 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/internal/queue/queue.go",
-				"/internal/queue/sqs.go",
-				"/internal/queue/mock.go",
-			},
-			Check: func(p *Project) bool { return p.Queue == QueueNone },
-		},
-		{
-			FilePaths: []string{
 				"/internal/html/pages/index.templ",
 				"/cmd/app/handlers/page_handler.go",
 			},
@@ -116,16 +100,16 @@ func NewProject(cfg *Config) *Project {
 	return project
 }
 
-func (p *Project) Redis() bool {
-	return p.KeyValueStore != KeyValueStoreNone
+func (p *Project) HasKeyValueStore() bool {
+	return p.KeyValueStore != KeyValueStoreNone && p.KeyValueStore != ""
 }
 
 func (p *Project) UsesDockerOnDev() bool {
-	return p.Redis() || p.Database != DatabaseNone
+	return p.HasKeyValueStore() || p.Database != DatabaseNone
 }
 
 func (p *Project) HasDevEnv() bool {
-	return !(p.Database == DatabaseSQLite3 && !p.Redis())
+	return !(p.Database == DatabaseSQLite3 && !p.HasKeyValueStore())
 }
 
 func (p *Project) ExcludeFile(templateFileName string) bool {

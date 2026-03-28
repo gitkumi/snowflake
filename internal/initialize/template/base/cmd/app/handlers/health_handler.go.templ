@@ -22,11 +22,17 @@ func HandleHealth(healthService *service.HealthService) gin.HandlerFunc {
 		}
 {{- end }}
 		
-{{- if .Redis }}
+{{- if eq .KeyValueStore "redis" }}
 		if redisStatus, err := healthService.Redis.Ping(c.Request.Context()).Result(); err != nil {
 			response["redis"] = "error"
 		} else {
 			response["redis"] = redisStatus
+		}
+{{- else if eq .KeyValueStore "valkey" }}
+		if err := healthService.Valkey.Do(c.Request.Context(), healthService.Valkey.B().Ping().Build()).Error(); err != nil {
+			response["valkey"] = "error"
+		} else {
+			response["valkey"] = "PONG"
 		}
 {{- end }}
 		

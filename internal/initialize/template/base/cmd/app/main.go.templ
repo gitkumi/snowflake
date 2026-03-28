@@ -17,11 +17,10 @@ import (
 {{- if .Storage }}
 	"{{ .Name }}/internal/storage"
 {{- end }}
-{{- if .Redis }}
+{{- if eq .KeyValueStore "redis" }}
 	"github.com/redis/go-redis/v9"
-{{- end }}
-{{- if eq .Queue "sqs" }}
-	"{{ .Name }}/internal/queue"
+{{- else if eq .KeyValueStore "valkey" }}
+	"github.com/valkey-io/valkey-go"
 {{- end }}
 )
 
@@ -76,23 +75,22 @@ func main() {
 	// })
 {{- end }}
 
-{{- if .Redis }}
+{{- if eq .KeyValueStore "redis" }}
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     vars.RedisAddr,
 		Password: vars.RedisPassword,
 		DB:       vars.RedisDB,
 	})
-{{- end }}
-
-{{- if eq .Queue "sqs" }}
-	q := queue.NewMockQueue()
-	// TODO: Uncomment this after setting up your SQS
-	// q := queue.NewSQSQueue(&queue.SQSQueueConfig{
-	// 	AccessKey: vars.SQSAccessKey,
-	// 	SecretKey: vars.SQSSecretKey,
-	// 	Region:    vars.SQSRegion,
-	// 	QueueURL:  vars.SQSQueueURL,
-	// })
+{{- else if eq .KeyValueStore "valkey" }}
+	vk, err := valkey.NewClient(valkey.ClientOption{
+		InitAddress: []string{vars.ValkeyAddr},
+		Password:    vars.ValkeyPassword,
+		SelectDB:    vars.ValkeyDB,
+	})
+	if err != nil {
+		log.Fatal("failed to create valkey client: ", err)
+	}
+	defer vk.Close()
 {{- end }}
 
 	srv := newServer(
@@ -102,11 +100,10 @@ func main() {
 {{- if .Storage }}
 		stor,
 {{- end }}
-{{- if .Redis }}
+{{- if eq .KeyValueStore "redis" }}
 		rdb,
-{{- end }}
-{{- if eq .Queue "sqs" }}
-		q,
+{{- else if eq .KeyValueStore "valkey" }}
+		vk,
 {{- end }}
 		logger,
 		vars.BaseURL,

@@ -20,7 +20,6 @@ type Config struct {
 
 	Name             string
 	Database         Database
-	Queue            Queue
 	ContainerRuntime ContainerRuntime
 
 	SMTP          bool
@@ -57,7 +56,7 @@ func Run(cfg *Config) error {
 		}
 	}
 
-	printSuccessMessage(project.Name, project.Database, project.Redis(), cfg.Quiet)
+	printSuccessMessage(project.Name, project.Database, project.HasKeyValueStore(), cfg.Quiet)
 
 	return nil
 }
@@ -157,7 +156,7 @@ func createFiles(project *Project, outputPath string, templateFiles fs.FS,
 	return err
 }
 
-func printSuccessMessage(projectName string, database Database, redis bool, quiet bool) {
+func printSuccessMessage(projectName string, database Database, hasKeyValueStore bool, quiet bool) {
 	if quiet {
 		return
 	}
@@ -169,7 +168,7 @@ Run your new project:
 
   $ cd %s`, projectName, projectName)
 
-	if database == DatabasePostgres || database == DatabaseMySQL || database == DatabaseMariaDB || redis {
+	if database == DatabasePostgres || database == DatabaseMySQL || database == DatabaseMariaDB || hasKeyValueStore {
 		successMessage += `
   $ make app.devenv.up # Initialize the dev environment
   $ make app.dev`

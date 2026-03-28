@@ -95,31 +95,6 @@ func (d Database) Import() string {
 	}
 }
 
-type Queue string
-
-const (
-	QueueNone Queue = "none"
-	QueueSQS  Queue = "sqs"
-)
-
-var AllQueues = []Queue{
-	QueueNone,
-	QueueSQS,
-}
-
-func (t Queue) IsValid() bool {
-	for _, bg := range AllQueues {
-		if bg == t {
-			return true
-		}
-	}
-	return false
-}
-
-func (t Queue) String() string {
-	return string(t)
-}
-
 type KeyValueStore string
 
 const (

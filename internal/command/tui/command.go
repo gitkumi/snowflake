@@ -20,7 +20,6 @@ func Command() *cobra.Command {
 			projectPath := ""
 			database := initialize.AllDatabases[0]
 			keyValueStore := initialize.AllKeyValueStores[0]
-			queue := initialize.AllQueues[0]
 			containerRuntime := initialize.AllContainerRuntimes[0] // Defaults to Podman
 			selectedFeatures := []string{"Git"}
 
@@ -37,7 +36,7 @@ func Command() *cobra.Command {
 					Options(
 						huh.NewOption("Git", "Git"),
 						huh.NewOption("SMTP", "SMTP"),
-						huh.NewOption("S3-compatible", "Storage"),
+						huh.NewOption("Object Storage (S3-compatible)", "Storage"),
 						huh.NewOption("HTML (templ)", "Templ"),
 					).
 					Value(&selectedFeatures),
@@ -67,16 +66,6 @@ func Command() *cobra.Command {
 					Value(&keyValueStore),
 			)
 
-			queueGroup := huh.NewGroup(
-				huh.NewSelect[initialize.Queue]().
-					Title("Select queue").
-					Options(
-						huh.NewOption("None", initialize.QueueNone),
-						huh.NewOption("SQS", initialize.QueueSQS),
-					).
-					Value(&queue),
-			)
-
 			containerRuntimeGroup := huh.NewGroup(
 				huh.NewSelect[initialize.ContainerRuntime]().
 					Title("Select container runtime").
@@ -92,7 +81,6 @@ func Command() *cobra.Command {
 				databaseGroup,
 				keyValueStoreGroup,
 				featuresGroup,
-				queueGroup,
 				containerRuntimeGroup,
 			)
 
@@ -111,7 +99,6 @@ func Command() *cobra.Command {
 			cfg.OutputDir = outputDir
 			cfg.Database = database
 			cfg.KeyValueStore = keyValueStore
-			cfg.Queue = queue
 			cfg.ContainerRuntime = containerRuntime
 
 			cfg.Git = contains(selectedFeatures, "Git")

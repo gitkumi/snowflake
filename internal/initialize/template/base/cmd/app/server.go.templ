@@ -21,13 +21,11 @@ import (
 {{- if .Storage }}
 	"{{ .Name }}/internal/storage"
 {{- end }}
-{{- if .Redis }}
+{{- if eq .KeyValueStore "redis" }}
 	"github.com/redis/go-redis/v9"
+{{- else if eq .KeyValueStore "valkey" }}
+	"github.com/valkey-io/valkey-go"
 {{- end }}
-{{- if eq .Queue "sqs" }}
-	"{{ .Name }}/internal/queue"
-{{- end }}
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -40,11 +38,10 @@ type server struct {
 {{- if .Storage }}
 	storage storage.Storage
 {{- end }}
-{{- if .Redis }}
+{{- if eq .KeyValueStore "redis" }}
 	redis   *redis.Client
-{{- end }}
-{{- if eq .Queue "sqs" }}
-	queue   queue.Queue
+{{- else if eq .KeyValueStore "valkey" }}
+	valkey  valkey.Client
 {{- end }}
 	logger  *slog.Logger
 	
@@ -67,11 +64,10 @@ func newServer(
 {{- if .Storage }}
 	storage storage.Storage,
 {{- end }}
-{{- if .Redis }}
+{{- if eq .KeyValueStore "redis" }}
 	redis *redis.Client,
-{{- end }}
-{{- if eq .Queue "sqs" }}
-	queue queue.Queue,
+{{- else if eq .KeyValueStore "valkey" }}
+	vk valkey.Client,
 {{- end }}
 	logger *slog.Logger,
 	baseURL string,
@@ -88,7 +84,8 @@ func newServer(
 	healthService := service.NewHealthService(
 		{{- if ne .Database.String "none" }}db,{{- end }}
 		{{- if .Storage }}storage,{{- end }}
-		{{- if .Redis }}redis,{{- end }}
+		{{- if eq .KeyValueStore "redis" }}redis,{{- end }}
+		{{- if eq .KeyValueStore "valkey" }}vk,{{- end }}
 	)
 	
 	s := &server{
@@ -98,11 +95,10 @@ func newServer(
 {{- if .Storage }}
 		storage:       storage,
 {{- end }}
-{{- if .Redis }}
+{{- if eq .KeyValueStore "redis" }}
 		redis:         redis,
-{{- end }}
-{{- if eq .Queue "sqs" }}
-		queue:         queue,
+{{- else if eq .KeyValueStore "valkey" }}
+		valkey:        vk,
 {{- end }}
 		logger:        logger,
 {{- if ne .Database.String "none" }}

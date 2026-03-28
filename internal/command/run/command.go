@@ -15,7 +15,6 @@ func Command() *cobra.Command {
 		quiet            bool
 		database         string
 		keyValueStore    string
-		queue            string
 		containerRuntime string
 		outputDir        string
 		git              bool
@@ -57,11 +56,6 @@ func Command() *cobra.Command {
 				log.Fatalf("Invalid database type: %s. Must be one of: %v", database, initialize.AllDatabases)
 			}
 
-			queueEnum := initialize.Queue(queue)
-			if !queueEnum.IsValid() {
-				log.Fatalf("Invalid queue type: %s. Must be one of: %v", queue, initialize.AllQueues)
-			}
-
 			containerRuntimeEnum := initialize.ContainerRuntime(containerRuntime)
 			if !containerRuntimeEnum.IsValid() {
 				log.Fatalf("Invalid container runtime: %s. Must be one of: %v", containerRuntime, initialize.AllContainerRuntimes)
@@ -77,7 +71,6 @@ func Command() *cobra.Command {
 				Name:             args[0],
 				Database:         dbEnum,
 				KeyValueStore:    kvsEnum,
-				Queue:            queueEnum,
 				ContainerRuntime: containerRuntimeEnum,
 				Git:              git,
 				OutputDir:        outputDir,
@@ -92,7 +85,6 @@ func Command() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&database, "database", "d", "none", fmt.Sprintf("Database type %v", initialize.AllDatabases))
-	cmd.Flags().StringVarP(&queue, "queue", "q", "none", fmt.Sprintf("Queue type %v", initialize.AllQueues))
 	cmd.Flags().StringVarP(&containerRuntime, "container", "c", "podman", fmt.Sprintf("Container runtime %v", initialize.AllContainerRuntimes))
 	cmd.Flags().StringVarP(&outputDir, "output", "o", "", "Output directory for the generated project")
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "Disable project generation messages")

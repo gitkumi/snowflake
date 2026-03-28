@@ -7,8 +7,10 @@ import (
 	{{- if .Storage }}
 	"{{ .Name }}/internal/storage"
 	{{- end }}
-	{{- if .Redis }}
+	{{- if eq .KeyValueStore "redis" }}
 	"github.com/redis/go-redis/v9"
+	{{- else if eq .KeyValueStore "valkey" }}
+	"github.com/valkey-io/valkey-go"
 	{{- end }}
 )
 
@@ -19,8 +21,10 @@ type HealthService struct {
 	{{- if .Storage }}
 	Storage storage.Storage
 	{{- end }}
-	{{- if .Redis }}
+	{{- if eq .KeyValueStore "redis" }}
 	Redis *redis.Client
+	{{- else if eq .KeyValueStore "valkey" }}
+	Valkey valkey.Client
 	{{- end }}
 }
 
@@ -31,8 +35,10 @@ func NewHealthService(
 	{{- if .Storage }}
 	storage storage.Storage,
 	{{- end }}
-	{{- if .Redis }}
+	{{- if eq .KeyValueStore "redis" }}
 	redisClient *redis.Client,
+	{{- else if eq .KeyValueStore "valkey" }}
+	valkeyClient valkey.Client,
 	{{- end }}
 ) *HealthService {
 	return &HealthService{
@@ -42,8 +48,10 @@ func NewHealthService(
 		{{- if .Storage }}
 		Storage: storage,
 		{{- end }}
-		{{- if .Redis }}
+		{{- if eq .KeyValueStore "redis" }}
 		Redis: redisClient,
+		{{- else if eq .KeyValueStore "valkey" }}
+		Valkey: valkeyClient,
 		{{- end }}
 	}
 }
