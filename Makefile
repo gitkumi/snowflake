@@ -32,7 +32,7 @@ build:
 .PHONY: build-all
 build-all:
 	@mkdir -p dist
-	@echo "Building for multiple platforms..."
+	@echo "Building for multiple platforms.."
 	GOOS=linux GOARCH=amd64 go build -o dist/snowflake_linux_amd64 ./main.go; \
 	GOOS=linux GOARCH=arm64 go build -o dist/snowflake_linux_arm64 ./main.go; \
 	GOOS=darwin GOARCH=amd64 go build -o dist/snowflake_darwin_amd64 ./main.go; \
@@ -40,6 +40,14 @@ build-all:
 	GOOS=windows GOARCH=amd64 go build -o dist/snowflake_windows_amd64.exe ./main.go;
 	@cd dist && sha256sum * > SHA256SUMS
 	@echo "Done! Binaries are in the dist/ directory"
+
+.PHONY: tools.install
+tools.install:
+	@echo "Installing development tools.."
+	@go install gotest.tools/gotestsum@latest
+	@go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+	@go install github.com/a-h/templ/cmd/templ@latest
+	@echo "Development tools installed!"
 
 .PHONY: versions
 versions:
