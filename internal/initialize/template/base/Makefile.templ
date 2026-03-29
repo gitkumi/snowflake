@@ -2,6 +2,13 @@ APP_NAME := app
 APP_DIR := cmd/app
 BUILD_DIR := bin
 CONTAINER_RUNTIME := {{ .ContainerRuntime.String }}
+{{- if ne .Database.String "none" }}
+
+GOOSE_DRIVER := {{ .Database.Driver }}
+GOOSE_DBSTRING := {{ .Database.ConnString .Name }}
+GOOSE_MIGRATION_DIR := $(APP_DIR)/sql/migrations
+export GOOSE_DRIVER GOOSE_DBSTRING GOOSE_MIGRATION_DIR
+{{- end }}
 
 .PHONY: audit
 audit:
@@ -88,23 +95,23 @@ app.test.watch:
 
 .PHONY: app.sqlc
 app.sqlc:
-	cd $(APP_DIR) && sqlc generate
+	sqlc generate -f $(APP_DIR)/sqlc.yaml
 
 .PHONY: app.db
 app.db:
-	cd $(APP_DIR) && goose status
+	goose status
 
 .PHONY: app.db.up
 app.db.up:
-	cd $(APP_DIR) && goose up
+	goose up
 
 .PHONY: app.db.down
 app.db.down:
-	cd $(APP_DIR) && goose down
+	goose down
 
 .PHONY: app.db.reset
 app.db.reset:
-	cd $(APP_DIR) && goose reset && goose up
+	goose reset && goose up
 {{- end }}
 
 {{- if eq .Database.String "mysql" }}
