@@ -317,7 +317,7 @@ func buildRouteInstructions(content string, cfg *ProjectConfig, resource *Resour
 		lines = append(lines, registerLine)
 	}
 	if len(lines) > 0 {
-		sections = append(sections, "Add this inside registerRoutes in cmd/app/router.go:\n"+indentLines(lines))
+		sections = append(sections, "Add this inside newRouter in cmd/app/router.go:\n"+indentLines(lines))
 	}
 
 	if len(sections) == 0 {

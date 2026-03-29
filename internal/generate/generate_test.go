@@ -248,18 +248,20 @@ sql:
 		t.Fatal(err)
 	}
 
-	routesGo := `package main
+	routerGo := `package main
 
 import (
-	"database/sql"
-
 	"github.com/gin-gonic/gin"
 )
 
-func registerRoutes(api *gin.RouterGroup, db *sql.DB) {
+func (s *server) newRouter() *gin.Engine {
+	router := gin.Default()
+	api := router.Group("/api")
+	_ = api
+	return router
 }
 `
-	if err := os.WriteFile(filepath.Join(projectDir, "cmd", "app", "routes.go"), []byte(routesGo), 0666); err != nil {
+	if err := os.WriteFile(filepath.Join(projectDir, "cmd", "app", "router.go"), []byte(routerGo), 0666); err != nil {
 		t.Fatal(err)
 	}
 }
