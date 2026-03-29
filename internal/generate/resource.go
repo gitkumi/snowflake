@@ -35,7 +35,6 @@ func NewResource(name string, plural string, fields []Field, cfg *ProjectConfig)
 	}
 }
 
-
 func ParseFields(rawFields []string, database string) ([]Field, error) {
 	fields := make([]Field, 0, len(rawFields))
 	for _, raw := range rawFields {
