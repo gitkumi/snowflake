@@ -23,26 +23,33 @@ func resourceCommand() *cobra.Command {
 	var quiet bool
 
 	cmd := &cobra.Command{
-		Use:   "resource <name> [field:type ...]",
+		Use:   "resource <Name> <plural> [field:type ...]",
 		Short: "Generate a CRUD resource (migration, queries, handler, service)",
 		Long: `Generate a full CRUD resource with migration, SQL queries, handler, and service.
 
+The first argument is the resource name (singular, e.g. "Post").
+The second argument is the plural table name (e.g. "posts").
+
+Fields are specified as name:type pairs.
+
 Example:
-  snowflake gen resource post title:string body:text published:bool
+  snowflake gen resource Post posts title:string body:text published:bool
 
-Valid field types: string, text, int, bigint, bool, float, timestamp
-If no type is specified, "string" is used as the default.`,
-		Args: cobra.MinimumNArgs(1),
+Valid field types: string, text, int, bigint, bool, float, timestamp`,
+		Args: cobra.MinimumNArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
-			fields := args[1:]
-
 			cwd, err := os.Getwd()
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			if err := generate.Run(name, fields, cwd, quiet); err != nil {
+			if err := generate.Run(generate.GenerateInput{
+				Name:       args[0],
+				Plural:     args[1],
+				RawFields:  args[2:],
+				ProjectDir: cwd,
+				Quiet:      quiet,
+			}); err != nil {
 				log.Fatal(err)
 			}
 		},
@@ -56,26 +63,33 @@ func migrationCommand() *cobra.Command {
 	var quiet bool
 
 	cmd := &cobra.Command{
-		Use:   "migration <name> [field:type ...]",
+		Use:   "migration <Name> <plural> [field:type ...]",
 		Short: "Generate a database migration",
 		Long: `Generate a database migration file.
 
+The first argument is the resource name (singular, e.g. "Post").
+The second argument is the plural table name (e.g. "posts").
+
+Fields are specified as name:type pairs.
+
 Example:
-  snowflake gen migration create_posts title:string body:text published:bool
+  snowflake gen migration Post posts title:string body:text published:bool
 
-Valid field types: string, text, int, bigint, bool, float, timestamp
-If no type is specified, "string" is used as the default.`,
-		Args: cobra.MinimumNArgs(1),
+Valid field types: string, text, int, bigint, bool, float, timestamp`,
+		Args: cobra.MinimumNArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
-			fields := args[1:]
-
 			cwd, err := os.Getwd()
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			if err := generate.RunMigration(name, fields, cwd, quiet); err != nil {
+			if err := generate.RunMigration(generate.GenerateInput{
+				Name:       args[0],
+				Plural:     args[1],
+				RawFields:  args[2:],
+				ProjectDir: cwd,
+				Quiet:      quiet,
+			}); err != nil {
 				log.Fatal(err)
 			}
 		},

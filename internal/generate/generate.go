@@ -57,6 +57,14 @@ var funcMap = template.FuncMap{
 	},
 }
 
+type GenerateInput struct {
+	Name       string
+	Plural     string
+	RawFields  []string
+	ProjectDir string
+	Quiet      bool
+}
+
 type generatedTarget struct {
 	templateName string
 	outputPath   string
@@ -68,30 +76,30 @@ type generationContext struct {
 	templates *template.Template
 }
 
-func RunMigration(name string, rawFields []string, projectDir string, quiet bool) error {
-	ctx, err := prepareGeneration(name, rawFields, projectDir)
+func RunMigration(input GenerateInput) error {
+	ctx, err := prepareGeneration(input)
 	if err != nil {
 		return err
 	}
 
-	migrationsDir := filepath.Join(projectDir, "cmd", "app", "sql", "migrations")
+	migrationsDir := filepath.Join(input.ProjectDir, "cmd", "app", "sql", "migrations")
 	migNum := MigrationNumber()
 	_, err = renderTargets(ctx.templates, ctx.resource, []generatedTarget{
 		{
 			templateName: migrationTemplateName(ctx.config.Database),
 			outputPath:   MigrationFilePath(migrationsDir, migNum, ctx.resource.PluralName),
 		},
-	}, projectDir, quiet)
+	}, input.ProjectDir, input.Quiet)
 	return err
 }
 
-func Run(resourceName string, rawFields []string, projectDir string, quiet bool) error {
-	ctx, err := prepareGeneration(resourceName, rawFields, projectDir)
+func Run(input GenerateInput) error {
+	ctx, err := prepareGeneration(input)
 	if err != nil {
 		return err
 	}
 
-	migrationsDir := filepath.Join(projectDir, "cmd", "app", "sql", "migrations")
+	migrationsDir := filepath.Join(input.ProjectDir, "cmd", "app", "sql", "migrations")
 	migNum := MigrationNumber()
 	files := []generatedTarget{
 		{
@@ -100,48 +108,48 @@ func Run(resourceName string, rawFields []string, projectDir string, quiet bool)
 		},
 		{
 			templateName: queriesTemplateName(ctx.config.Database),
-			outputPath:   filepath.Join(projectDir, "cmd", "app", "sql", "queries", ctx.resource.PluralName+".sql"),
+			outputPath:   filepath.Join(input.ProjectDir, "cmd", "app", "sql", "queries", ctx.resource.PluralName+".sql"),
 		},
 		{
 			templateName: serviceTemplateName(ctx.config.Database),
-			outputPath:   filepath.Join(projectDir, "cmd", "app", "service", ctx.resource.Name+"_service.go"),
+			outputPath:   filepath.Join(input.ProjectDir, "cmd", "app", "service", ctx.resource.Name+"_service.go"),
 		},
 		{
 			templateName: "handler.go.tmpl",
-			outputPath:   filepath.Join(projectDir, "cmd", "app", "handlers", ctx.resource.Name+"_handler.go"),
+			outputPath:   filepath.Join(input.ProjectDir, "cmd", "app", "handlers", ctx.resource.Name+"_handler.go"),
 		},
 	}
 
-	goFiles, err := renderTargets(ctx.templates, ctx.resource, files, projectDir, quiet)
+	goFiles, err := renderTargets(ctx.templates, ctx.resource, files, input.ProjectDir, input.Quiet)
 	if err != nil {
 		return err
 	}
 
-	if err := runGenCommand("sqlc", []string{"generate"}, filepath.Join(projectDir, "cmd", "app"), quiet); err != nil {
-		if !quiet {
+	if err := runGenCommand("sqlc", []string{"generate"}, filepath.Join(input.ProjectDir, "cmd", "app"), input.Quiet); err != nil {
+		if !input.Quiet {
 			fmt.Println("  warning: sqlc generate failed. Run it manually: cd cmd/app && sqlc generate")
 		}
 	}
 
 	if len(goFiles) > 0 {
 		args := append([]string{"-w", "-s"}, uniquePaths(goFiles)...)
-		_ = runGenCommand("gofmt", args, projectDir, true)
+		_ = runGenCommand("gofmt", args, input.ProjectDir, true)
 	}
 
-	if !quiet {
-		printSuccess(projectDir, ctx.config, ctx.resource)
+	if !input.Quiet {
+		printSuccess(input.ProjectDir, ctx.config, ctx.resource)
 	}
 
 	return nil
 }
 
-func prepareGeneration(name string, rawFields []string, projectDir string) (*generationContext, error) {
-	cfg, err := LoadConfig(projectDir)
+func prepareGeneration(input GenerateInput) (*generationContext, error) {
+	cfg, err := LoadConfig(input.ProjectDir)
 	if err != nil {
 		return nil, err
 	}
 
-	fields, err := ParseFields(rawFields, cfg.Database)
+	fields, err := ParseFields(input.RawFields, cfg.Database)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +161,7 @@ func prepareGeneration(name string, rawFields []string, projectDir string) (*gen
 
 	return &generationContext{
 		config:    cfg,
-		resource:  NewResource(name, fields, cfg),
+		resource:  NewResource(input.Name, input.Plural, fields, cfg),
 		templates: templates,
 	}, nil
 }
@@ -254,7 +262,14 @@ func runGenCommand(name string, args []string, dir string, quiet bool) error {
 }
 
 func printSuccess(projectDir string, cfg *ProjectConfig, r *Resource) {
-	fmt.Printf("\nResource %q generated.\n", r.Name)
+	fmt.Println()
+	fmt.Printf("Generated %s resource with %d field(s).\n", r.Name, len(r.Fields))
+	if len(r.Fields) > 0 {
+		fmt.Println()
+		for _, f := range r.Fields {
+			fmt.Printf("    %s:%s\n", f.Name, f.Type)
+		}
+	}
 	fmt.Printf("\n%s\n", routeInstructions(projectDir, cfg, r))
 }
 

@@ -18,7 +18,13 @@ func TestGenerateResource(t *testing.T) {
 			// Setup minimal project structure
 			setupProjectDir(t, projectDir, db)
 
-			err := Run("post", []string{"title:string", "body:text", "published:bool"}, projectDir, true)
+			err := Run(GenerateInput{
+				Name:       "post",
+				Plural:     "posts",
+				RawFields:  []string{"title:string", "body:text", "published:bool"},
+				ProjectDir: projectDir,
+				Quiet:      true,
+			})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -76,7 +82,13 @@ func TestGenerateMigration(t *testing.T) {
 			projectDir := t.TempDir()
 			setupProjectDir(t, projectDir, db)
 
-			err := RunMigration("create_posts", []string{"title:string", "body:text"}, projectDir, true)
+			err := RunMigration(GenerateInput{
+				Name:       "create_posts",
+				Plural:     "posts",
+				RawFields:  []string{"title:string", "body:text"},
+				ProjectDir: projectDir,
+				Quiet:      true,
+			})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -117,7 +129,13 @@ func TestGenerateResourceNoDB(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err := Run("post", []string{"title:string"}, projectDir, true)
+	err := Run(GenerateInput{
+		Name:       "post",
+		Plural:     "posts",
+		RawFields:  []string{"title:string"},
+		ProjectDir: projectDir,
+		Quiet:      true,
+	})
 	if err == nil {
 		t.Fatal("expected error when sqlc.yaml is missing")
 	}
@@ -127,7 +145,12 @@ func TestGenerateResourceNoFields(t *testing.T) {
 	projectDir := t.TempDir()
 	setupProjectDir(t, projectDir, "postgres")
 
-	err := Run("post", []string{}, projectDir, true)
+	err := Run(GenerateInput{
+		Name:       "post",
+		Plural:     "posts",
+		ProjectDir: projectDir,
+		Quiet:      true,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,7 +165,13 @@ func TestGenerateResourceNoFields(t *testing.T) {
 func TestGenerateResourceNoGoMod(t *testing.T) {
 	projectDir := t.TempDir()
 
-	err := Run("post", []string{"title:string"}, projectDir, true)
+	err := Run(GenerateInput{
+		Name:       "post",
+		Plural:     "posts",
+		RawFields:  []string{"title:string"},
+		ProjectDir: projectDir,
+		Quiet:      true,
+	})
 	if err == nil {
 		t.Fatal("expected error when go.mod is missing")
 	}
@@ -157,7 +186,7 @@ func TestRouteInstructions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resource := NewResource("post", nil, cfg)
+	resource := NewResource("post", "posts", nil, cfg)
 	instructions := routeInstructions(projectDir, cfg, resource)
 
 	for _, want := range []string{

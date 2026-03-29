@@ -24,70 +24,36 @@ type Field struct {
 	GoType    string
 }
 
-func NewResource(name string, fields []Field, cfg *ProjectConfig) *Resource {
+func NewResource(name string, plural string, fields []Field, cfg *ProjectConfig) *Resource {
 	return &Resource{
 		Name:       name,
 		NameTitle:  toTitle(name),
-		PluralName: pluralize(name),
+		PluralName: plural,
 		ModuleName: cfg.Module,
 		Database:   cfg.Database,
 		Fields:     fields,
 	}
 }
 
-func pluralize(s string) string {
-	if s == "" {
-		return s
-	}
-
-	lastSeparator := strings.LastIndexAny(s, "_-")
-	if lastSeparator >= 0 {
-		return s[:lastSeparator+1] + pluralizeWord(s[lastSeparator+1:])
-	}
-
-	return pluralizeWord(s)
-}
-
-func pluralizeWord(s string) string {
-	lower := strings.ToLower(s)
-	if strings.HasSuffix(lower, "z") {
-		return s + "zes"
-	}
-	if strings.HasSuffix(lower, "s") || strings.HasSuffix(lower, "x") ||
-		strings.HasSuffix(lower, "ch") || strings.HasSuffix(lower, "sh") {
-		return s + "es"
-	}
-	if strings.HasSuffix(lower, "y") && len(s) > 1 && !isVowel(rune(lower[len(lower)-2])) {
-		return s[:len(s)-1] + "ies"
-	}
-	return s + "s"
-}
-
-func isVowel(r rune) bool {
-	switch r {
-	case 'a', 'e', 'i', 'o', 'u':
-		return true
-	}
-	return false
-}
 
 func ParseFields(rawFields []string, database string) ([]Field, error) {
 	fields := make([]Field, 0, len(rawFields))
 	for _, raw := range rawFields {
 		parts := strings.SplitN(raw, ":", 2)
+		if len(parts) != 2 || parts[1] == "" {
+			return nil, fmt.Errorf("invalid field %q, expected name:type format (e.g. title:string)\nValid types: string, text, int, bigint, bool, float, timestamp", raw)
+		}
+
 		name := parts[0]
 		if name == "" {
 			return nil, fmt.Errorf("empty field name in %q", raw)
 		}
 
-		typeName := "string"
-		if len(parts) == 2 {
-			typeName = parts[1]
-		}
+		typeName := parts[1]
 
 		mapping, ok := typeMapping[typeName]
 		if !ok {
-			return nil, fmt.Errorf("unknown field type %q (valid: string, text, int, bigint, bool, float, timestamp)", typeName)
+			return nil, fmt.Errorf("unknown field type %q in %q\nValid types: string, text, int, bigint, bool, float, timestamp", typeName, raw)
 		}
 
 		sqlType, ok := mapping.SQLTypes[database]

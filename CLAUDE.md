@@ -39,11 +39,11 @@ make run               # run the CLI
 ```
 snowflake new                           # interactive project scaffold (TUI)
 snowflake run <name> [flags]            # non-interactive project scaffold
-snowflake gen resource <name> [fields]  # generate full CRUD resource
-snowflake gen migration <name> [fields] # generate migration only
+snowflake gen resource <Name> <plural> [field:type ...]  # generate full CRUD resource
+snowflake gen migration <Name> <plural> [field:type ...]  # generate migration only
 ```
 
-Field types: `string`, `text`, `int`, `bigint`, `bool`, `float`, `timestamp`. Defaults to `string`.
+Field types: `string`, `text`, `int`, `bigint`, `bool`, `float`, `timestamp`.
 
 ## Adding a new feature
 

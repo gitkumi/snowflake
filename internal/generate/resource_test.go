@@ -4,36 +4,6 @@ import (
 	"testing"
 )
 
-func TestPluralize(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected string
-	}{
-		{"post", "posts"},
-		{"category", "categories"},
-		{"address", "addresses"},
-		{"bus", "buses"},
-		{"box", "boxes"},
-		{"church", "churches"},
-		{"dish", "dishes"},
-		{"quiz", "quizzes"},
-		{"key", "keys"},
-		{"day", "days"},
-		{"toy", "toys"},
-		{"user", "users"},
-		{"blog_post", "blog_posts"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			got := pluralize(tt.input)
-			if got != tt.expected {
-				t.Errorf("pluralize(%q) = %q, want %q", tt.input, got, tt.expected)
-			}
-		})
-	}
-}
-
 func TestToTitle(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -75,14 +45,10 @@ func TestParseFields(t *testing.T) {
 	}
 }
 
-func TestParseFieldsDefaultType(t *testing.T) {
-	fields, err := ParseFields([]string{"name"}, "postgres")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if fields[0].Type != "string" {
-		t.Errorf("expected default type 'string', got %q", fields[0].Type)
+func TestParseFieldsMissingType(t *testing.T) {
+	_, err := ParseFields([]string{"name"}, "postgres")
+	if err == nil {
+		t.Fatal("expected error for field without type")
 	}
 }
 
@@ -104,7 +70,7 @@ func TestNewResource(t *testing.T) {
 	cfg := &ProjectConfig{Module: "acme", Database: "postgres"}
 	fields := []Field{{Name: "title", NameTitle: "Title", Type: "string", SQLType: "TEXT", GoType: "string"}}
 
-	r := NewResource("post", fields, cfg)
+	r := NewResource("post", "posts", fields, cfg)
 
 	if r.Name != "post" {
 		t.Errorf("expected Name 'post', got %q", r.Name)
