@@ -274,7 +274,7 @@ func printSuccess(projectDir string, cfg *ProjectConfig, r *Resource) {
 }
 
 func routeInstructions(projectDir string, cfg *ProjectConfig, resource *Resource) string {
-	content, err := os.ReadFile(filepath.Join(projectDir, "cmd", "app", "routes.go"))
+	content, err := os.ReadFile(filepath.Join(projectDir, "cmd", "app", "router.go"))
 	if err != nil {
 		content = nil
 	}
@@ -303,7 +303,7 @@ func buildRouteInstructions(content string, cfg *ProjectConfig, resource *Resour
 
 	var sections []string
 	if len(imports) > 0 {
-		sections = append(sections, "Add these imports to cmd/app/routes.go:\n"+indentLines(imports))
+		sections = append(sections, "Add these imports to cmd/app/router.go:\n"+indentLines(imports))
 	}
 
 	var lines []string
@@ -317,11 +317,11 @@ func buildRouteInstructions(content string, cfg *ProjectConfig, resource *Resour
 		lines = append(lines, registerLine)
 	}
 	if len(lines) > 0 {
-		sections = append(sections, "Add this inside registerRoutes in cmd/app/routes.go:\n"+indentLines(lines))
+		sections = append(sections, "Add this inside registerRoutes in cmd/app/router.go:\n"+indentLines(lines))
 	}
 
 	if len(sections) == 0 {
-		return "Routes for this resource already appear to be declared in cmd/app/routes.go."
+		return "Routes for this resource already appear to be declared in cmd/app/router.go."
 	}
 
 	return strings.Join(sections, "\n\n")

@@ -1,0 +1,41 @@
+package main
+
+import (
+{{- if ne .Database.String "none" }}
+	"database/sql"
+{{- end }}
+
+	"{{ .Name }}/cmd/app/handlers"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+)
+
+// newRouter sets up all HTTP routes for the service
+func (s *server) newRouter() *gin.Engine {
+	router := gin.Default()
+	router.Use(cors.Default())
+
+{{- if .Templ }}
+	router.GET("/", handlers.HandleIndex())
+{{- end }}
+
+	api := router.Group("/api")
+	{
+		api.GET("/health", handlers.HandleHealth(handlers.HealthDependencies{
+{{- if ne .Database.String "none" }}
+			DB: s.db,
+{{- end }}
+{{- if eq .KeyValueStore "redis" }}
+			Redis: s.redis,
+{{- else if eq .KeyValueStore "valkey" }}
+			Valkey: s.valkey,
+{{- end }}
+		}))
+		registerRoutes(api{{- if ne .Database.String "none" }}, s.db{{- end }})
+	}
+
+	return router
+}
+
+func registerRoutes(api *gin.RouterGroup{{- if ne .Database.String "none" }}, db *sql.DB{{- end }}) {
+}

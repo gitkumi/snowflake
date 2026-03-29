@@ -190,7 +190,7 @@ func TestRouteInstructions(t *testing.T) {
 	instructions := routeInstructions(projectDir, cfg, resource)
 
 	for _, want := range []string{
-		`Add these imports to cmd/app/routes.go:`,
+		`Add these imports to cmd/app/router.go:`,
 		`"acme/cmd/app/handlers"`,
 		`"acme/cmd/app/repo"`,
 		`"acme/cmd/app/service"`,
@@ -257,8 +257,6 @@ import (
 )
 
 func registerRoutes(api *gin.RouterGroup, db *sql.DB) {
-	_ = api
-	_ = db
 }
 `
 	if err := os.WriteFile(filepath.Join(projectDir, "cmd", "app", "routes.go"), []byte(routesGo), 0666); err != nil {

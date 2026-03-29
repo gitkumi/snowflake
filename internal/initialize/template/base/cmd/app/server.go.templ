@@ -13,13 +13,11 @@ import (
 	"syscall"
 	"time"
 
-	"{{ .Name }}/cmd/app/handlers"
 {{- if eq .KeyValueStore "redis" }}
 	"github.com/redis/go-redis/v9"
 {{- else if eq .KeyValueStore "valkey" }}
 	"github.com/valkey-io/valkey-go"
 {{- end }}
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -71,36 +69,9 @@ func newServer(
 	}
 
 	// Setup router with routes
-	s.router = s.routes()
+	s.router = s.newRouter()
 
 	return s
-}
-
-// routes sets up all HTTP routes for the service
-func (s *server) routes() *gin.Engine {
-	router := gin.Default()
-	router.Use(cors.Default())
-	
-{{- if .Templ }}
-	router.GET("/", handlers.HandleIndex())
-{{- end }}
-
-	api := router.Group("/api")
-	{
-		api.GET("/health", handlers.HandleHealth(handlers.HealthDependencies{
-{{- if ne .Database.String "none" }}
-			DB: s.db,
-{{- end }}
-{{- if eq .KeyValueStore "redis" }}
-			Redis: s.redis,
-{{- else if eq .KeyValueStore "valkey" }}
-			Valkey: s.valkey,
-{{- end }}
-		}))
-		registerRoutes(api{{- if ne .Database.String "none" }}, s.db{{- end }})
-	}
-
-	return router
 }
 
 // run starts the HTTP server with graceful shutdown
