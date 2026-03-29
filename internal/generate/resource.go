@@ -26,9 +26,9 @@ type Field struct {
 
 func NewResource(name string, plural string, fields []Field, cfg *ProjectConfig) *Resource {
 	return &Resource{
-		Name:       name,
+		Name:       strings.ToLower(name),
 		NameTitle:  toTitle(name),
-		PluralName: plural,
+		PluralName: strings.ToLower(plural),
 		ModuleName: cfg.Module,
 		Database:   cfg.Database,
 		Fields:     fields,
