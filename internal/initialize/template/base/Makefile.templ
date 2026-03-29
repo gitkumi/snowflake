@@ -174,8 +174,3 @@ app.devenv.down:
 app.devenv.logs:
 	$(CONTAINER_RUNTIME) compose -f $(APP_DIR)/devenv.yaml logs -f
 {{- end }}
-
-.PHONY: app.clean
-app.clean:
-	rm -f $(BUILD_DIR)/$(APP_NAME)
-	rm -f coverage.out coverage.html
