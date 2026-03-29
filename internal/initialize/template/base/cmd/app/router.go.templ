@@ -1,6 +1,10 @@
 package main
 
 import (
+{{- if .Templ }}
+	"net/http"
+	"{{ .Name }}/internal/html"
+{{- end }}
 	"{{ .Name }}/cmd/app/handlers"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -12,6 +16,7 @@ func (s *server) newRouter() *gin.Engine {
 	router.Use(cors.Default())
 
 {{- if .Templ }}
+	router.StaticFS("/static", http.FS(html.StaticFS))
 	router.GET("/", handlers.HandleIndex())
 {{- end }}
 

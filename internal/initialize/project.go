@@ -57,6 +57,8 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
+				"/internal/html/html.go",
+				"/internal/html/static/reset.css",
 				"/internal/html/pages/index.templ",
 				"/cmd/app/handlers/page_handler.go",
 			},
