@@ -1,9 +1,6 @@
 package main
 
 import (
-{{- if .SMTP }}
-	"{{ .Name }}/cmd/app/handlers"
-{{- end }}
 	"log"
 	"log/slog"
 	"os"
@@ -48,7 +45,6 @@ func main() {
 
 {{- if .SMTP }}
 	var mailer smtp.Mailer
-	var mailbox *smtp.Mailbox
 	switch vars.Environment {
 	case "production":
 		m, err := smtp.NewSMTPMailer(&smtp.SMTPMailerConfig{
@@ -63,8 +59,7 @@ func main() {
 		}
 		mailer = m
 	default:
-		mailbox = smtp.NewMailbox(vars.SMTPFrom, "tmp/snowflake_dev_mailbox.json", logger)
-		mailer = mailbox
+		mailer = smtp.NewDevMailbox(vars.SMTPFrom, "tmp/snowflake_dev_mailbox.json", logger)
 	}
 {{- end }}
 
@@ -118,10 +113,8 @@ func main() {
 	)
 
 {{- if .SMTP }}
-	if mailbox != nil {
-		devMailbox := srv.router.Group("/dev/mailbox")
-		devMailbox.POST("/send", handlers.HandleSendEmail(mailbox))
-		mailbox.Routes(devMailbox)
+	if dm, ok := mailer.(*smtp.DevMailbox); ok {
+		dm.Routes(srv.router.Group("/dev/mailbox"))
 	}
 {{- end }}
 

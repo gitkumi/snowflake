@@ -33,7 +33,7 @@ func NewProject(cfg *Config) *Project {
 			FilePaths: []string{
 				"/internal/smtp/mailer.go",
 				"/internal/smtp/smtp.go",
-				"/internal/smtp/mailbox.go",
+				"/internal/smtp/dev_mailbox.go",
 				"/internal/smtp/handler.go",
 				"/internal/smtp/layout.templ",
 				"/internal/smtp/list.templ",

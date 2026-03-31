@@ -227,7 +227,7 @@ func TestGenerateSMTPForcesTempl(t *testing.T) {
 	requiredFiles := []string{
 		filepath.Join(projectDir, "internal", "html", "pages", "index.templ"),
 		filepath.Join(projectDir, "cmd", "app", "handlers", "page_handler.go"),
-		filepath.Join(projectDir, "internal", "smtp", "mailbox.go"),
+		filepath.Join(projectDir, "internal", "smtp", "dev_mailbox.go"),
 	}
 	for _, f := range requiredFiles {
 		if _, err := os.Stat(f); os.IsNotExist(err) {
@@ -295,7 +295,7 @@ func TestGeneratedMailboxCreatesStorageDirectory(t *testing.T) {
 		SMTP:     true,
 	})
 
-	mailbox := mustReadFile(t, filepath.Join(projectDir, "internal", "smtp", "mailbox.go"))
+	mailbox := mustReadFile(t, filepath.Join(projectDir, "internal", "smtp", "dev_mailbox.go"))
 	if !strings.Contains(mailbox, "os.MkdirAll") {
 		t.Fatal("mailbox should create its persistence directory before writing")
 	}

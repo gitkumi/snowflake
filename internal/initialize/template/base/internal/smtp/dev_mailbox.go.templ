@@ -12,7 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const maxMailboxEmails = 1000
+const maxEmails = 1000
 
 // StoredEmail wraps an Email with metadata for the mailbox UI.
 type StoredEmail struct {
@@ -24,8 +24,8 @@ type StoredEmail struct {
 	CreatedAt time.Time
 }
 
-// Mailbox captures emails for development inspection, persisted to a JSON file.
-type Mailbox struct {
+// DevMailbox captures emails for development inspection, persisted to a JSON file.
+type DevMailbox struct {
 	mu     sync.RWMutex
 	emails []StoredEmail
 	nextID int
@@ -39,15 +39,15 @@ type snapshot struct {
 	Emails []StoredEmail `json:"emails"`
 }
 
-// NewMailbox creates a new Mailbox, loading any previously persisted emails from path.
-func NewMailbox(from string, path string, logger *slog.Logger) *Mailbox {
-	m := &Mailbox{from: from, path: path, logger: logger}
+// NewDevMailbox creates a new DevMailbox, loading any previously persisted emails from path.
+func NewDevMailbox(from string, path string, logger *slog.Logger) *DevMailbox {
+	m := &DevMailbox{from: from, path: path, logger: logger}
 	m.load()
 	return m
 }
 
 // Send captures an email into the mailbox, implementing the Mailer interface.
-func (m *Mailbox) Send(email Email) error {
+func (m *DevMailbox) Send(email Email) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -61,8 +61,8 @@ func (m *Mailbox) Send(email Email) error {
 		CreatedAt: time.Now(),
 	})
 
-	if len(m.emails) > maxMailboxEmails {
-		m.emails = m.emails[len(m.emails)-maxMailboxEmails:]
+	if len(m.emails) > maxEmails {
+		m.emails = m.emails[len(m.emails)-maxEmails:]
 	}
 
 	m.save()
@@ -75,14 +75,14 @@ func (m *Mailbox) Send(email Email) error {
 }
 
 // Routes mounts the dev mailbox UI onto the given router group.
-func (m *Mailbox) Routes(rg *gin.RouterGroup) {
+func (m *DevMailbox) Routes(rg *gin.RouterGroup) {
 	rg.GET("", handleList(m))
 	rg.GET("/:id", handleShow(m))
 	rg.POST("/clear", handleClear(m))
 }
 
 // List returns all stored emails in reverse chronological order.
-func (m *Mailbox) List() []StoredEmail {
+func (m *DevMailbox) List() []StoredEmail {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -94,7 +94,7 @@ func (m *Mailbox) List() []StoredEmail {
 }
 
 // Get returns a single email by ID.
-func (m *Mailbox) Get(id int) (StoredEmail, bool) {
+func (m *DevMailbox) Get(id int) (StoredEmail, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -107,7 +107,7 @@ func (m *Mailbox) Get(id int) (StoredEmail, bool) {
 }
 
 // Clear removes all stored emails.
-func (m *Mailbox) Clear() {
+func (m *DevMailbox) Clear() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -115,7 +115,7 @@ func (m *Mailbox) Clear() {
 	m.save()
 }
 
-func (m *Mailbox) load() {
+func (m *DevMailbox) load() {
 	data, err := os.ReadFile(m.path)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
@@ -132,7 +132,7 @@ func (m *Mailbox) load() {
 	m.nextID = snap.NextID
 }
 
-func (m *Mailbox) save() {
+func (m *DevMailbox) save() {
 	dir := filepath.Dir(m.path)
 	if dir != "." {
 		if err := os.MkdirAll(dir, 0755); err != nil {
