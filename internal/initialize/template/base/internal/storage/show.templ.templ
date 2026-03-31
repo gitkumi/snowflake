@@ -2,7 +2,6 @@ package storage
 
 import (
 	"fmt"
-	"net/url"
 
 	ui "{{ .Name }}/internal/html/ui"
 )
@@ -19,8 +18,7 @@ templ storageShow(object StoredObject) {
 			<div>{ "Time: " + object.CreatedAt.Format("2006-01-02 15:04:05") }</div>
 		</div>
 		<div style="margin-top: 12px;">
-			<a href={ templ.SafeURL("/dev/storage/raw?key=" + url.QueryEscape(object.Key)) }>[raw]</a>
-			<form method="POST" action="/dev/storage/delete" style="display: inline; margin-left: 12px;">
+			<form method="POST" action="/dev/storage/delete" style="display: inline;">
 				<input type="hidden" name="key" value={ object.Key }/>
 				@ui.LinkButton("submit", "delete", ui.LinkButtonStyle(false), templ.Attributes{})
 			</form>

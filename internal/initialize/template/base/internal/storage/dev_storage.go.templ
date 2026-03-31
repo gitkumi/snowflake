@@ -60,7 +60,6 @@ func NewDevStorage(path string, logger *slog.Logger) *DevStorage {
 func (s *DevStorage) Routes(rg *gin.RouterGroup) {
 	rg.GET("", handleList(s))
 	rg.GET("/object", handleShow(s))
-	rg.GET("/raw", handleRaw(s))
 	rg.POST("/upload", handleUpload(s))
 	rg.POST("/delete", handleDelete(s))
 	rg.POST("/clear", handleClear(s))

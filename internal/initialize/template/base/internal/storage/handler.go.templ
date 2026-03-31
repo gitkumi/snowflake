@@ -1,10 +1,8 @@
 package storage
 
 import (
-	"mime"
 	"net/http"
 	"net/url"
-	"path"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -40,25 +38,6 @@ func handleShow(store *DevStorage) gin.HandlerFunc {
 		if err := storageShow(object).Render(c.Request.Context(), c.Writer); err != nil {
 			c.String(http.StatusInternalServerError, "failed to render object")
 		}
-	}
-}
-
-func handleRaw(store *DevStorage) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		key := strings.TrimSpace(c.Query("key"))
-		if key == "" {
-			c.String(http.StatusBadRequest, "key is required")
-			return
-		}
-
-		object, ok := store.GetObject(key)
-		if !ok {
-			c.String(http.StatusNotFound, "object not found")
-			return
-		}
-
-		c.Header("Content-Disposition", mime.FormatMediaType("inline", map[string]string{"filename": path.Base(object.Key)}))
-		c.Data(http.StatusOK, object.ContentType, object.Data)
 	}
 }
 

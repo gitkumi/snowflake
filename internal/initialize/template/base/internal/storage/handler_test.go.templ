@@ -46,7 +46,7 @@ func TestHandleUploadStoresObjectAndRedirects(t *testing.T) {
 	}
 }
 
-func TestHandleShowAndRaw(t *testing.T) {
+func TestHandleShow(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	store := NewDevStorage(filepath.Join(t.TempDir(), "storage.json"), slog.Default())
@@ -74,17 +74,21 @@ func TestHandleShowAndRaw(t *testing.T) {
 	if !strings.Contains(showBody, "plain text object") {
 		t.Fatalf("expected show page to contain object preview, got %q", showBody)
 	}
+}
+
+func TestRoutesDoNotExposeRaw(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	store := NewDevStorage(filepath.Join(t.TempDir(), "storage.json"), slog.Default())
+	router := gin.New()
+	store.Routes(router.Group("/dev/storage"))
 
 	rawReq := httptest.NewRequest(http.MethodGet, "/dev/storage/raw?key=docs%2Freadme.txt", nil)
 	rawRec := httptest.NewRecorder()
 	router.ServeHTTP(rawRec, rawReq)
 
-	if rawRec.Code != http.StatusOK {
-		t.Fatalf("expected raw status %d, got %d", http.StatusOK, rawRec.Code)
-	}
-
-	if got := rawRec.Body.String(); got != "plain text object" {
-		t.Fatalf("expected raw response body, got %q", got)
+	if rawRec.Code != http.StatusNotFound {
+		t.Fatalf("expected raw status %d, got %d", http.StatusNotFound, rawRec.Code)
 	}
 }
 
