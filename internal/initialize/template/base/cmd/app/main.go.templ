@@ -24,11 +24,10 @@ import (
 {{- end }}
 )
 
-func init() {
-	_ = godotenv.Load(".env")
-}
-
 func main() {
+	if err := godotenv.Load(".env"); err != nil {
+		log.Fatal("failed to load .env: ", err)
+	}
 	vars := env.Load()
 
 	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{
