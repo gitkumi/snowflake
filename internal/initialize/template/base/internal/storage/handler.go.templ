@@ -1,0 +1,121 @@
+package storage
+
+import (
+	"mime"
+	"net/http"
+	"net/url"
+	"path"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+)
+
+func handleList(store *DevStorage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		objects := store.ListObjects("")
+		c.Status(http.StatusOK)
+		c.Header("Content-Type", "text/html; charset=utf-8")
+		if err := storageList(objects).Render(c.Request.Context(), c.Writer); err != nil {
+			c.String(http.StatusInternalServerError, "failed to render storage")
+		}
+	}
+}
+
+func handleShow(store *DevStorage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		key := strings.TrimSpace(c.Query("key"))
+		if key == "" {
+			c.String(http.StatusBadRequest, "key is required")
+			return
+		}
+
+		object, ok := store.GetObject(key)
+		if !ok {
+			c.String(http.StatusNotFound, "object not found")
+			return
+		}
+
+		c.Status(http.StatusOK)
+		c.Header("Content-Type", "text/html; charset=utf-8")
+		if err := storageShow(object).Render(c.Request.Context(), c.Writer); err != nil {
+			c.String(http.StatusInternalServerError, "failed to render object")
+		}
+	}
+}
+
+func handleRaw(store *DevStorage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		key := strings.TrimSpace(c.Query("key"))
+		if key == "" {
+			c.String(http.StatusBadRequest, "key is required")
+			return
+		}
+
+		object, ok := store.GetObject(key)
+		if !ok {
+			c.String(http.StatusNotFound, "object not found")
+			return
+		}
+
+		c.Header("Content-Disposition", mime.FormatMediaType("inline", map[string]string{"filename": path.Base(object.Key)}))
+		c.Data(http.StatusOK, object.ContentType, object.Data)
+	}
+}
+
+func handleUpload(store *DevStorage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		key := strings.TrimSpace(c.PostForm("key"))
+
+		header, err := c.FormFile("file")
+		if err != nil {
+			c.String(http.StatusBadRequest, "file is required")
+			return
+		}
+
+		if key == "" {
+			key = header.Filename
+		}
+		if key == "" {
+			c.String(http.StatusBadRequest, "key is required (provide a key or upload a file with a name)")
+			return
+		}
+
+		file, err := header.Open()
+		if err != nil {
+			c.String(http.StatusInternalServerError, "failed to read file")
+			return
+		}
+		defer file.Close()
+
+		if _, err := store.Upload(key, file); err != nil {
+			c.String(http.StatusInternalServerError, "failed to store object")
+			return
+		}
+
+		c.Redirect(http.StatusSeeOther, "/dev/storage/object?key="+url.QueryEscape(key))
+	}
+}
+
+func handleDelete(store *DevStorage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		key := strings.TrimSpace(c.PostForm("key"))
+		if key == "" {
+			c.String(http.StatusBadRequest, "key is required")
+			return
+		}
+
+		if err := store.Delete(key); err != nil {
+			c.String(http.StatusNotFound, "object not found")
+			return
+		}
+
+		c.Redirect(http.StatusSeeOther, "/dev/storage")
+	}
+}
+
+func handleClear(store *DevStorage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		store.Clear()
+		c.Redirect(http.StatusSeeOther, "/dev/storage")
+	}
+}

@@ -176,8 +176,8 @@ func normalizeConfig(cfg *Config) error {
 		cfg.ContainerRuntime = ContainerRuntimePodman
 	}
 
-	// SMTP requires Templ for the dev mailbox UI
-	if cfg.SMTP {
+	// SMTP and Storage require Templ for their dev UIs.
+	if cfg.SMTP || cfg.Storage {
 		cfg.Templ = true
 	}
 

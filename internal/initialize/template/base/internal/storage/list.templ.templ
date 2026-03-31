@@ -1,0 +1,48 @@
+package storage
+
+import (
+	"fmt"
+	"net/url"
+
+	ui "{{ .Name }}/internal/html/ui"
+)
+
+templ storageList(objects []StoredObject) {
+	@layout("Storage") {
+		<div style="margin-bottom: 12px;">
+			Dev Storage ({ fmt.Sprintf("%d", len(objects)) })
+			if len(objects) > 0 {
+				<form method="POST" action="/dev/storage/clear" style="display: inline;">
+					@ui.LinkButton("submit", "clear", ui.LinkButtonStyle(false), templ.Attributes{})
+				</form>
+			}
+		</div>
+		<hr/>
+		<form method="POST" action="/dev/storage/upload" enctype="multipart/form-data" style="margin-top: 12px;">
+			@ui.LabeledInput("Key", "text", "key", "key", "uploads/example.txt", false, templ.Attributes{})
+			<div style="margin-top: 12px;">
+				<label for="file">File</label>
+			</div>
+			<div style="margin-top: 4px;">
+				<input type="file" id="file" name="file" required style="width: 100%; font: inherit;"/>
+			</div>
+			<div style="margin-top: 12px;">
+				@ui.LinkButton("submit", "Upload", ui.LinkButtonStyle(false), templ.Attributes{})
+			</div>
+		</form>
+		<hr/>
+		if len(objects) == 0 {
+			<div style="margin-top: 12px;">
+				No objects yet.
+			</div>
+		} else {
+			for _, object := range objects {
+				<div style="margin: 4px 0;">
+					<a href={ templ.SafeURL("/dev/storage/object?key=" + url.QueryEscape(object.Key)) }>
+						{ object.CreatedAt.Format("15:04:05") } { object.Key } { formatObjectSize(object.Size) } { truncateLabel(object.ContentType, 24) }
+					</a>
+				</div>
+			}
+		}
+	}
+}

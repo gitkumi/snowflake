@@ -1,0 +1,33 @@
+package storage
+
+import (
+	"fmt"
+	"net/url"
+
+	ui "{{ .Name }}/internal/html/ui"
+)
+
+templ storageShow(object StoredObject) {
+	@layout(object.Key) {
+		<div>
+			<a href="/dev/storage">&lt;- Storage</a>
+		</div>
+		<div style="margin-top: 24px;">
+			<div>{ "Key: " + object.Key }</div>
+			<div>{ "Size: " + formatObjectSize(object.Size) + " (" + fmt.Sprintf("%d bytes", object.Size) + ")" }</div>
+			<div>{ "Type: " + object.ContentType }</div>
+			<div>{ "Time: " + object.CreatedAt.Format("2006-01-02 15:04:05") }</div>
+		</div>
+		<div style="margin-top: 12px;">
+			<a href={ templ.SafeURL("/dev/storage/raw?key=" + url.QueryEscape(object.Key)) }>[raw]</a>
+			<form method="POST" action="/dev/storage/delete" style="display: inline; margin-left: 12px;">
+				<input type="hidden" name="key" value={ object.Key }/>
+				@ui.LinkButton("submit", "delete", ui.LinkButtonStyle(false), templ.Attributes{})
+			</form>
+		</div>
+		<hr/>
+		<div style="margin-top: 8px;">
+			<pre>{ objectPreview(object) }</pre>
+		</div>
+	}
+}

@@ -18,23 +18,12 @@ templ mailboxList(emails []StoredEmail) {
 		</div>
 		<hr/>
 		<form method="POST" action="/dev/mailbox/send" style="margin-top: 12px;">
-			<div>
-				<label for="to">To</label>
-			</div>
-			<div style="margin-top: 4px;">
-				<input type="email" id="to" name="to" placeholder="user@example.com" required style="width: 100%; font: inherit; padding: 8px; border: 1px solid #000;"/>
+			@ui.LabeledInput("To", "email", "to", "to", "user@example.com", true, templ.Attributes{})
+			<div style="margin-top: 12px;">
+				@ui.LabeledInput("Subject", "text", "subject", "subject", "Hello!", true, templ.Attributes{})
 			</div>
 			<div style="margin-top: 12px;">
-				<label for="subject">Subject</label>
-			</div>
-			<div style="margin-top: 4px;">
-				<input type="text" id="subject" name="subject" placeholder="Hello!" required style="width: 100%; font: inherit; padding: 8px; border: 1px solid #000;"/>
-			</div>
-			<div style="margin-top: 12px;">
-				<label for="body">Body</label>
-			</div>
-			<div style="margin-top: 4px;">
-				<textarea id="body" name="body" placeholder="Write your email content here..." required style="width: 100%; min-height: 160px; font: inherit; padding: 8px; border: 1px solid #000;"></textarea>
+				@ui.LabeledTextArea("Body", "body", "body", "Write your email content here...", true, templ.Attributes{})
 			</div>
 			<div style="margin-top: 12px;">
 				@ui.LinkButton("submit", "Send", ui.LinkButtonStyle(false), templ.Attributes{})

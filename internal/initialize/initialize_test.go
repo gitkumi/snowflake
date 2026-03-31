@@ -171,6 +171,8 @@ func TestGenerateTempl(t *testing.T) {
 		filepath.Join(projectDir, "internal", "html", "pages", "index.templ"),
 		filepath.Join(projectDir, "internal", "html", "ui", "button.go"),
 		filepath.Join(projectDir, "internal", "html", "ui", "button.templ"),
+		filepath.Join(projectDir, "internal", "html", "ui", "dev_page.templ"),
+		filepath.Join(projectDir, "internal", "html", "ui", "field.templ"),
 		filepath.Join(projectDir, "cmd", "app", "handlers", "page_handler.go"),
 	}
 	for _, f := range templFiles {
@@ -202,6 +204,8 @@ func TestGenerateNoTempl(t *testing.T) {
 		filepath.Join(projectDir, "internal", "html", "pages", "index.templ"),
 		filepath.Join(projectDir, "internal", "html", "ui", "button.go"),
 		filepath.Join(projectDir, "internal", "html", "ui", "button.templ"),
+		filepath.Join(projectDir, "internal", "html", "ui", "dev_page.templ"),
+		filepath.Join(projectDir, "internal", "html", "ui", "field.templ"),
 		filepath.Join(projectDir, "cmd", "app", "handlers", "page_handler.go"),
 	}
 	for _, f := range templFiles {
@@ -232,6 +236,8 @@ func TestGenerateSMTPForcesTempl(t *testing.T) {
 		filepath.Join(projectDir, "internal", "html", "pages", "index.templ"),
 		filepath.Join(projectDir, "internal", "html", "ui", "button.go"),
 		filepath.Join(projectDir, "internal", "html", "ui", "button.templ"),
+		filepath.Join(projectDir, "internal", "html", "ui", "dev_page.templ"),
+		filepath.Join(projectDir, "internal", "html", "ui", "field.templ"),
 		filepath.Join(projectDir, "cmd", "app", "handlers", "page_handler.go"),
 		filepath.Join(projectDir, "internal", "smtp", "dev_mailbox.go"),
 		filepath.Join(projectDir, "internal", "smtp", "handler_test.go"),
@@ -239,6 +245,68 @@ func TestGenerateSMTPForcesTempl(t *testing.T) {
 	for _, f := range requiredFiles {
 		if _, err := os.Stat(f); os.IsNotExist(err) {
 			t.Fatalf("required SMTP file not created at %s", f)
+		}
+	}
+}
+
+func TestGenerateStorageForcesTempl(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := initialize.Generate(&initialize.Config{
+		Quiet:     true,
+		Name:      "acme",
+		Database:  initialize.DatabaseNone,
+		OutputDir: tmpDir,
+		Git:       false,
+		Storage:   true,
+		Templ:     false,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	requiredFiles := []string{
+		filepath.Join(projectDir, "internal", "html", "pages", "index.templ"),
+		filepath.Join(projectDir, "internal", "html", "ui", "button.go"),
+		filepath.Join(projectDir, "internal", "html", "ui", "button.templ"),
+		filepath.Join(projectDir, "internal", "html", "ui", "dev_page.templ"),
+		filepath.Join(projectDir, "internal", "html", "ui", "field.templ"),
+		filepath.Join(projectDir, "cmd", "app", "handlers", "page_handler.go"),
+		filepath.Join(projectDir, "internal", "storage", "dev_storage.go"),
+		filepath.Join(projectDir, "internal", "storage", "handler.go"),
+		filepath.Join(projectDir, "internal", "storage", "handler_test.go"),
+		filepath.Join(projectDir, "internal", "storage", "layout.templ"),
+		filepath.Join(projectDir, "internal", "storage", "list.templ"),
+		filepath.Join(projectDir, "internal", "storage", "show.templ"),
+	}
+	for _, f := range requiredFiles {
+		if _, err := os.Stat(f); os.IsNotExist(err) {
+			t.Fatalf("required storage file not created at %s", f)
+		}
+	}
+}
+
+func TestGenerateNoStorage(t *testing.T) {
+	projectDir := generateProject(t, initialize.Config{
+		Quiet:    true,
+		Name:     "acme",
+		Database: initialize.DatabaseNone,
+		Git:      false,
+		Storage:  false,
+	})
+
+	forbiddenFiles := []string{
+		filepath.Join(projectDir, "internal", "storage", "dev_storage.go"),
+		filepath.Join(projectDir, "internal", "storage", "handler.go"),
+		filepath.Join(projectDir, "internal", "storage", "handler_test.go"),
+		filepath.Join(projectDir, "internal", "storage", "layout.templ"),
+		filepath.Join(projectDir, "internal", "storage", "list.templ"),
+		filepath.Join(projectDir, "internal", "storage", "show.templ"),
+	}
+	for _, f := range forbiddenFiles {
+		if _, err := os.Stat(f); !os.IsNotExist(err) {
+			t.Fatalf("storage file should not exist at %s", f)
 		}
 	}
 }
@@ -308,6 +376,24 @@ func TestGeneratedMailboxCreatesStorageDirectory(t *testing.T) {
 	}
 	if !strings.Contains(mailbox, "filepath.Dir") {
 		t.Fatal("mailbox should derive the persistence directory from the mailbox path")
+	}
+}
+
+func TestGeneratedDevStorageCreatesStorageDirectory(t *testing.T) {
+	projectDir := generateProject(t, initialize.Config{
+		Quiet:    true,
+		Name:     "acme",
+		Database: initialize.DatabaseNone,
+		Git:      false,
+		Storage:  true,
+	})
+
+	storage := mustReadFile(t, filepath.Join(projectDir, "internal", "storage", "dev_storage.go"))
+	if !strings.Contains(storage, "os.MkdirAll") {
+		t.Fatal("dev storage should create its persistence directory before writing")
+	}
+	if !strings.Contains(storage, "filepath.Dir") {
+		t.Fatal("dev storage should derive the persistence directory from the storage path")
 	}
 }
 

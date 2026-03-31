@@ -1,0 +1,141 @@
+package storage
+
+import (
+	"bytes"
+	"io"
+	"log/slog"
+	"mime/multipart"
+	"net/http"
+	"net/http/httptest"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+)
+
+func TestHandleUploadStoresObjectAndRedirects(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	store := NewDevStorage(filepath.Join(t.TempDir(), "storage.json"), slog.Default())
+	router := gin.New()
+	store.Routes(router.Group("/dev/storage"))
+
+	body, contentType := newUploadBody(t, "uploads/hello.txt", "hello.txt", "hello from dev storage")
+	req := httptest.NewRequest(http.MethodPost, "/dev/storage/upload", body)
+	req.Header.Set("Content-Type", contentType)
+
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("expected status %d, got %d", http.StatusSeeOther, rec.Code)
+	}
+
+	if got := rec.Header().Get("Location"); got != "/dev/storage/object?key=uploads%2Fhello.txt" {
+		t.Fatalf("expected redirect to stored object, got %q", got)
+	}
+
+	object, ok := store.GetObject("uploads/hello.txt")
+	if !ok {
+		t.Fatal("expected object to be stored")
+	}
+
+	if got := string(object.Data); got != "hello from dev storage" {
+		t.Fatalf("expected stored body, got %q", got)
+	}
+}
+
+func TestHandleShowAndRaw(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	store := NewDevStorage(filepath.Join(t.TempDir(), "storage.json"), slog.Default())
+	router := gin.New()
+	store.Routes(router.Group("/dev/storage"))
+
+	body, contentType := newUploadBody(t, "docs/readme.txt", "readme.txt", "plain text object")
+	uploadReq := httptest.NewRequest(http.MethodPost, "/dev/storage/upload", body)
+	uploadReq.Header.Set("Content-Type", contentType)
+	uploadRec := httptest.NewRecorder()
+	router.ServeHTTP(uploadRec, uploadReq)
+
+	showReq := httptest.NewRequest(http.MethodGet, "/dev/storage/object?key=docs%2Freadme.txt", nil)
+	showRec := httptest.NewRecorder()
+	router.ServeHTTP(showRec, showReq)
+
+	if showRec.Code != http.StatusOK {
+		t.Fatalf("expected show status %d, got %d", http.StatusOK, showRec.Code)
+	}
+
+	showBody := showRec.Body.String()
+	if !strings.Contains(showBody, "docs/readme.txt") {
+		t.Fatalf("expected show page to contain object key, got %q", showBody)
+	}
+	if !strings.Contains(showBody, "plain text object") {
+		t.Fatalf("expected show page to contain object preview, got %q", showBody)
+	}
+
+	rawReq := httptest.NewRequest(http.MethodGet, "/dev/storage/raw?key=docs%2Freadme.txt", nil)
+	rawRec := httptest.NewRecorder()
+	router.ServeHTTP(rawRec, rawReq)
+
+	if rawRec.Code != http.StatusOK {
+		t.Fatalf("expected raw status %d, got %d", http.StatusOK, rawRec.Code)
+	}
+
+	if got := rawRec.Body.String(); got != "plain text object" {
+		t.Fatalf("expected raw response body, got %q", got)
+	}
+}
+
+func TestHandleClearRemovesObjects(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	store := NewDevStorage(filepath.Join(t.TempDir(), "storage.json"), slog.Default())
+	router := gin.New()
+	store.Routes(router.Group("/dev/storage"))
+
+	body, contentType := newUploadBody(t, "uploads/clear.txt", "clear.txt", "to be cleared")
+	uploadReq := httptest.NewRequest(http.MethodPost, "/dev/storage/upload", body)
+	uploadReq.Header.Set("Content-Type", contentType)
+	uploadRec := httptest.NewRecorder()
+	router.ServeHTTP(uploadRec, uploadReq)
+
+	clearReq := httptest.NewRequest(http.MethodPost, "/dev/storage/clear", nil)
+	clearRec := httptest.NewRecorder()
+	router.ServeHTTP(clearRec, clearReq)
+
+	if clearRec.Code != http.StatusSeeOther {
+		t.Fatalf("expected clear status %d, got %d", http.StatusSeeOther, clearRec.Code)
+	}
+
+	if got := len(store.ListObjects("")); got != 0 {
+		t.Fatalf("expected storage to be empty, got %d objects", got)
+	}
+}
+
+func newUploadBody(t *testing.T, key string, filename string, body string) (io.Reader, string) {
+	t.Helper()
+
+	var buffer bytes.Buffer
+	writer := multipart.NewWriter(&buffer)
+
+	if err := writer.WriteField("key", key); err != nil {
+		t.Fatalf("failed to write key: %v", err)
+	}
+
+	part, err := writer.CreateFormFile("file", filename)
+	if err != nil {
+		t.Fatalf("failed to create file part: %v", err)
+	}
+
+	if _, err := io.Copy(part, strings.NewReader(body)); err != nil {
+		t.Fatalf("failed to write file content: %v", err)
+	}
+
+	if err := writer.Close(); err != nil {
+		t.Fatalf("failed to close multipart writer: %v", err)
+	}
+
+	return &buffer, writer.FormDataContentType()
+}

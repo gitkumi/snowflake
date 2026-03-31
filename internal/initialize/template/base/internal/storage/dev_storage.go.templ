@@ -1,0 +1,352 @@
+package storage
+
+import (
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"log/slog"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"path"
+	"path/filepath"
+	"slices"
+	"strings"
+	"sync"
+	"time"
+	"unicode/utf8"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/gin-gonic/gin"
+)
+
+const (
+	maxObjects       = 1000
+	objectPreviewMax = 4096
+)
+
+// StoredObject is a development-only snapshot of an uploaded object.
+type StoredObject struct {
+	Key         string    `json:"key"`
+	ContentType string    `json:"content_type"`
+	Data        []byte    `json:"data"`
+	Size        int64     `json:"size"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+// DevStorage captures objects locally for development inspection.
+type DevStorage struct {
+	mu      sync.RWMutex
+	objects []StoredObject
+	path    string
+	logger  *slog.Logger
+}
+
+type storageSnapshot struct {
+	Objects []StoredObject `json:"objects"`
+}
+
+// NewDevStorage creates a new DevStorage backed by a JSON snapshot file.
+func NewDevStorage(path string, logger *slog.Logger) *DevStorage {
+	s := &DevStorage{path: path, logger: logger}
+	s.load()
+	return s
+}
+
+// Routes mounts the dev storage UI onto the given router group.
+func (s *DevStorage) Routes(rg *gin.RouterGroup) {
+	rg.GET("", handleList(s))
+	rg.GET("/object", handleShow(s))
+	rg.GET("/raw", handleRaw(s))
+	rg.POST("/upload", handleUpload(s))
+	rg.POST("/delete", handleDelete(s))
+	rg.POST("/clear", handleClear(s))
+}
+
+// Get downloads an object into a temporary file and returns its local path.
+func (s *DevStorage) Get(key string) (string, error) {
+	object, ok := s.GetObject(key)
+	if !ok {
+		return "", os.ErrNotExist
+	}
+
+	file, err := os.CreateTemp("", "{{ .Name }}-dev-storage-*-"+tempPattern(path.Base(object.Key)))
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	if _, err := file.Write(object.Data); err != nil {
+		os.Remove(file.Name())
+		return "", err
+	}
+
+	return file.Name(), nil
+}
+
+// List returns stored objects matching prefix in reverse chronological order.
+func (s *DevStorage) List(prefix string) ([]*s3.Object, error) {
+	objects := s.ListObjects(prefix)
+	items := make([]*s3.Object, 0, len(objects))
+	for _, object := range objects {
+		lastModified := object.CreatedAt
+		items = append(items, &s3.Object{
+			Key:          aws.String(object.Key),
+			Size:         aws.Int64(object.Size),
+			LastModified: &lastModified,
+		})
+	}
+	return items, nil
+}
+
+// Upload stores an object locally for later inspection.
+func (s *DevStorage) Upload(key string, file multipart.File) (string, error) {
+	key = strings.TrimSpace(key)
+	if key == "" {
+		return "", errors.New("key is required")
+	}
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return "", err
+	}
+
+	contentType := http.DetectContentType(data)
+	if len(data) == 0 {
+		contentType = "application/octet-stream"
+	}
+
+	object := StoredObject{
+		Key:         key,
+		ContentType: contentType,
+		Data:        data,
+		Size:        int64(len(data)),
+		CreatedAt:   time.Now(),
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if idx := s.indexLocked(key); idx >= 0 {
+		s.objects = append(s.objects[:idx], s.objects[idx+1:]...)
+	}
+
+	s.objects = append(s.objects, object)
+	if len(s.objects) > maxObjects {
+		s.objects = s.objects[len(s.objects)-maxObjects:]
+	}
+
+	s.save()
+	s.logger.Debug("object captured in dev storage", "key", key, "size", object.Size)
+
+	return key, nil
+}
+
+// Delete removes a stored object.
+func (s *DevStorage) Delete(key string) error {
+	key = strings.TrimSpace(key)
+	if key == "" {
+		return errors.New("key is required")
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	idx := s.indexLocked(key)
+	if idx < 0 {
+		return os.ErrNotExist
+	}
+
+	s.objects = append(s.objects[:idx], s.objects[idx+1:]...)
+	s.save()
+
+	return nil
+}
+
+// Clear removes all stored objects.
+func (s *DevStorage) Clear() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.objects = nil
+	s.save()
+}
+
+// GetObject returns a single stored object by key.
+func (s *DevStorage) GetObject(key string) (StoredObject, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	idx := s.indexLocked(key)
+	if idx < 0 {
+		return StoredObject{}, false
+	}
+
+	return cloneObject(s.objects[idx]), true
+}
+
+// ListObjects returns objects filtered by prefix in reverse chronological order.
+func (s *DevStorage) ListObjects(prefix string) []StoredObject {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	items := make([]StoredObject, 0, len(s.objects))
+	for _, object := range s.objects {
+		if prefix != "" && !strings.HasPrefix(object.Key, prefix) {
+			continue
+		}
+		items = append(items, cloneObject(object))
+	}
+
+	slices.SortStableFunc(items, func(a StoredObject, b StoredObject) int {
+		if a.CreatedAt.Equal(b.CreatedAt) {
+			return strings.Compare(a.Key, b.Key)
+		}
+		if a.CreatedAt.After(b.CreatedAt) {
+			return -1
+		}
+		return 1
+	})
+
+	return items
+}
+
+func (s *DevStorage) indexLocked(key string) int {
+	for i := range s.objects {
+		if s.objects[i].Key == key {
+			return i
+		}
+	}
+	return -1
+}
+
+func (s *DevStorage) load() {
+	data, err := os.ReadFile(s.path)
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			s.logger.Error("failed to read storage file", "path", s.path, "error", err)
+		}
+		return
+	}
+
+	var snap storageSnapshot
+	if err := json.Unmarshal(data, &snap); err != nil {
+		s.logger.Error("failed to parse storage file", "path", s.path, "error", err)
+		return
+	}
+
+	s.objects = snap.Objects
+}
+
+func (s *DevStorage) save() {
+	dir := filepath.Dir(s.path)
+	if dir != "." {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			s.logger.Error("failed to create storage directory", "path", dir, "error", err)
+			return
+		}
+	}
+
+	data, err := json.Marshal(storageSnapshot{Objects: s.objects})
+	if err != nil {
+		s.logger.Error("failed to marshal storage snapshot", "error", err)
+		return
+	}
+
+	if err := os.WriteFile(s.path, data, 0644); err != nil {
+		s.logger.Error("failed to write storage file", "path", s.path, "error", err)
+	}
+}
+
+func cloneObject(object StoredObject) StoredObject {
+	out := object
+	out.Data = append([]byte(nil), object.Data...)
+	return out
+}
+
+func formatObjectSize(size int64) string {
+	switch {
+	case size < 1024:
+		return fmt.Sprintf("%dB", size)
+	case size < 1024*1024:
+		return fmt.Sprintf("%.1fKB", float64(size)/1024)
+	default:
+		return fmt.Sprintf("%.1fMB", float64(size)/(1024*1024))
+	}
+}
+
+func objectPreview(object StoredObject) string {
+	data := object.Data
+	truncated := len(data) > objectPreviewMax
+	if truncated {
+		data = data[:objectPreviewMax]
+	}
+
+	if objectIsText(object) {
+		data = validUTF8Prefix(data)
+		text := string(data)
+		if truncated {
+			return text + "\n\n[preview truncated]"
+		}
+		if text == "" {
+			return "(empty)"
+		}
+		return text
+	}
+
+	dump := hex.Dump(data)
+	if truncated {
+		return dump + fmt.Sprintf("\n[%d more bytes]", len(object.Data)-len(data))
+	}
+	if dump == "" {
+		return "(empty)"
+	}
+	return dump
+}
+
+func objectIsText(object StoredObject) bool {
+	contentType := strings.ToLower(object.ContentType)
+	switch {
+	case strings.HasPrefix(contentType, "text/"):
+		return true
+	case strings.Contains(contentType, "json"):
+		return true
+	case strings.Contains(contentType, "xml"):
+		return true
+	case strings.Contains(contentType, "javascript"):
+		return true
+	case strings.Contains(contentType, "yaml"):
+		return true
+	}
+
+	return utf8.Valid(object.Data)
+}
+
+func truncateLabel(value string, width int) string {
+	if len(value) <= width {
+		return value
+	}
+	if width <= 3 {
+		return value[:width]
+	}
+	return value[:width-3] + "..."
+}
+
+func validUTF8Prefix(data []byte) []byte {
+	for len(data) > 0 && !utf8.Valid(data) {
+		data = data[:len(data)-1]
+	}
+	return data
+}
+
+func tempPattern(key string) string {
+	key = strings.ReplaceAll(key, string(filepath.Separator), "_")
+	key = strings.ReplaceAll(key, "/", "_")
+	if key == "" || key == "." {
+		return "object"
+	}
+	return key
+}

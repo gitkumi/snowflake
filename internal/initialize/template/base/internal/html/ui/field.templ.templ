@@ -1,0 +1,19 @@
+package ui
+
+templ LabeledInput(label string, inputType string, id string, name string, placeholder string, required bool, attrs templ.Attributes) {
+	<div>
+		<label for={ id }>{ label }</label>
+	</div>
+	<div style="margin-top: 4px;">
+		<input type={ inputType } id={ id } name={ name } placeholder={ placeholder } required?={ required } style="width: 100%; font: inherit; padding: 8px; border: 1px solid #000;" { attrs... }/>
+	</div>
+}
+
+templ LabeledTextArea(label string, id string, name string, placeholder string, required bool, attrs templ.Attributes) {
+	<div>
+		<label for={ id }>{ label }</label>
+	</div>
+	<div style="margin-top: 4px;">
+		<textarea id={ id } name={ name } placeholder={ placeholder } required?={ required } style="width: 100%; min-height: 160px; font: inherit; padding: 8px; border: 1px solid #000;" { attrs... }></textarea>
+	</div>
+}

@@ -1,0 +1,29 @@
+package ui
+
+templ DevPage(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title }</title>
+			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+			<style>
+				*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+				body { font-family: "SF Mono", Monaco, Consolas, "Courier New", monospace; font-size: 18px; background: #fff; color: #000; max-width: 768px; padding: 20px; }
+				a, button { color: #000; font: inherit; }
+				button { padding: 0; border: 0; background: none; cursor: pointer; text-decoration: underline; }
+				input, textarea { color: inherit; background: #fff; font: inherit; }
+				pre { white-space: pre-wrap; word-wrap: break-word; }
+				hr { border: none; border-top: 1px dashed #000; margin: 12px 0; }
+				iframe { width: 100%; min-height: 400px; border: 1px solid #000; margin-top: 8px; }
+				[x-cloak] { display: none !important; }
+				.line { margin-top: 4px; }
+				.actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+			</style>
+		</head>
+		<body>
+			{ children... }
+		</body>
+	</html>
+}

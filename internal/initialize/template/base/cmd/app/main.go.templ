@@ -64,16 +64,19 @@ func main() {
 {{- end }}
 
 {{- if .Storage }}
-	stor := storage.NewMockStorage()
-	// TODO: uncomment this after setting up your S3
-	// stor := storage.NewS3Storage(&storage.S3StorageConfig{
-	// 	AccessKey:   vars.S3AccessKey,
-	// 	SecretKey:   vars.S3SecretKey,
-	// 	EndpointURL: vars.S3EndpointURL,
-	// 	Region:      vars.S3Region,
-	// 	Bucket:      vars.S3Bucket,
-	// })
-	_ = stor // TODO: remove this when you use storage
+	var stor storage.Storage
+	switch vars.Environment {
+	case "production":
+		stor = storage.NewS3Storage(&storage.S3StorageConfig{
+			AccessKey:   vars.S3AccessKey,
+			SecretKey:   vars.S3SecretKey,
+			EndpointURL: vars.S3EndpointURL,
+			Region:      vars.S3Region,
+			Bucket:      vars.S3Bucket,
+		})
+	default:
+		stor = storage.NewDevStorage("tmp/snowflake_dev_storage.json", logger)
+	}
 {{- end }}
 
 {{- if eq .KeyValueStore "redis" }}
@@ -115,6 +118,11 @@ func main() {
 {{- if .SMTP }}
 	if dm, ok := mailer.(*smtp.DevMailbox); ok {
 		dm.Routes(srv.router.Group("/dev/mailbox"))
+	}
+{{- end }}
+{{- if .Storage }}
+	if ds, ok := stor.(*storage.DevStorage); ok {
+		ds.Routes(srv.router.Group("/dev/storage"))
 	}
 {{- end }}
 
