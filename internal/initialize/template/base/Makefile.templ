@@ -2,10 +2,12 @@ APP_NAME := app
 APP_DIR := cmd/app
 BUILD_DIR := bin
 CONTAINER_RUNTIME := {{ .ContainerRuntime.String }}
+
+include .env
 {{- if ne .Database.String "none" }}
 
 GOOSE_DRIVER := {{ .Database.Driver }}
-GOOSE_DBSTRING := {{ .Database.ConnString .Name }}
+GOOSE_DBSTRING := $(DATABASE_CONN_STRING)
 GOOSE_MIGRATION_DIR := $(APP_DIR)/sql/migrations
 export GOOSE_DRIVER GOOSE_DBSTRING GOOSE_MIGRATION_DIR
 {{- end }}
