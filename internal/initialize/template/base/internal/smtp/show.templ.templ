@@ -1,5 +1,7 @@
 package smtp
 
+import ui "{{ .Name }}/internal/html/ui"
+
 templ mailboxShow(email StoredEmail) {
 	@layout(email.Subject) {
 		<div>
@@ -13,8 +15,14 @@ templ mailboxShow(email StoredEmail) {
 		</div>
 		<hr/>
 		<div x-data="{ tab: 'html' }" style="margin-top: 8px;">
-			<button type="button" x-bind:style="'font-family: inherit; font-size: inherit; background: none; border: none; cursor: pointer; text-decoration: underline;' + (tab === 'html' ? ' font-weight: bold;' : '')" @click="tab = 'html'">[html]</button>
-			<button type="button" x-bind:style="'font-family: inherit; font-size: inherit; background: none; border: none; cursor: pointer; text-decoration: underline;' + (tab === 'text' ? ' font-weight: bold;' : '')" @click="tab = 'text'">[text]</button>
+			@ui.LinkButton("button", "html", ui.LinkButtonStyle(true), templ.Attributes{
+				"x-bind:style": ui.LinkButtonBindStyle("tab === 'html'"),
+				"@click": "tab = 'html'",
+			})
+			@ui.LinkButton("button", "text", ui.LinkButtonStyle(false), templ.Attributes{
+				"x-bind:style": ui.LinkButtonBindStyle("tab === 'text'"),
+				"@click": "tab = 'text'",
+			})
 			<div x-show="tab === 'html'" style="margin-top: 8px;">
 				<iframe srcdoc={ email.Body }></iframe>
 			</div>

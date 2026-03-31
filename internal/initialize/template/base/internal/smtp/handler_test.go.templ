@@ -1,0 +1,92 @@
+package smtp
+
+import (
+	"io"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+)
+
+func TestRoutesSend(t *testing.T) {
+	t.Setenv("GIN_MODE", gin.TestMode)
+	gin.SetMode(gin.TestMode)
+
+	store := NewDevMailbox(
+		"dev@example.com",
+		filepath.Join(t.TempDir(), "mailbox.json"),
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
+
+	router := gin.New()
+	store.Routes(router.Group("/dev/mailbox"))
+
+	form := url.Values{
+		"to":      {"user@example.com"},
+		"subject": {"Mailbox smoke test"},
+		"body":    {"Hello from the dev mailbox UI."},
+	}
+	req := httptest.NewRequest(http.MethodPost, "/dev/mailbox/send", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("expected status %d, got %d", http.StatusSeeOther, rec.Code)
+	}
+	if got := rec.Header().Get("Location"); got != "/dev/mailbox" {
+		t.Fatalf("expected redirect to /dev/mailbox, got %q", got)
+	}
+
+	emails := store.List()
+	if len(emails) != 1 {
+		t.Fatalf("expected 1 stored email, got %d", len(emails))
+	}
+	if emails[0].To != "user@example.com" {
+		t.Fatalf("expected To to be user@example.com, got %q", emails[0].To)
+	}
+	if emails[0].Subject != "Mailbox smoke test" {
+		t.Fatalf("expected Subject to match, got %q", emails[0].Subject)
+	}
+	if emails[0].Body != "Hello from the dev mailbox UI." {
+		t.Fatalf("expected Body to match, got %q", emails[0].Body)
+	}
+}
+
+func TestHandleSendValidation(t *testing.T) {
+	t.Setenv("GIN_MODE", gin.TestMode)
+	gin.SetMode(gin.TestMode)
+
+	store := NewDevMailbox(
+		"dev@example.com",
+		filepath.Join(t.TempDir(), "mailbox.json"),
+		slog.New(slog.NewTextHandler(io.Discard, nil)),
+	)
+
+	router := gin.New()
+	router.POST("/dev/mailbox/send", handleSend(store))
+
+	form := url.Values{
+		"to":      {"   "},
+		"subject": {"Missing recipient"},
+		"body":    {"Body"},
+	}
+	req := httptest.NewRequest(http.MethodPost, "/dev/mailbox/send", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
+	}
+	if got := len(store.List()); got != 0 {
+		t.Fatalf("expected no stored emails, got %d", got)
+	}
+}

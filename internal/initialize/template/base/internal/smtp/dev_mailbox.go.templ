@@ -78,6 +78,7 @@ func (m *DevMailbox) Send(email Email) error {
 func (m *DevMailbox) Routes(rg *gin.RouterGroup) {
 	rg.GET("", handleList(m))
 	rg.GET("/:id", handleShow(m))
+	rg.POST("/send", handleSend(m))
 	rg.POST("/clear", handleClear(m))
 }
 

@@ -1,0 +1,14 @@
+package ui
+
+const LinkButtonBaseStyle = "font-family: inherit; font-size: inherit; background: none; border: none; cursor: pointer; text-decoration: underline;"
+
+func LinkButtonStyle(active bool) string {
+	if active {
+		return LinkButtonBaseStyle + " font-weight: bold;"
+	}
+	return LinkButtonBaseStyle
+}
+
+func LinkButtonBindStyle(activeExpression string) string {
+	return "'" + LinkButtonBaseStyle + "' + (" + activeExpression + " ? ' font-weight: bold;' : '')"
+}

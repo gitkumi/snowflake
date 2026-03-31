@@ -169,6 +169,8 @@ func TestGenerateTempl(t *testing.T) {
 	// Check templ files exist
 	templFiles := []string{
 		filepath.Join(projectDir, "internal", "html", "pages", "index.templ"),
+		filepath.Join(projectDir, "internal", "html", "ui", "button.go"),
+		filepath.Join(projectDir, "internal", "html", "ui", "button.templ"),
 		filepath.Join(projectDir, "cmd", "app", "handlers", "page_handler.go"),
 	}
 	for _, f := range templFiles {
@@ -198,6 +200,8 @@ func TestGenerateNoTempl(t *testing.T) {
 	// Check templ files do NOT exist
 	templFiles := []string{
 		filepath.Join(projectDir, "internal", "html", "pages", "index.templ"),
+		filepath.Join(projectDir, "internal", "html", "ui", "button.go"),
+		filepath.Join(projectDir, "internal", "html", "ui", "button.templ"),
 		filepath.Join(projectDir, "cmd", "app", "handlers", "page_handler.go"),
 	}
 	for _, f := range templFiles {
@@ -226,8 +230,11 @@ func TestGenerateSMTPForcesTempl(t *testing.T) {
 	projectDir := filepath.Join(tmpDir, "acme")
 	requiredFiles := []string{
 		filepath.Join(projectDir, "internal", "html", "pages", "index.templ"),
+		filepath.Join(projectDir, "internal", "html", "ui", "button.go"),
+		filepath.Join(projectDir, "internal", "html", "ui", "button.templ"),
 		filepath.Join(projectDir, "cmd", "app", "handlers", "page_handler.go"),
 		filepath.Join(projectDir, "internal", "smtp", "dev_mailbox.go"),
+		filepath.Join(projectDir, "internal", "smtp", "handler_test.go"),
 	}
 	for _, f := range requiredFiles {
 		if _, err := os.Stat(f); os.IsNotExist(err) {

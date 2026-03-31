@@ -1,0 +1,5 @@
+package ui
+
+templ LinkButton(buttonType string, label string, style string, attrs templ.Attributes) {
+	<button type={ buttonType } style={ style } { attrs... }>{ "[" + label + "]" }</button>
+}
