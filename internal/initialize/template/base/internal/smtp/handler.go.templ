@@ -1,0 +1,49 @@
+package smtp
+
+import (
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
+)
+
+func handleList(store *Mailbox) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		emails := store.List()
+		c.Status(http.StatusOK)
+		c.Header("Content-Type", "text/html; charset=utf-8")
+		if err := mailboxList(emails).Render(c.Request.Context(), c.Writer); err != nil {
+			c.String(http.StatusInternalServerError, "failed to render mailbox")
+		}
+	}
+}
+
+func handleShow(store *Mailbox) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		idStr := c.Param("id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			c.String(http.StatusBadRequest, "invalid email id")
+			return
+		}
+
+		email, ok := store.Get(id)
+		if !ok {
+			c.String(http.StatusNotFound, "email not found")
+			return
+		}
+
+		c.Status(http.StatusOK)
+		c.Header("Content-Type", "text/html; charset=utf-8")
+		if err := mailboxShow(email).Render(c.Request.Context(), c.Writer); err != nil {
+			c.String(http.StatusInternalServerError, "failed to render email")
+		}
+	}
+}
+
+func handleClear(store *Mailbox) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		store.Clear()
+		c.Redirect(http.StatusSeeOther, "/dev/mailbox")
+	}
+}

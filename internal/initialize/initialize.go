@@ -176,6 +176,11 @@ func normalizeConfig(cfg *Config) error {
 		cfg.ContainerRuntime = ContainerRuntimePodman
 	}
 
+	// SMTP requires Templ for the dev mailbox UI
+	if cfg.SMTP {
+		cfg.Templ = true
+	}
+
 	if !cfg.Database.IsValid() {
 		return fmt.Errorf("invalid database type: %s. Must be one of: %v", cfg.Database, AllDatabases)
 	}

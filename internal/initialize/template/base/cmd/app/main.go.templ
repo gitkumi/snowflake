@@ -43,21 +43,27 @@ func main() {
 		log.Fatal("failed to create DB: ", err)
 	}
 {{- end }}
-	
+
 {{- if .SMTP }}
-	mailer := smtp.NewMockMailer()
-	// TODO: uncomment this after setting up your SMTP
-	// mailer, err := smtp.NewSMTPMailer(&smtp.SMTPMailerConfig{
-	// 	Host:     vars.SMTPHost,
-	// 	Port:     vars.SMTPPort,
-	// 	Username: vars.SMTPUsername,
-	// 	Password: vars.SMTPPassword,
-	// 	From:     vars.SMTPFrom,
-	// })
-	// if err != nil {
-	// 	log.Fatal("failed to create mailer: ", err)
-	// }
-	_ = mailer // TODO: remove this when you use the mailer
+	var mailer smtp.Mailer
+	var mailbox *smtp.Mailbox
+	switch vars.Environment {
+	case "production":
+		m, err := smtp.NewSMTPMailer(&smtp.SMTPMailerConfig{
+			Host:     vars.SMTPHost,
+			Port:     vars.SMTPPort,
+			Username: vars.SMTPUsername,
+			Password: vars.SMTPPassword,
+			From:     vars.SMTPFrom,
+		})
+		if err != nil {
+			log.Fatal("failed to create mailer: ", err)
+		}
+		mailer = m
+	default:
+		mailbox = smtp.NewMailbox(vars.SMTPFrom, "tmp/snowflake_dev_mailbox.json", logger)
+		mailer = mailbox
+	}
 {{- end }}
 
 {{- if .Storage }}
@@ -101,10 +107,19 @@ func main() {
 		vk,
 {{- end }}
 		logger,
+{{- if .SMTP }}
+		mailer,
+{{- end }}
 		vars.BaseURL,
 		vars.Port,
 		vars.GinMode,
 	)
+
+{{- if .SMTP }}
+	if mailbox != nil {
+		mailbox.Routes(srv.router.Group("/dev/mailbox"))
+	}
+{{- end }}
 
 	if err := srv.run(); err != nil {
 		log.Fatal("server error: ", err)

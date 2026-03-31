@@ -1,0 +1,30 @@
+package smtp
+
+import "fmt"
+
+templ mailboxList(emails []StoredEmail) {
+	@layout("Inbox") {
+		<div style="margin-bottom: 12px;">
+			Dev Mailbox ({ fmt.Sprintf("%d", len(emails)) })
+			if len(emails) > 0 {
+				<form method="POST" action="/dev/mailbox/clear" style="display: inline;">
+					<button type="submit" style="font-family: inherit; font-size: inherit; background: none; border: none; cursor: pointer; text-decoration: underline;">[clear]</button>
+				</form>
+			}
+		</div>
+		<hr/>
+		if len(emails) == 0 {
+			<div style="margin-top: 12px;">
+				No emails yet.
+			</div>
+		} else {
+			for _, email := range emails {
+				<div style="margin: 4px 0;">
+					<a href={ templ.SafeURL(fmt.Sprintf("/dev/mailbox/%d", email.ID)) }>
+						{ email.CreatedAt.Format("15:04:05") } { email.To } { email.Subject }
+					</a>
+				</div>
+			}
+		}
+	}
+}

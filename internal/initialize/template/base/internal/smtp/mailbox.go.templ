@@ -1,0 +1,139 @@
+package smtp
+
+import (
+	"encoding/json"
+	"log/slog"
+	"os"
+	"sync"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+const maxMailboxEmails = 1000
+
+// StoredEmail wraps an Email with metadata for the mailbox UI.
+type StoredEmail struct {
+	ID        int
+	To        string
+	From      string
+	Subject   string
+	Body      string
+	CreatedAt time.Time
+}
+
+// Mailbox captures emails for development inspection, persisted to a JSON file.
+type Mailbox struct {
+	mu     sync.RWMutex
+	emails []StoredEmail
+	nextID int
+	from   string
+	path   string
+	logger *slog.Logger
+}
+
+type snapshot struct {
+	NextID int           `json:"next_id"`
+	Emails []StoredEmail `json:"emails"`
+}
+
+// NewMailbox creates a new Mailbox, loading any previously persisted emails from path.
+func NewMailbox(from string, path string, logger *slog.Logger) *Mailbox {
+	m := &Mailbox{from: from, path: path, logger: logger}
+	m.load()
+	return m
+}
+
+// Send captures an email into the mailbox, implementing the Mailer interface.
+func (m *Mailbox) Send(email Email) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.nextID++
+	m.emails = append(m.emails, StoredEmail{
+		ID:        m.nextID,
+		To:        email.To,
+		From:      m.from,
+		Subject:   email.Subject,
+		Body:      email.Body,
+		CreatedAt: time.Now(),
+	})
+
+	if len(m.emails) > maxMailboxEmails {
+		m.emails = m.emails[len(m.emails)-maxMailboxEmails:]
+	}
+
+	m.save()
+	m.logger.Debug("email captured in dev mailbox",
+		"id", m.nextID,
+		"to", email.To,
+		"subject", email.Subject,
+	)
+	return nil
+}
+
+// Routes mounts the dev mailbox UI onto the given router group.
+func (m *Mailbox) Routes(rg *gin.RouterGroup) {
+	rg.GET("", handleList(m))
+	rg.GET("/:id", handleShow(m))
+	rg.POST("/clear", handleClear(m))
+}
+
+// List returns all stored emails in reverse chronological order.
+func (m *Mailbox) List() []StoredEmail {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	out := make([]StoredEmail, len(m.emails))
+	for i, e := range m.emails {
+		out[len(m.emails)-1-i] = e
+	}
+	return out
+}
+
+// Get returns a single email by ID.
+func (m *Mailbox) Get(id int) (StoredEmail, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, e := range m.emails {
+		if e.ID == id {
+			return e, true
+		}
+	}
+	return StoredEmail{}, false
+}
+
+// Clear removes all stored emails.
+func (m *Mailbox) Clear() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.emails = nil
+	m.save()
+}
+
+func (m *Mailbox) load() {
+	data, err := os.ReadFile(m.path)
+	if err != nil {
+		return // file doesn't exist yet
+	}
+	var snap snapshot
+	if err := json.Unmarshal(data, &snap); err != nil {
+		m.logger.Error("failed to parse mailbox file", "path", m.path, "error", err)
+		return
+	}
+	m.emails = snap.Emails
+	m.nextID = snap.NextID
+}
+
+func (m *Mailbox) save() {
+	data, err := json.Marshal(snapshot{NextID: m.nextID, Emails: m.emails})
+	if err != nil {
+		m.logger.Error("failed to marshal mailbox", "error", err)
+		return
+	}
+	if err := os.WriteFile(m.path, data, 0644); err != nil {
+		m.logger.Error("failed to write mailbox file", "path", m.path, "error", err)
+	}
+}

@@ -33,7 +33,12 @@ func NewProject(cfg *Config) *Project {
 			FilePaths: []string{
 				"/internal/smtp/mailer.go",
 				"/internal/smtp/smtp.go",
-				"/internal/smtp/mock.go",
+				"/internal/smtp/mailbox.go",
+				"/internal/smtp/handler.go",
+				"/internal/smtp/layout.templ",
+				"/internal/smtp/list.templ",
+				"/internal/smtp/show.templ",
+				"/cmd/app/handlers/send_handler.go",
 			},
 			Check: func(p *Project) bool { return !p.SMTP },
 		},

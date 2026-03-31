@@ -8,12 +8,50 @@ templ Index() {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>{{ .Name }}</title>
 			<link rel="stylesheet" href="/static/reset.css"/>
+{{- if .SMTP }}
+			<style>
+				body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; }
+				.container { max-width: 640px; margin: 0 auto; padding: 48px 24px; }
+				h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+				p { color: #6b7280; font-size: 14px; margin-bottom: 32px; }
+				a { color: #2563eb; }
+
+				form { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+				label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px; }
+				input, textarea { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit; margin-bottom: 16px; }
+				input:focus, textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.15); }
+				textarea { min-height: 120px; resize: vertical; }
+				button { padding: 8px 20px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; }
+				button:hover { background: #1d4ed8; }
+
+				.links { margin-top: 16px; font-size: 13px; color: #6b7280; }
+			</style>
+{{- end }}
 		</head>
 		<body>
+{{- if .SMTP }}
+			<div class="container">
+				<h1>{{ .Name }}</h1>
+				<p>Send a test email — it will appear in the <a href="/dev/mailbox">Dev Mailbox</a>.</p>
+				<form method="POST" action="/send">
+					<label for="to">To</label>
+					<input type="email" id="to" name="to" placeholder="user@example.com" required/>
+					<label for="subject">Subject</label>
+					<input type="text" id="subject" name="subject" placeholder="Hello!" required/>
+					<label for="body">Body</label>
+					<textarea id="body" name="body" placeholder="Write your email content here..." required></textarea>
+					<button type="submit">Send Email</button>
+				</form>
+				<div class="links">
+					<a href="/dev/mailbox">Open Dev Mailbox →</a>
+				</div>
+			</div>
+{{- else }}
 			<main>
 				<h1>Welcome to {{ .Name }}</h1>
 				<p>Edit this page at <code>internal/html/pages/index.templ</code></p>
 			</main>
+{{- end }}
 		</body>
 	</html>
 }

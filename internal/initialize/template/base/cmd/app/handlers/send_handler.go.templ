@@ -1,0 +1,37 @@
+package handlers
+
+import (
+	"net/http"
+
+	"{{ .Name }}/internal/smtp"
+
+	"github.com/gin-gonic/gin"
+)
+
+func HandleSendEmail(mailer smtp.Mailer) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		to := c.PostForm("to")
+		subject := c.PostForm("subject")
+		body := c.PostForm("body")
+
+		if to == "" || subject == "" || body == "" {
+			c.String(http.StatusBadRequest, "to, subject, and body are required")
+			return
+		}
+
+		if err := mailer.Send(smtp.Email{
+			To:      to,
+			Subject: subject,
+			Body:    body,
+		}); err != nil {
+			c.String(http.StatusInternalServerError, "failed to send email")
+			return
+		}
+
+		referer := c.GetHeader("Referer")
+		if referer == "" {
+			referer = "/"
+		}
+		c.Redirect(http.StatusSeeOther, referer)
+	}
+}

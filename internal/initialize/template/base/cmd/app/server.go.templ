@@ -13,6 +13,9 @@ import (
 	"syscall"
 	"time"
 
+{{- if .SMTP }}
+	"{{ .Name }}/internal/smtp"
+{{- end }}
 {{- if eq .KeyValueStore "redis" }}
 	"github.com/redis/go-redis/v9"
 {{- else if eq .KeyValueStore "valkey" }}
@@ -32,6 +35,9 @@ type server struct {
 	valkey  valkey.Client
 {{- end }}
 	logger  *slog.Logger
+{{- if .SMTP }}
+	mailer  smtp.Mailer
+{{- end }}
 	baseURL string
 	port    int
 	router  *gin.Engine
@@ -48,6 +54,9 @@ func newServer(
 	vk valkey.Client,
 {{- end }}
 	logger *slog.Logger,
+{{- if .SMTP }}
+	mailer smtp.Mailer,
+{{- end }}
 	baseURL string,
 	port int,
 	ginMode string,
@@ -64,6 +73,9 @@ func newServer(
 		valkey:        vk,
 {{- end }}
 		logger:        logger,
+{{- if .SMTP }}
+		mailer:        mailer,
+{{- end }}
 		baseURL:       baseURL,
 		port:          port,
 	}
