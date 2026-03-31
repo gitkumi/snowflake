@@ -64,10 +64,10 @@ type sqlcConfig struct {
 }
 
 func readDatabase(dir string) (string, error) {
-	data, err := os.ReadFile(filepath.Join(dir, "cmd", "app", "sqlc.yaml"))
+	data, err := os.ReadFile(filepath.Join(dir, "sqlc.yaml"))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return "", fmt.Errorf("cmd/app/sqlc.yaml not found - is this a Snowflake project with a database?")
+			return "", fmt.Errorf("sqlc.yaml not found - is this a Snowflake project with a database?")
 		}
 		return "", fmt.Errorf("failed to read sqlc.yaml: %w", err)
 	}

@@ -125,9 +125,9 @@ func Run(input GenerateInput) error {
 		return err
 	}
 
-	if err := runGenCommand("sqlc", []string{"generate"}, filepath.Join(input.ProjectDir, "cmd", "app"), input.Quiet); err != nil {
+	if err := runGenCommand("sqlc", []string{"generate", "-f", "sqlc.yaml"}, input.ProjectDir, input.Quiet); err != nil {
 		if !input.Quiet {
-			fmt.Println("  warning: sqlc generate failed. Run it manually: cd cmd/app && sqlc generate")
+			fmt.Println("  warning: sqlc generate failed. Run it manually: sqlc generate -f sqlc.yaml")
 		}
 	}
 

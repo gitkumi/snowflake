@@ -227,13 +227,13 @@ func TestEnvFilesGenerated(t *testing.T) {
 	projectDir := filepath.Join(tmpDir, "acme")
 
 	// Check for .env file
-	envPath := filepath.Join(projectDir, "cmd", "app", ".env")
+	envPath := filepath.Join(projectDir, ".env")
 	if _, err := os.Stat(envPath); os.IsNotExist(err) {
 		t.Fatalf(".env file not created at %s", envPath)
 	}
 
 	// Check for .env.test file
-	envTestPath := filepath.Join(projectDir, "cmd", "app", ".env.test")
+	envTestPath := filepath.Join(projectDir, ".env.test")
 	if _, err := os.Stat(envTestPath); os.IsNotExist(err) {
 		t.Fatalf(".env.test file not created at %s", envTestPath)
 	}

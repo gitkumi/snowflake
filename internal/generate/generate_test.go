@@ -237,14 +237,14 @@ func setupProjectDir(t *testing.T, projectDir string, database string) {
 	sqlcYaml := fmt.Sprintf(`version: "2"
 sql:
 - engine: "%s"
-  queries: "./sql/queries/"
-  schema: "./sql/migrations/"
+  queries: "./cmd/app/sql/queries/"
+  schema: "./cmd/app/sql/migrations/"
   gen:
     go:
       package: "repo"
-      out: "./repo"
+      out: "./cmd/app/repo"
 `, engine)
-	if err := os.WriteFile(filepath.Join(projectDir, "cmd", "app", "sqlc.yaml"), []byte(sqlcYaml), 0666); err != nil {
+	if err := os.WriteFile(filepath.Join(projectDir, "sqlc.yaml"), []byte(sqlcYaml), 0666); err != nil {
 		t.Fatal(err)
 	}
 

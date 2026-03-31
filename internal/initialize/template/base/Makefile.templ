@@ -60,7 +60,7 @@ app.run:
 
 .PHONY: app.dev
 app.dev:
-	cd $(APP_DIR) && air
+	air
 
 {{- if .Templ }}
 
@@ -95,7 +95,7 @@ app.test.watch:
 
 .PHONY: app.sqlc
 app.sqlc:
-	sqlc generate -f $(APP_DIR)/sqlc.yaml
+	sqlc generate -f sqlc.yaml
 
 .PHONY: app.db
 app.db:
@@ -161,23 +161,23 @@ app.db.drop:
 
 .PHONY: app.docker.build
 app.docker.build:
-	$(CONTAINER_RUNTIME) build -f $(APP_DIR)/Dockerfile -t {{ .Name }}-$(APP_NAME):latest .
+	$(CONTAINER_RUNTIME) build -f Dockerfile -t {{ .Name }}-$(APP_NAME):latest .
 
 .PHONY: app.docker.run
 app.docker.run:
-	$(CONTAINER_RUNTIME) run --rm -p 8080:8080 --env-file $(APP_DIR)/.env {{ .Name }}-$(APP_NAME):latest
+	$(CONTAINER_RUNTIME) run --rm -p 8080:8080 --env-file .env {{ .Name }}-$(APP_NAME):latest
 
 {{- if .HasDevEnv }}
 
 .PHONY: app.devenv.up
 app.devenv.up:
-	$(CONTAINER_RUNTIME) compose -f $(APP_DIR)/devenv.yaml up -d
+	$(CONTAINER_RUNTIME) compose -f devenv.yaml up -d
 
 .PHONY: app.devenv.down
 app.devenv.down:
-	$(CONTAINER_RUNTIME) compose -f $(APP_DIR)/devenv.yaml down -v
+	$(CONTAINER_RUNTIME) compose -f devenv.yaml down -v
 
 .PHONY: app.devenv.logs
 app.devenv.logs:
-	$(CONTAINER_RUNTIME) compose -f $(APP_DIR)/devenv.yaml logs -f
+	$(CONTAINER_RUNTIME) compose -f devenv.yaml logs -f
 {{- end }}

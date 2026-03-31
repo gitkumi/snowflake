@@ -22,8 +22,8 @@ func NewProject(cfg *Config) *Project {
 	project.fileExclusions = []FileExclusion{
 		{
 			FilePaths: []string{
-				"/cmd/app/devenv.yaml",
-				"/cmd/app/Dockerfile",
+				"/devenv.yaml",
+				"/Dockerfile",
 			},
 			Check: func(p *Project) bool {
 				return p.Database == DatabaseSQLite3 && !p.HasKeyValueStore()
@@ -47,11 +47,11 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/cmd/app/sqlc.yaml",
+				"/sqlc.yaml",
 				"/cmd/app/sql/sql.go",
 				"/cmd/migrator/main.go",
 				"/internal/db/db.go",
-				"/cmd/app/devenv.yaml",
+				"/devenv.yaml",
 			},
 			Check: func(p *Project) bool { return p.Database == DatabaseNone },
 		},
