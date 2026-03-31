@@ -2,8 +2,10 @@ package smtp
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -116,7 +118,10 @@ func (m *Mailbox) Clear() {
 func (m *Mailbox) load() {
 	data, err := os.ReadFile(m.path)
 	if err != nil {
-		return // file doesn't exist yet
+		if !errors.Is(err, os.ErrNotExist) {
+			m.logger.Error("failed to read mailbox file", "path", m.path, "error", err)
+		}
+		return
 	}
 	var snap snapshot
 	if err := json.Unmarshal(data, &snap); err != nil {
@@ -128,6 +133,14 @@ func (m *Mailbox) load() {
 }
 
 func (m *Mailbox) save() {
+	dir := filepath.Dir(m.path)
+	if dir != "." {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			m.logger.Error("failed to create mailbox directory", "path", dir, "error", err)
+			return
+		}
+	}
+
 	data, err := json.Marshal(snapshot{NextID: m.nextID, Emails: m.emails})
 	if err != nil {
 		m.logger.Error("failed to marshal mailbox", "error", err)

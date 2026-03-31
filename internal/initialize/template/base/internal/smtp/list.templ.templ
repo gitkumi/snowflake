@@ -13,6 +13,30 @@ templ mailboxList(emails []StoredEmail) {
 			}
 		</div>
 		<hr/>
+		<form method="POST" action="/dev/mailbox/send" style="margin-top: 12px;">
+			<div>
+				<label for="to">To</label>
+			</div>
+			<div style="margin-top: 4px;">
+				<input type="email" id="to" name="to" placeholder="user@example.com" required style="width: 100%; font: inherit; padding: 8px; border: 1px solid #000;"/>
+			</div>
+			<div style="margin-top: 12px;">
+				<label for="subject">Subject</label>
+			</div>
+			<div style="margin-top: 4px;">
+				<input type="text" id="subject" name="subject" placeholder="Hello!" required style="width: 100%; font: inherit; padding: 8px; border: 1px solid #000;"/>
+			</div>
+			<div style="margin-top: 12px;">
+				<label for="body">Body</label>
+			</div>
+			<div style="margin-top: 4px;">
+				<textarea id="body" name="body" placeholder="Write your email content here..." required style="width: 100%; min-height: 160px; font: inherit; padding: 8px; border: 1px solid #000;"></textarea>
+			</div>
+			<div style="margin-top: 12px;">
+				<button type="submit" style="font: inherit; padding: 8px 12px; border: 1px solid #000; background: #fff; cursor: pointer;">Send Email</button>
+			</div>
+		</form>
+		<hr/>
 		if len(emails) == 0 {
 			<div style="margin-top: 12px;">
 				No emails yet.

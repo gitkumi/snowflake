@@ -19,9 +19,6 @@ func (s *server) newRouter() *gin.Engine {
 	router.StaticFS("/static", http.FS(html.StaticFS))
 	router.GET("/", handlers.HandleIndex())
 {{- end }}
-{{- if .SMTP }}
-	router.POST("/send", handlers.HandleSendEmail(s.mailer))
-{{- end }}
 
 	api := router.Group("/api")
 	{

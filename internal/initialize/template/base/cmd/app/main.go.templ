@@ -1,6 +1,9 @@
 package main
 
 import (
+{{- if .SMTP }}
+	"{{ .Name }}/cmd/app/handlers"
+{{- end }}
 	"log"
 	"log/slog"
 	"os"
@@ -116,7 +119,9 @@ func main() {
 
 {{- if .SMTP }}
 	if mailbox != nil {
-		mailbox.Routes(srv.router.Group("/dev/mailbox"))
+		devMailbox := srv.router.Group("/dev/mailbox")
+		devMailbox.POST("/send", handlers.HandleSendEmail(mailbox))
+		mailbox.Routes(devMailbox)
 	}
 {{- end }}
 

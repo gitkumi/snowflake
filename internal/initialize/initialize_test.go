@@ -207,6 +207,35 @@ func TestGenerateNoTempl(t *testing.T) {
 	}
 }
 
+func TestGenerateSMTPForcesTempl(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	err := initialize.Generate(&initialize.Config{
+		Quiet:     true,
+		Name:      "acme",
+		Database:  initialize.DatabaseNone,
+		OutputDir: tmpDir,
+		Git:       false,
+		SMTP:      true,
+		Templ:     false,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	projectDir := filepath.Join(tmpDir, "acme")
+	requiredFiles := []string{
+		filepath.Join(projectDir, "internal", "html", "pages", "index.templ"),
+		filepath.Join(projectDir, "cmd", "app", "handlers", "page_handler.go"),
+		filepath.Join(projectDir, "internal", "smtp", "mailbox.go"),
+	}
+	for _, f := range requiredFiles {
+		if _, err := os.Stat(f); os.IsNotExist(err) {
+			t.Fatalf("required SMTP file not created at %s", f)
+		}
+	}
+}
+
 func TestEnvFilesGenerated(t *testing.T) {
 	tmpDir := t.TempDir()
 
@@ -254,6 +283,24 @@ func TestEnvFilesGenerated(t *testing.T) {
 	}
 	if len(envTestContent) == 0 {
 		t.Fatal(".env.test file is empty")
+	}
+}
+
+func TestGeneratedMailboxCreatesStorageDirectory(t *testing.T) {
+	projectDir := generateProject(t, initialize.Config{
+		Quiet:    true,
+		Name:     "acme",
+		Database: initialize.DatabaseNone,
+		Git:      false,
+		SMTP:     true,
+	})
+
+	mailbox := mustReadFile(t, filepath.Join(projectDir, "internal", "smtp", "mailbox.go"))
+	if !strings.Contains(mailbox, "os.MkdirAll") {
+		t.Fatal("mailbox should create its persistence directory before writing")
+	}
+	if !strings.Contains(mailbox, "filepath.Dir") {
+		t.Fatal("mailbox should derive the persistence directory from the mailbox path")
 	}
 }
 
@@ -388,4 +435,26 @@ func abs(x int) int {
 		return -x
 	}
 	return x
+}
+
+func generateProject(t *testing.T, cfg initialize.Config) string {
+	t.Helper()
+
+	cfg.OutputDir = t.TempDir()
+	if err := initialize.Generate(&cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	return filepath.Join(cfg.OutputDir, cfg.Name)
+}
+
+func mustReadFile(t *testing.T, path string) string {
+	t.Helper()
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("failed to read %s: %v", path, err)
+	}
+
+	return string(content)
 }

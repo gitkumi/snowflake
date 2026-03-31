@@ -167,7 +167,7 @@ app.docker.build:
 
 .PHONY: app.docker.run
 app.docker.run:
-	$(CONTAINER_RUNTIME) run --rm -p 8080:8080 --env-file .env {{ .Name }}-$(APP_NAME):latest
+	$(CONTAINER_RUNTIME) run --rm -p 8080:8080 -v $(CURDIR)/.env:/app/.env:ro {{ .Name }}-$(APP_NAME):latest
 
 {{- if .HasDevEnv }}
 
