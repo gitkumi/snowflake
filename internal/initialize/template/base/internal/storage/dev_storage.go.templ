@@ -20,7 +20,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+{{- if .DevStorageDashboard }}
 	"github.com/gin-gonic/gin"
+{{- end }}
 )
 
 const (
@@ -56,6 +58,8 @@ func NewDevStorage(path string, logger *slog.Logger) *DevStorage {
 	return s
 }
 
+{{- if .DevStorageDashboard }}
+
 // Routes mounts the dev storage UI onto the given router group.
 func (s *DevStorage) Routes(rg *gin.RouterGroup) {
 	rg.GET("", handleList(s))
@@ -64,6 +68,7 @@ func (s *DevStorage) Routes(rg *gin.RouterGroup) {
 	rg.POST("/delete", handleDelete(s))
 	rg.POST("/clear", handleClear(s))
 }
+{{- end }}
 
 // Get downloads an object into a temporary file and returns its local path.
 func (s *DevStorage) Get(key string) (string, error) {

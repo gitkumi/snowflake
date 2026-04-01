@@ -25,6 +25,10 @@ type Config struct {
 	Storage       bool
 	KeyValueStore KeyValueStore
 	Templ         bool
+
+	DevDBDashboard      bool
+	DevMailboxDashboard bool
+	DevStorageDashboard bool
 }
 
 // Generate creates the project files without running any external commands.
@@ -176,8 +180,19 @@ func normalizeConfig(cfg *Config) error {
 		cfg.ContainerRuntime = ContainerRuntimePodman
 	}
 
-	// SMTP and Storage require Templ for their dev UIs.
-	if cfg.SMTP || cfg.Storage {
+	// Dashboards are only valid when their parent feature is enabled.
+	if cfg.Database == DatabaseNone {
+		cfg.DevDBDashboard = false
+	}
+	if !cfg.SMTP {
+		cfg.DevMailboxDashboard = false
+	}
+	if !cfg.Storage {
+		cfg.DevStorageDashboard = false
+	}
+
+	// Dev dashboards require Templ for their UIs.
+	if cfg.DevDBDashboard || cfg.DevMailboxDashboard || cfg.DevStorageDashboard {
 		cfg.Templ = true
 	}
 

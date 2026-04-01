@@ -1,0 +1,9 @@
+package db
+
+import ui "{{ .Name }}/internal/html/ui"
+
+templ devDBLayout(title string) {
+	@ui.DevPage(title + " — Dev Database") {
+		{ children... }
+	}
+}

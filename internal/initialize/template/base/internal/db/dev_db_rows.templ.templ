@@ -1,0 +1,97 @@
+package db
+
+import (
+	"fmt"
+	"net/url"
+
+	ui "{{ .Name }}/internal/html/ui"
+)
+
+type devDBRowsData struct {
+	Table      string
+	Columns    []string
+	ColInfo    []columnInfo
+	Rows       [][]string
+	HasPK      bool
+	Total      int64
+	Page       int
+	TotalPages int
+	PerPage    int
+}
+
+func devDBRowPKQuery(columns []columnInfo, row []string, colNames []string) string {
+	q := url.Values{}
+	colMap := make(map[string]int, len(colNames))
+	for i, c := range colNames {
+		colMap[c] = i
+	}
+	for _, col := range columns {
+		if col.IsPrimaryKey {
+			if idx, ok := colMap[col.Name]; ok {
+				q.Set(col.Name, row[idx])
+			}
+		}
+	}
+	return q.Encode()
+}
+
+templ devDBRowsPage(data devDBRowsData) {
+	@devDBLayout(data.Table) {
+		<div style="margin-bottom: 8px;">
+			<a href="/dev/db">&lt;- tables</a>
+		</div>
+		<div style="margin-bottom: 12px;">
+			{ data.Table } ({ fmt.Sprintf("%d", data.Total) } rows)
+			if data.HasPK {
+				<a href={ templ.SafeURL(fmt.Sprintf("/dev/db/tables/%s/new", url.PathEscape(data.Table))) } style="text-decoration: underline;">[new]</a>
+			}
+		</div>
+		<hr/>
+		if len(data.Rows) == 0 {
+			<div>No rows.</div>
+		} else {
+			<div style="overflow-x: auto;">
+				<table style="border-collapse: collapse; width: 100%;">
+					<thead>
+						<tr>
+							for _, col := range data.Columns {
+								<th style="border: 1px solid #000; padding: 4px 8px; text-align: left;">{ col }</th>
+							}
+							if data.HasPK {
+								<th style="border: 1px solid #000; padding: 4px 8px;"></th>
+							}
+						</tr>
+					</thead>
+					<tbody>
+						for _, row := range data.Rows {
+							<tr>
+								for _, val := range row {
+									<td style="border: 1px solid #000; padding: 4px 8px;">{ devTruncateValue(val, 60) }</td>
+								}
+								if data.HasPK {
+									<td style="border: 1px solid #000; padding: 4px 8px;">
+										<a href={ templ.SafeURL(fmt.Sprintf("/dev/db/tables/%s/rows?%s", url.PathEscape(data.Table), devDBRowPKQuery(data.ColInfo, row, data.Columns))) } style="text-decoration: underline;">[view]</a>
+									</td>
+								}
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+		<hr/>
+		<div style="display: flex; gap: 12px; align-items: center;">
+			<span>Page { fmt.Sprintf("%d", data.Page) } of { fmt.Sprintf("%d", data.TotalPages) }</span>
+			if data.Page > 1 {
+				@ui.LinkButton("button", "prev", ui.LinkButtonStyle(false), templ.Attributes{
+					"onclick": fmt.Sprintf("window.location.href='/dev/db/tables/%s?page=%d&per_page=%d'", url.PathEscape(data.Table), data.Page-1, data.PerPage),
+				})
+			}
+			if data.Page < data.TotalPages {
+				@ui.LinkButton("button", "next", ui.LinkButtonStyle(false), templ.Attributes{
+					"onclick": fmt.Sprintf("window.location.href='/dev/db/tables/%s?page=%d&per_page=%d'", url.PathEscape(data.Table), data.Page+1, data.PerPage),
+				})
+			}
+		</div>
+	}
+}

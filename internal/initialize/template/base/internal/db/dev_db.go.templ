@@ -1,0 +1,28 @@
+package db
+
+import (
+	"database/sql"
+	"log/slog"
+
+	"github.com/gin-gonic/gin"
+)
+
+type DevDB struct {
+	db     *sql.DB
+	logger *slog.Logger
+}
+
+func NewDevDB(db *sql.DB, logger *slog.Logger) *DevDB {
+	return &DevDB{db: db, logger: logger}
+}
+
+func (d *DevDB) Routes(rg *gin.RouterGroup) {
+	rg.GET("", d.handleTableList)
+	rg.POST("/query", d.handleQueryExec)
+	rg.GET("/tables/:name", d.handleRowList)
+	rg.GET("/tables/:name/new", d.handleRowNew)
+	rg.GET("/tables/:name/rows", d.handleRowShow)
+	rg.POST("/tables/:name/create", d.handleRowCreate)
+	rg.POST("/tables/:name/update", d.handleRowUpdate)
+	rg.POST("/tables/:name/delete", d.handleRowDelete)
+}

@@ -1,0 +1,76 @@
+package db
+
+import (
+	"fmt"
+
+	ui "{{ .Name }}/internal/html/ui"
+)
+
+type devDBQueryData struct {
+	Result *queryResult
+}
+
+templ devDBTablesPage(tables []tableInfo, qd *devDBQueryData) {
+	@devDBLayout("Tables") {
+		<div style="margin-bottom: 12px;">
+			Dev Database ({ fmt.Sprintf("%d", len(tables)) } tables)
+		</div>
+		<hr/>
+		<form method="POST" action="/dev/db/query">
+			@ui.LabeledTextArea("SQL Query", "query", "query", "SELECT * FROM users LIMIT 10;", false, templ.Attributes{})
+			<div style="margin-top: 12px;">
+				@ui.LinkButton("submit", "Execute", ui.LinkButtonStyle(false), templ.Attributes{})
+			</div>
+		</form>
+		if qd != nil && qd.Result != nil {
+			<hr/>
+			if qd.Result.Error != "" {
+				<pre style="color: red;">{ qd.Result.Error }</pre>
+			} else if len(qd.Result.Columns) > 0 {
+				<div style="overflow-x: auto;">
+					<table style="border-collapse: collapse; width: 100%;">
+						<thead>
+							<tr>
+								for _, col := range qd.Result.Columns {
+									<th style="border: 1px solid #000; padding: 4px 8px; text-align: left;">{ col }</th>
+								}
+							</tr>
+						</thead>
+						<tbody>
+							for _, row := range qd.Result.Rows {
+								<tr>
+									for _, val := range row {
+										<td style="border: 1px solid #000; padding: 4px 8px;">{ devTruncateValue(val, 100) }</td>
+									}
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+				<div style="margin-top: 8px;">
+					{ fmt.Sprintf("%d", len(qd.Result.Rows)) } rows
+					if qd.Result.Truncated {
+						(truncated to { fmt.Sprintf("%d", len(qd.Result.Rows)) })
+					}
+				</div>
+			} else {
+				<div>
+					Query OK, { fmt.Sprintf("%d", qd.Result.Affected) } rows affected
+				</div>
+			}
+		}
+		<hr/>
+		if len(tables) == 0 {
+			<div style="margin-top: 12px;">No tables found.</div>
+		} else {
+			for _, t := range tables {
+				<div style="margin: 4px 0;">
+					<a href={ templ.SafeURL(fmt.Sprintf("/dev/db/tables/%s", t.Name)) }>
+						{ t.Name }
+					</a>
+					<span style="opacity: 0.6;">{ fmt.Sprintf("(%d rows)", t.RowCount) }</span>
+				</div>
+			}
+		}
+	}
+}

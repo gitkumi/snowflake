@@ -115,12 +115,17 @@ func main() {
 		vars.GinMode,
 	)
 
-{{- if .SMTP }}
+{{- if .DevDBDashboard }}
+	if vars.Environment == "development" {
+		db.NewDevDB(database, logger).Routes(srv.router.Group("/dev/db"))
+	}
+{{- end }}
+{{- if .DevMailboxDashboard }}
 	if dm, ok := mailer.(*smtp.DevMailbox); ok {
 		dm.Routes(srv.router.Group("/dev/mailbox"))
 	}
 {{- end }}
-{{- if .Storage }}
+{{- if .DevStorageDashboard }}
 	if ds, ok := stor.(*storage.DevStorage); ok {
 		ds.Routes(srv.router.Group("/dev/storage"))
 	}

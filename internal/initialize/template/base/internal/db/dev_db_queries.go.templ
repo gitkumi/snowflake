@@ -1,0 +1,501 @@
+package db
+
+import (
+	"database/sql"
+	"fmt"
+	"sort"
+	"strings"
+{{- if eq .Database.String "postgres" }}
+
+	"github.com/lib/pq"
+{{- end }}
+)
+
+type tableInfo struct {
+	Name     string
+	RowCount int64
+}
+
+type columnInfo struct {
+	Name            string
+	DataType        string
+	IsNullable      bool
+	IsPrimaryKey    bool
+	Default         string
+	IsAutoIncrement bool
+}
+
+type queryResult struct {
+	Columns   []string
+	Rows      [][]string
+	Affected  int64
+	Error     string
+	Truncated bool
+}
+
+func devQuoteIdent(name string) string {
+{{- if eq .Database.String "postgres" }}
+	return pq.QuoteIdentifier(name)
+{{- else if or (eq .Database.String "mysql") (eq .Database.String "mariadb") }}
+	return "`" + strings.ReplaceAll(name, "`", "``") + "`"
+{{- else }}
+	return `"` + strings.ReplaceAll(name, `"`, `""`) + `"`
+{{- end }}
+}
+
+func devPlaceholder(i int) string {
+{{- if eq .Database.String "postgres" }}
+	return fmt.Sprintf("$%d", i)
+{{- else }}
+	_ = i
+	return "?"
+{{- end }}
+}
+
+func devListTables(db *sql.DB) ([]tableInfo, error) {
+{{- if eq .Database.String "postgres" }}
+	rows, err := db.Query(`
+		SELECT t.table_name, COALESCE(s.n_live_tup, 0)
+		FROM information_schema.tables t
+		LEFT JOIN pg_stat_user_tables s ON s.relname = t.table_name
+		WHERE t.table_schema = 'public' AND t.table_type = 'BASE TABLE'
+		ORDER BY t.table_name
+	`)
+{{- else if or (eq .Database.String "mysql") (eq .Database.String "mariadb") }}
+	rows, err := db.Query(`
+		SELECT TABLE_NAME, TABLE_ROWS
+		FROM information_schema.TABLES
+		WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE'
+		ORDER BY TABLE_NAME
+	`)
+{{- else }}
+	rows, err := db.Query(`
+		SELECT name, 0
+		FROM sqlite_master
+		WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
+		ORDER BY name
+	`)
+{{- end }}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tables []tableInfo
+	for rows.Next() {
+		var t tableInfo
+		if err := rows.Scan(&t.Name, &t.RowCount); err != nil {
+			return nil, err
+		}
+		tables = append(tables, t)
+	}
+	return tables, rows.Err()
+}
+
+func devListColumns(db *sql.DB, table string) ([]columnInfo, error) {
+{{- if eq .Database.String "sqlite3" }}
+	rows, err := db.Query(fmt.Sprintf("PRAGMA table_info(%s)", devQuoteIdent(table)))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var cols []columnInfo
+	for rows.Next() {
+		var cid int
+		var c columnInfo
+		var notNull int
+		var dflt sql.NullString
+		var pk int
+		if err := rows.Scan(&cid, &c.Name, &c.DataType, &notNull, &dflt, &pk); err != nil {
+			return nil, err
+		}
+		c.IsNullable = notNull == 0
+		if dflt.Valid {
+			c.Default = dflt.String
+		}
+		c.IsPrimaryKey = pk > 0
+		cols = append(cols, c)
+	}
+{{- else }}
+	pkCols, err := devPrimaryKeyCols(db, table)
+	if err != nil {
+		return nil, err
+	}
+	pkSet := make(map[string]bool, len(pkCols))
+	for _, c := range pkCols {
+		pkSet[c] = true
+	}
+{{- if eq .Database.String "postgres" }}
+	rows, err := db.Query(`
+		SELECT column_name, data_type, is_nullable, COALESCE(column_default, '')
+		FROM information_schema.columns
+		WHERE table_schema = 'public' AND table_name = $1
+		ORDER BY ordinal_position
+	`, table)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var cols []columnInfo
+	for rows.Next() {
+		var c columnInfo
+		var nullable string
+		if err := rows.Scan(&c.Name, &c.DataType, &nullable, &c.Default); err != nil {
+			return nil, err
+		}
+		c.IsNullable = nullable == "YES"
+		c.IsPrimaryKey = pkSet[c.Name]
+		cols = append(cols, c)
+	}
+{{- else }}
+	rows, err := db.Query(`
+		SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COALESCE(COLUMN_DEFAULT, ''), EXTRA
+		FROM information_schema.COLUMNS
+		WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?
+		ORDER BY ORDINAL_POSITION
+	`, table)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var cols []columnInfo
+	for rows.Next() {
+		var c columnInfo
+		var nullable string
+		var extra string
+		if err := rows.Scan(&c.Name, &c.DataType, &nullable, &c.Default, &extra); err != nil {
+			return nil, err
+		}
+		c.IsNullable = nullable == "YES"
+		c.IsPrimaryKey = pkSet[c.Name]
+		c.IsAutoIncrement = strings.EqualFold(extra, "auto_increment")
+		cols = append(cols, c)
+	}
+{{- end }}
+{{- end }}
+	return cols, rows.Err()
+}
+
+func devPrimaryKeyCols(db *sql.DB, table string) ([]string, error) {
+{{- if eq .Database.String "sqlite3" }}
+	rows, err := db.Query(fmt.Sprintf("PRAGMA table_info(%s)", devQuoteIdent(table)))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var cols []string
+	for rows.Next() {
+		var cid int
+		var name, dataType string
+		var notNull int
+		var dflt sql.NullString
+		var pk int
+		if err := rows.Scan(&cid, &name, &dataType, &notNull, &dflt, &pk); err != nil {
+			return nil, err
+		}
+		if pk > 0 {
+			cols = append(cols, name)
+		}
+	}
+{{- else if eq .Database.String "postgres" }}
+	rows, err := db.Query(`
+		SELECT kcu.column_name
+		FROM information_schema.table_constraints tc
+		JOIN information_schema.key_column_usage kcu
+			ON tc.constraint_name = kcu.constraint_name
+			AND tc.table_schema = kcu.table_schema
+		WHERE tc.table_schema = 'public'
+			AND tc.table_name = $1
+			AND tc.constraint_type = 'PRIMARY KEY'
+		ORDER BY kcu.ordinal_position
+	`, table)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var cols []string
+	for rows.Next() {
+		var col string
+		if err := rows.Scan(&col); err != nil {
+			return nil, err
+		}
+		cols = append(cols, col)
+	}
+{{- else }}
+	rows, err := db.Query(`
+		SELECT COLUMN_NAME
+		FROM information_schema.KEY_COLUMN_USAGE
+		WHERE TABLE_SCHEMA = DATABASE()
+			AND TABLE_NAME = ?
+			AND CONSTRAINT_NAME = 'PRIMARY'
+		ORDER BY ORDINAL_POSITION
+	`, table)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var cols []string
+	for rows.Next() {
+		var col string
+		if err := rows.Scan(&col); err != nil {
+			return nil, err
+		}
+		cols = append(cols, col)
+	}
+{{- end }}
+	return cols, rows.Err()
+}
+
+func devCountRows(db *sql.DB, table string) (int64, error) {
+	var count int64
+	err := db.QueryRow(
+		fmt.Sprintf("SELECT COUNT(*) FROM %s", devQuoteIdent(table)),
+	).Scan(&count)
+	return count, err
+}
+
+func devSelectRows(db *sql.DB, table string, columns []columnInfo, limit, offset int) ([]string, [][]string, error) {
+	pkCols := devPKColumns(columns)
+	orderBy := ""
+	if len(pkCols) > 0 {
+		quoted := make([]string, len(pkCols))
+		for i, c := range pkCols {
+			quoted[i] = devQuoteIdent(c)
+		}
+		orderBy = " ORDER BY " + strings.Join(quoted, ", ")
+	}
+
+	query := fmt.Sprintf("SELECT * FROM %s%s LIMIT %d OFFSET %d",
+		devQuoteIdent(table), orderBy, limit, offset)
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	cols, data, _, err := devScanRows(rows, 0)
+	return cols, data, err
+}
+
+func devSelectRow(db *sql.DB, table string, pkValues map[string]string) ([]string, []string, error) {
+	where, args := devBuildWhereClause(pkValues)
+	query := fmt.Sprintf("SELECT * FROM %s WHERE %s LIMIT 1",
+		devQuoteIdent(table), where)
+
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	cols, data, _, err := devScanRows(rows, 0)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(data) == 0 {
+		return nil, nil, sql.ErrNoRows
+	}
+	return cols, data[0], nil
+}
+
+func devInsertRow(db *sql.DB, table string, columns []columnInfo, values map[string]string) error {
+	var colNames []string
+	var placeholders []string
+	var args []interface{}
+	i := 1
+
+	for _, col := range columns {
+		val, ok := values[col.Name]
+		if !ok || val == "" {
+			if col.Default != "" || col.IsNullable || col.IsAutoIncrement {
+				continue
+			}
+		}
+		colNames = append(colNames, devQuoteIdent(col.Name))
+		if val == "" && col.IsNullable {
+			placeholders = append(placeholders, "NULL")
+		} else {
+			placeholders = append(placeholders, devPlaceholder(i))
+			args = append(args, val)
+			i++
+		}
+	}
+
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+		devQuoteIdent(table),
+		strings.Join(colNames, ", "),
+		strings.Join(placeholders, ", "))
+
+	_, err := db.Exec(query, args...)
+	return err
+}
+
+func devUpdateRow(db *sql.DB, table string, columns []columnInfo, pkValues map[string]string, values map[string]string) error {
+	var setClauses []string
+	var args []interface{}
+	i := 1
+
+	for _, col := range columns {
+		if col.IsPrimaryKey {
+			continue
+		}
+		val, ok := values[col.Name]
+		if !ok {
+			continue
+		}
+		if val == "" && col.IsNullable {
+			setClauses = append(setClauses, devQuoteIdent(col.Name)+" = NULL")
+		} else {
+			setClauses = append(setClauses, fmt.Sprintf("%s = %s", devQuoteIdent(col.Name), devPlaceholder(i)))
+			args = append(args, val)
+			i++
+		}
+	}
+
+	where, whereArgs := devBuildWhereClauseOffset(pkValues, i)
+	args = append(args, whereArgs...)
+
+	query := fmt.Sprintf("UPDATE %s SET %s WHERE %s",
+		devQuoteIdent(table),
+		strings.Join(setClauses, ", "),
+		where)
+
+	_, err := db.Exec(query, args...)
+	return err
+}
+
+func devDeleteRow(db *sql.DB, table string, pkValues map[string]string) error {
+	where, args := devBuildWhereClause(pkValues)
+	query := fmt.Sprintf("DELETE FROM %s WHERE %s",
+		devQuoteIdent(table), where)
+
+	_, err := db.Exec(query, args...)
+	return err
+}
+
+func devExecQuery(db *sql.DB, query string) queryResult {
+	trimmed := strings.TrimSpace(strings.ToUpper(query))
+	isSelect := strings.HasPrefix(trimmed, "SELECT") ||
+		strings.HasPrefix(trimmed, "WITH") ||
+		strings.HasPrefix(trimmed, "EXPLAIN") ||
+{{- if ne .Database.String "sqlite3" }}
+		strings.HasPrefix(trimmed, "SHOW") ||
+{{- end }}
+{{- if eq .Database.String "postgres" }}
+		strings.HasPrefix(trimmed, "TABLE") ||
+{{- end }}
+		strings.HasPrefix(trimmed, "VALUES")
+
+	if isSelect {
+		rows, err := db.Query(query)
+		if err != nil {
+			return queryResult{Error: err.Error()}
+		}
+		defer rows.Close()
+
+		cols, data, truncated, err := devScanRows(rows, maxQueryRows)
+		if err != nil {
+			return queryResult{Error: err.Error()}
+		}
+		return queryResult{Columns: cols, Rows: data, Truncated: truncated}
+	}
+
+	result, err := db.Exec(query)
+	if err != nil {
+		return queryResult{Error: err.Error()}
+	}
+	affected, _ := result.RowsAffected()
+	return queryResult{Affected: affected}
+}
+
+const maxQueryRows = 1000
+
+func devScanRows(rows *sql.Rows, limit int) ([]string, [][]string, bool, error) {
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, nil, false, err
+	}
+
+	ptrs := make([]*sql.NullString, len(columns))
+	scanDest := make([]interface{}, len(columns))
+	for i := range ptrs {
+		ptrs[i] = &sql.NullString{}
+		scanDest[i] = ptrs[i]
+	}
+
+	var result [][]string
+	truncated := false
+	for rows.Next() {
+		if limit > 0 && len(result) >= limit {
+			truncated = true
+			break
+		}
+		if err := rows.Scan(scanDest...); err != nil {
+			return nil, nil, false, err
+		}
+		row := make([]string, len(columns))
+		for i, p := range ptrs {
+			if p.Valid {
+				row[i] = p.String
+			} else {
+				row[i] = "NULL"
+			}
+		}
+		result = append(result, row)
+	}
+	if !truncated {
+		if err := rows.Err(); err != nil {
+			return nil, nil, false, err
+		}
+	}
+	return columns, result, truncated, nil
+}
+
+func devBuildWhereClause(pkValues map[string]string) (string, []interface{}) {
+	return devBuildWhereClauseOffset(pkValues, 1)
+}
+
+func devBuildWhereClauseOffset(pkValues map[string]string, start int) (string, []interface{}) {
+	keys := make([]string, 0, len(pkValues))
+	for col := range pkValues {
+		keys = append(keys, col)
+	}
+	sort.Strings(keys)
+
+	clauses := make([]string, 0, len(keys))
+	args := make([]interface{}, 0, len(keys))
+	i := start
+	for _, col := range keys {
+		clauses = append(clauses, fmt.Sprintf("%s = %s", devQuoteIdent(col), devPlaceholder(i)))
+		args = append(args, pkValues[col])
+		i++
+	}
+	return strings.Join(clauses, " AND "), args
+}
+
+func devPKColumns(columns []columnInfo) []string {
+	var pks []string
+	for _, c := range columns {
+		if c.IsPrimaryKey {
+			pks = append(pks, c.Name)
+		}
+	}
+	return pks
+}
+
+func devTruncateValue(s string, max int) string {
+	if len(s) <= max {
+		return s
+	}
+	if max <= 3 {
+		return s[:max]
+	}
+	return s[:max-3] + "..."
+}

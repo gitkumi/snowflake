@@ -34,27 +34,49 @@ func NewProject(cfg *Config) *Project {
 				"/internal/smtp/mailer.go",
 				"/internal/smtp/smtp.go",
 				"/internal/smtp/dev_mailbox.go",
-				"/internal/smtp/handler.go",
-				"/internal/smtp/handler_test.go",
-				"/internal/smtp/layout.templ",
-				"/internal/smtp/list.templ",
-				"/internal/smtp/show.templ",
 				"/cmd/app/handlers/send_handler.go",
 			},
 			Check: func(p *Project) bool { return !p.SMTP },
 		},
 		{
 			FilePaths: []string{
+				"/internal/smtp/handler.go",
+				"/internal/smtp/handler_test.go",
+				"/internal/smtp/layout.templ",
+				"/internal/smtp/list.templ",
+				"/internal/smtp/show.templ",
+			},
+			Check: func(p *Project) bool { return !p.SMTP || !p.DevMailboxDashboard },
+		},
+		{
+			FilePaths: []string{
 				"/internal/storage/storage.go",
 				"/internal/storage/s3.go",
 				"/internal/storage/dev_storage.go",
+			},
+			Check: func(p *Project) bool { return !p.Storage },
+		},
+		{
+			FilePaths: []string{
 				"/internal/storage/handler.go",
 				"/internal/storage/handler_test.go",
 				"/internal/storage/layout.templ",
 				"/internal/storage/list.templ",
 				"/internal/storage/show.templ",
 			},
-			Check: func(p *Project) bool { return !p.Storage },
+			Check: func(p *Project) bool { return !p.Storage || !p.DevStorageDashboard },
+		},
+		{
+			FilePaths: []string{
+				"/internal/db/dev_db.go",
+				"/internal/db/dev_db_handler.go",
+				"/internal/db/dev_db_queries.go",
+				"/internal/db/dev_db_layout.templ",
+				"/internal/db/dev_db_row_form.templ",
+				"/internal/db/dev_db_rows.templ",
+				"/internal/db/dev_db_tables.templ",
+			},
+			Check: func(p *Project) bool { return !p.DevDBDashboard },
 		},
 		{
 			FilePaths: []string{

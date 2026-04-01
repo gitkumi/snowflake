@@ -22,109 +22,126 @@ func TestGenerateVariants(t *testing.T) {
 		{
 			name: "no_db",
 			cfg: initialize.Config{
-				Quiet:         true,
-				Name:          "acme",
-				Database:      initialize.DatabaseNone,
-				Git:           false,
-				SMTP:          true,
-				Storage:       true,
-				KeyValueStore: initialize.KeyValueStoreRedis,
+				Quiet:               true,
+				Name:                "acme",
+				Database:            initialize.DatabaseNone,
+				Git:                 false,
+				SMTP:                true,
+				Storage:             true,
+				DevMailboxDashboard: true,
+				DevStorageDashboard: true,
+				KeyValueStore:       initialize.KeyValueStoreRedis,
 			},
 		},
 		{
 			name: "sqlite3",
 			cfg: initialize.Config{
-				Quiet:         true,
-				Name:          "acme",
-				Database:      initialize.DatabaseSQLite3,
-				Git:           false,
-				SMTP:          true,
-				Storage:       true,
-				KeyValueStore: initialize.KeyValueStoreRedis,
+				Quiet:               true,
+				Name:                "acme",
+				Database:            initialize.DatabaseSQLite3,
+				Git:                 false,
+				SMTP:                true,
+				Storage:             true,
+				DevMailboxDashboard: true,
+				DevStorageDashboard: true,
+				KeyValueStore:       initialize.KeyValueStoreRedis,
 			},
 		},
 		{
 			name: "postgres",
 			cfg: initialize.Config{
-				Quiet:         true,
-				Name:          "acme",
-				Database:      initialize.DatabasePostgres,
-				Git:           false,
-				SMTP:          true,
-				Storage:       true,
-				KeyValueStore: initialize.KeyValueStoreRedis,
+				Quiet:               true,
+				Name:                "acme",
+				Database:            initialize.DatabasePostgres,
+				Git:                 false,
+				SMTP:                true,
+				Storage:             true,
+				DevDBDashboard:      true,
+				DevMailboxDashboard: true,
+				DevStorageDashboard: true,
+				KeyValueStore:       initialize.KeyValueStoreRedis,
 			},
 		},
 		{
 			name: "mysql",
 			cfg: initialize.Config{
-				Quiet:         true,
-				Name:          "acme",
-				Database:      initialize.DatabaseMySQL,
-				Git:           false,
-				SMTP:          true,
-				Storage:       true,
-				KeyValueStore: initialize.KeyValueStoreRedis,
+				Quiet:               true,
+				Name:                "acme",
+				Database:            initialize.DatabaseMySQL,
+				Git:                 false,
+				SMTP:                true,
+				Storage:             true,
+				DevMailboxDashboard: true,
+				DevStorageDashboard: true,
+				KeyValueStore:       initialize.KeyValueStoreRedis,
 			},
 		},
 		{
 			name: "mariadb",
 			cfg: initialize.Config{
-				Quiet:         true,
-				Name:          "acme",
-				Database:      initialize.DatabaseMariaDB,
-				Git:           false,
-				SMTP:          true,
-				Storage:       true,
-				KeyValueStore: initialize.KeyValueStoreRedis,
+				Quiet:               true,
+				Name:                "acme",
+				Database:            initialize.DatabaseMariaDB,
+				Git:                 false,
+				SMTP:                true,
+				Storage:             true,
+				DevMailboxDashboard: true,
+				DevStorageDashboard: true,
+				KeyValueStore:       initialize.KeyValueStoreRedis,
 			},
 		},
 		{
 			name: "no_smtp",
 			cfg: initialize.Config{
-				Quiet:         true,
-				Name:          "acme",
-				Database:      initialize.DatabaseSQLite3,
-				Git:           false,
-				SMTP:          false,
-				Storage:       true,
-				KeyValueStore: initialize.KeyValueStoreRedis,
+				Quiet:               true,
+				Name:                "acme",
+				Database:            initialize.DatabaseSQLite3,
+				Git:                 false,
+				SMTP:                false,
+				Storage:             true,
+				DevStorageDashboard: true,
+				KeyValueStore:       initialize.KeyValueStoreRedis,
 			},
 		},
 		{
 			name: "no_storage",
 			cfg: initialize.Config{
-				Quiet:         true,
-				Name:          "acme",
-				Database:      initialize.DatabaseSQLite3,
-				Git:           false,
-				SMTP:          true,
-				Storage:       false,
-				KeyValueStore: initialize.KeyValueStoreRedis,
+				Quiet:               true,
+				Name:                "acme",
+				Database:            initialize.DatabaseSQLite3,
+				Git:                 false,
+				SMTP:                true,
+				Storage:             false,
+				DevMailboxDashboard: true,
+				KeyValueStore:       initialize.KeyValueStoreRedis,
 			},
 		},
 		{
 			name: "valkey",
 			cfg: initialize.Config{
-				Quiet:         true,
-				Name:          "acme",
-				Database:      initialize.DatabaseSQLite3,
-				Git:           false,
-				SMTP:          true,
-				Storage:       true,
-				KeyValueStore: initialize.KeyValueStoreValkey,
+				Quiet:               true,
+				Name:                "acme",
+				Database:            initialize.DatabaseSQLite3,
+				Git:                 false,
+				SMTP:                true,
+				Storage:             true,
+				DevMailboxDashboard: true,
+				DevStorageDashboard: true,
+				KeyValueStore:       initialize.KeyValueStoreValkey,
 			},
 		},
 		{
 			name: "no_redis",
 			cfg: initialize.Config{
-				Quiet:         true,
-				Name:          "acme",
-				Database:      initialize.DatabaseSQLite3,
-				Git:           false,
-				SMTP:          true,
-				Storage:       true,
-				KeyValueStore: initialize.KeyValueStoreNone,
+				Quiet:               true,
+				Name:                "acme",
+				Database:            initialize.DatabaseSQLite3,
+				Git:                 false,
+				SMTP:                true,
+				Storage:             true,
+				DevMailboxDashboard: true,
+				DevStorageDashboard: true,
+				KeyValueStore:       initialize.KeyValueStoreNone,
 			},
 		},
 	}
@@ -215,17 +232,18 @@ func TestGenerateNoTempl(t *testing.T) {
 	}
 }
 
-func TestGenerateSMTPForcesTempl(t *testing.T) {
+func TestGenerateDevMailboxDashboardForcesTempl(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Generate(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseNone,
-		OutputDir: tmpDir,
-		Git:       false,
-		SMTP:      true,
-		Templ:     false,
+		Quiet:               true,
+		Name:                "acme",
+		Database:            initialize.DatabaseNone,
+		OutputDir:           tmpDir,
+		Git:                 false,
+		SMTP:                true,
+		DevMailboxDashboard: true,
+		Templ:               false,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -244,22 +262,23 @@ func TestGenerateSMTPForcesTempl(t *testing.T) {
 	}
 	for _, f := range requiredFiles {
 		if _, err := os.Stat(f); os.IsNotExist(err) {
-			t.Fatalf("required SMTP file not created at %s", f)
+			t.Fatalf("required file not created at %s", f)
 		}
 	}
 }
 
-func TestGenerateStorageForcesTempl(t *testing.T) {
+func TestGenerateDevStorageDashboardForcesTempl(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	err := initialize.Generate(&initialize.Config{
-		Quiet:     true,
-		Name:      "acme",
-		Database:  initialize.DatabaseNone,
-		OutputDir: tmpDir,
-		Git:       false,
-		Storage:   true,
-		Templ:     false,
+		Quiet:               true,
+		Name:                "acme",
+		Database:            initialize.DatabaseNone,
+		OutputDir:           tmpDir,
+		Git:                 false,
+		Storage:             true,
+		DevStorageDashboard: true,
+		Templ:               false,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -282,7 +301,7 @@ func TestGenerateStorageForcesTempl(t *testing.T) {
 	}
 	for _, f := range requiredFiles {
 		if _, err := os.Stat(f); os.IsNotExist(err) {
-			t.Fatalf("required storage file not created at %s", f)
+			t.Fatalf("required file not created at %s", f)
 		}
 	}
 }
@@ -307,6 +326,66 @@ func TestGenerateNoStorage(t *testing.T) {
 	for _, f := range forbiddenFiles {
 		if _, err := os.Stat(f); !os.IsNotExist(err) {
 			t.Fatalf("storage file should not exist at %s", f)
+		}
+	}
+}
+
+func TestGenerateDevDBDashboard(t *testing.T) {
+	databases := []initialize.Database{
+		initialize.DatabaseSQLite3,
+		initialize.DatabasePostgres,
+		initialize.DatabaseMySQL,
+		initialize.DatabaseMariaDB,
+	}
+	for _, db := range databases {
+		t.Run(string(db), func(t *testing.T) {
+			projectDir := generateProject(t, initialize.Config{
+				Quiet:          true,
+				Name:           "acme",
+				Database:       db,
+				Git:            false,
+				DevDBDashboard: true,
+			})
+
+			requiredFiles := []string{
+				filepath.Join(projectDir, "internal", "db", "dev_db.go"),
+				filepath.Join(projectDir, "internal", "db", "dev_db_handler.go"),
+				filepath.Join(projectDir, "internal", "db", "dev_db_queries.go"),
+				filepath.Join(projectDir, "internal", "db", "dev_db_layout.templ"),
+				filepath.Join(projectDir, "internal", "db", "dev_db_row_form.templ"),
+				filepath.Join(projectDir, "internal", "db", "dev_db_rows.templ"),
+				filepath.Join(projectDir, "internal", "db", "dev_db_tables.templ"),
+			}
+			for _, f := range requiredFiles {
+				if _, err := os.Stat(f); os.IsNotExist(err) {
+					t.Fatalf("dev DB dashboard file not created at %s", f)
+				}
+			}
+		})
+	}
+}
+
+func TestGenerateNoDevDBDashboard(t *testing.T) {
+	projectDir := generateProject(t, initialize.Config{
+		Quiet:          true,
+		Name:           "acme",
+		Database:       initialize.DatabasePostgres,
+		Git:            false,
+		DevDBDashboard: false,
+	})
+
+	forbiddenFiles := []string{
+		filepath.Join(projectDir, "internal", "db", "dev_db.go"),
+		filepath.Join(projectDir, "internal", "db", "dev_db_handler.go"),
+		filepath.Join(projectDir, "internal", "db", "dev_db_queries.go"),
+		filepath.Join(projectDir, "internal", "db", "dev_db_layout.templ"),
+		filepath.Join(projectDir, "internal", "db", "dev_db_row_form.templ"),
+		filepath.Join(projectDir, "internal", "db", "dev_db_rows.templ"),
+		filepath.Join(projectDir, "internal", "db", "dev_db_tables.templ"),
+	}
+	for _, f := range forbiddenFiles {
+		if _, err := os.Stat(f); !os.IsNotExist(err) {
+			t.Fatalf("dev DB dashboard file should not exist at %s", f)
 		}
 	}
 }

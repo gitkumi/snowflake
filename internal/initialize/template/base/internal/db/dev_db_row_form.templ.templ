@@ -1,0 +1,111 @@
+package db
+
+import (
+	"fmt"
+	"net/url"
+
+	ui "{{ .Name }}/internal/html/ui"
+)
+
+type devDBRowFormData struct {
+	Table    string
+	Columns  []columnInfo
+	Values   map[string]string
+	PKValues map[string]string
+	IsNew    bool
+}
+
+func devDBColValue(values map[string]string, name string) string {
+	if values == nil {
+		return ""
+	}
+	return values[name]
+}
+
+func devDBIsAutoColumn(col columnInfo) bool {
+	return col.IsPrimaryKey && (col.Default != "" || col.IsAutoIncrement) && !col.IsNullable
+}
+
+templ devDBRowFormPage(data devDBRowFormData) {
+	@devDBLayout(data.Table) {
+		<div style="margin-bottom: 8px;">
+			<a href={ templ.SafeURL(fmt.Sprintf("/dev/db/tables/%s", url.PathEscape(data.Table))) }>&lt;- { data.Table }</a>
+		</div>
+		<div style="margin-bottom: 12px;">
+			if data.IsNew {
+				New Row
+			} else {
+				Edit Row
+			}
+		</div>
+		<hr/>
+		if data.IsNew {
+			<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/dev/db/tables/%s/create", url.PathEscape(data.Table))) }>
+				for _, col := range data.Columns {
+					<div style="margin-top: 12px;">
+						if devDBIsAutoColumn(col) {
+							@ui.LabeledInput(
+								fmt.Sprintf("%s (%s, auto)", col.Name, col.DataType),
+								"text", col.Name, col.Name,
+								col.Default, false,
+								templ.Attributes{},
+							)
+						} else if col.IsNullable {
+							@ui.LabeledInput(
+								fmt.Sprintf("%s (%s, nullable)", col.Name, col.DataType),
+								"text", col.Name, col.Name,
+								"", false,
+								templ.Attributes{},
+							)
+						} else {
+							@ui.LabeledInput(
+								fmt.Sprintf("%s (%s)", col.Name, col.DataType),
+								"text", col.Name, col.Name,
+								"", true,
+								templ.Attributes{},
+							)
+						}
+					</div>
+				}
+				<div style="margin-top: 12px;">
+					@ui.LinkButton("submit", "Create", ui.LinkButtonStyle(false), templ.Attributes{})
+				</div>
+			</form>
+		} else {
+			<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/dev/db/tables/%s/update", url.PathEscape(data.Table))) }>
+				for col, val := range data.PKValues {
+					<input type="hidden" name={ "_pk_" + col } value={ val }/>
+				}
+				for _, col := range data.Columns {
+					<div style="margin-top: 12px;">
+						if col.IsPrimaryKey {
+							@ui.LabeledInput(
+								fmt.Sprintf("%s (%s, pk)", col.Name, col.DataType),
+								"text", col.Name, col.Name,
+								"", false,
+								templ.Attributes{"value": devDBColValue(data.Values, col.Name), "readonly": "readonly", "style": "width: 100%; font: inherit; padding: 8px; border: 1px solid #000; background: #f5f5f5;"},
+							)
+						} else {
+							@ui.LabeledInput(
+								fmt.Sprintf("%s (%s)", col.Name, col.DataType),
+								"text", col.Name, col.Name,
+								"", false,
+								templ.Attributes{"value": devDBColValue(data.Values, col.Name)},
+							)
+						}
+					</div>
+				}
+				<div style="margin-top: 12px;">
+					@ui.LinkButton("submit", "Update", ui.LinkButtonStyle(false), templ.Attributes{})
+				</div>
+			</form>
+			<hr/>
+			<form method="POST" action={ templ.SafeURL(fmt.Sprintf("/dev/db/tables/%s/delete", url.PathEscape(data.Table))) } onsubmit="return confirm('Delete this row?')">
+				for col, val := range data.PKValues {
+					<input type="hidden" name={ "_pk_" + col } value={ val }/>
+				}
+				@ui.LinkButton("submit", "Delete", ui.LinkButtonStyle(false), templ.Attributes{"style": "color: red; " + ui.LinkButtonBaseStyle})
+			</form>
+		}
+	}
+}

@@ -22,6 +22,7 @@ func Command() *cobra.Command {
 			keyValueStore := initialize.AllKeyValueStores[0]
 			containerRuntime := initialize.AllContainerRuntimes[0] // Defaults to Podman
 			selectedFeatures := []string{"Git"}
+			selectedDashboards := []string{}
 
 			projectPathGroup := huh.NewGroup(
 				huh.NewInput().
@@ -66,6 +67,30 @@ func Command() *cobra.Command {
 					Value(&keyValueStore),
 			)
 
+			dashboardsGroup := huh.NewGroup(
+				huh.NewMultiSelect[string]().
+					Title("Add dev dashboards").
+					OptionsFunc(func() []huh.Option[string] {
+						var opts []huh.Option[string]
+						if database != initialize.DatabaseNone {
+							opts = append(opts, huh.NewOption("Database", "DevDBDashboard"))
+						}
+						if contains(selectedFeatures, "SMTP") {
+							opts = append(opts, huh.NewOption("Mailbox", "DevMailboxDashboard"))
+						}
+						if contains(selectedFeatures, "Storage") {
+							opts = append(opts, huh.NewOption("Storage", "DevStorageDashboard"))
+						}
+						return opts
+					}, []any{&selectedFeatures, &database}).
+					Value(&selectedDashboards),
+			).WithHideFunc(func() bool {
+				hasDB := database != initialize.DatabaseNone
+				hasSMTP := contains(selectedFeatures, "SMTP")
+				hasStorage := contains(selectedFeatures, "Storage")
+				return !hasDB && !hasSMTP && !hasStorage
+			})
+
 			containerRuntimeGroup := huh.NewGroup(
 				huh.NewSelect[initialize.ContainerRuntime]().
 					Title("Select container runtime").
@@ -81,6 +106,7 @@ func Command() *cobra.Command {
 				databaseGroup,
 				keyValueStoreGroup,
 				featuresGroup,
+				dashboardsGroup,
 				containerRuntimeGroup,
 			)
 
@@ -105,6 +131,10 @@ func Command() *cobra.Command {
 			cfg.SMTP = contains(selectedFeatures, "SMTP")
 			cfg.Storage = contains(selectedFeatures, "Storage")
 			cfg.Templ = contains(selectedFeatures, "Templ")
+
+			cfg.DevDBDashboard = contains(selectedDashboards, "DevDBDashboard")
+			cfg.DevMailboxDashboard = contains(selectedDashboards, "DevMailboxDashboard")
+			cfg.DevStorageDashboard = contains(selectedDashboards, "DevStorageDashboard")
 
 			if err := initialize.Run(cfg); err != nil {
 				fmt.Printf("error creating project: %v\n", err)

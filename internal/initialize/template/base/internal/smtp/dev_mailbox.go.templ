@@ -8,8 +8,10 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+{{- if .DevMailboxDashboard }}
 
 	"github.com/gin-gonic/gin"
+{{- end }}
 )
 
 const maxEmails = 1000
@@ -74,6 +76,8 @@ func (m *DevMailbox) Send(email Email) error {
 	return nil
 }
 
+{{- if .DevMailboxDashboard }}
+
 // Routes mounts the dev mailbox UI onto the given router group.
 func (m *DevMailbox) Routes(rg *gin.RouterGroup) {
 	rg.GET("", handleList(m))
@@ -81,6 +85,7 @@ func (m *DevMailbox) Routes(rg *gin.RouterGroup) {
 	rg.POST("/send", handleSend(m))
 	rg.POST("/clear", handleClear(m))
 }
+{{- end }}
 
 // List returns all stored emails in reverse chronological order.
 func (m *DevMailbox) List() []StoredEmail {

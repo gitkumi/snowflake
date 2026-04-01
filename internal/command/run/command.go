@@ -10,15 +10,18 @@ import (
 
 func Command() *cobra.Command {
 	var (
-		quiet            bool
-		database         string
-		keyValueStore    string
-		containerRuntime string
-		outputDir        string
-		git              bool
-		smtp             bool
-		storage          bool
-		templ            bool
+		quiet               bool
+		database            string
+		keyValueStore       string
+		containerRuntime    string
+		outputDir           string
+		git                 bool
+		smtp                bool
+		storage             bool
+		templ               bool
+		devDBDashboard      bool
+		devMailboxDashboard bool
+		devStorageDashboard bool
 	)
 
 	cmd := &cobra.Command{
@@ -42,16 +45,19 @@ func Command() *cobra.Command {
 			}
 
 			err = initialize.Run(&initialize.Config{
-				Quiet:            quiet,
-				Name:             args[0],
-				Database:         dbEnum,
-				KeyValueStore:    kvsEnum,
-				ContainerRuntime: containerRuntimeEnum,
-				Git:              git,
-				OutputDir:        outputDir,
-				SMTP:             smtp,
-				Storage:          storage,
-				Templ:            templ,
+				Quiet:               quiet,
+				Name:                args[0],
+				Database:            dbEnum,
+				KeyValueStore:       kvsEnum,
+				ContainerRuntime:    containerRuntimeEnum,
+				Git:                 git,
+				OutputDir:           outputDir,
+				SMTP:                smtp,
+				Storage:             storage,
+				Templ:               templ,
+				DevDBDashboard:      devDBDashboard,
+				DevMailboxDashboard: devMailboxDashboard,
+				DevStorageDashboard: devStorageDashboard,
 			})
 			if err != nil {
 				log.Fatal(err.Error())
@@ -68,6 +74,9 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&smtp, "smtp", false, "Add SMTP")
 	cmd.Flags().BoolVar(&storage, "storage", false, "Add Storage (S3)")
 	cmd.Flags().BoolVar(&templ, "templ", false, "Add HTML (templ)")
+	cmd.Flags().BoolVar(&devDBDashboard, "dev-db-dashboard", false, "Add dev database dashboard")
+	cmd.Flags().BoolVar(&devMailboxDashboard, "dev-mailbox-dashboard", false, "Add dev mailbox dashboard")
+	cmd.Flags().BoolVar(&devStorageDashboard, "dev-storage-dashboard", false, "Add dev storage dashboard")
 
 	return cmd
 }

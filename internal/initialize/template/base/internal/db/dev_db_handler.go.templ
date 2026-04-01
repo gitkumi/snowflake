@@ -1,0 +1,227 @@
+package db
+
+import (
+	"fmt"
+	"net/http"
+	"net/url"
+	"strings"
+
+	"{{ .Name }}/internal/pagination"
+
+	"github.com/a-h/templ"
+	"github.com/gin-gonic/gin"
+)
+
+func (d *DevDB) tableColumns(c *gin.Context) (string, []columnInfo, bool) {
+	table := c.Param("name")
+	columns, err := devListColumns(d.db, table)
+	if err != nil {
+		d.logger.Error("failed to list columns", "error", err)
+		c.String(http.StatusInternalServerError, "failed to list columns")
+		return "", nil, false
+	}
+	if len(columns) == 0 {
+		c.String(http.StatusNotFound, "table not found")
+		return "", nil, false
+	}
+	return table, columns, true
+}
+
+func (d *DevDB) handleTableList(c *gin.Context) {
+	tables, err := devListTables(d.db)
+	if err != nil {
+		d.logger.Error("failed to list tables", "error", err)
+		c.String(http.StatusInternalServerError, "failed to list tables: %v", err)
+		return
+	}
+
+	devRender(c, devDBTablesPage(tables, nil))
+}
+
+func (d *DevDB) handleQueryExec(c *gin.Context) {
+	query := strings.TrimSpace(c.PostForm("query"))
+
+	tables, err := devListTables(d.db)
+	if err != nil {
+		d.logger.Error("failed to list tables", "error", err)
+		c.String(http.StatusInternalServerError, "failed to list tables: %v", err)
+		return
+	}
+
+	if query == "" {
+		devRender(c, devDBTablesPage(tables, nil))
+		return
+	}
+
+	result := devExecQuery(d.db, query)
+	devRender(c, devDBTablesPage(tables, &devDBQueryData{Result: &result}))
+}
+
+func (d *DevDB) handleRowList(c *gin.Context) {
+	table, columns, ok := d.tableColumns(c)
+	if !ok {
+		return
+	}
+
+	total, err := devCountRows(d.db, table)
+	if err != nil {
+		d.logger.Error("failed to count rows", "error", err)
+		c.String(http.StatusInternalServerError, "failed to count rows")
+		return
+	}
+
+	p := pagination.FromRequest(c)
+	colNames, rows, err := devSelectRows(d.db, table, columns, p.PerPage, p.Offset)
+	if err != nil {
+		d.logger.Error("failed to select rows", "error", err)
+		c.String(http.StatusInternalServerError, "failed to select rows")
+		return
+	}
+
+	hasPK := len(devPKColumns(columns)) > 0
+	totalPages := int(total) / p.PerPage
+	if int(total)%p.PerPage != 0 {
+		totalPages++
+	}
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
+	devRender(c, devDBRowsPage(devDBRowsData{
+		Table:      table,
+		Columns:    colNames,
+		ColInfo:    columns,
+		Rows:       rows,
+		HasPK:      hasPK,
+		Total:      total,
+		Page:       p.Page,
+		TotalPages: totalPages,
+		PerPage:    p.PerPage,
+	}))
+}
+
+func (d *DevDB) handleRowNew(c *gin.Context) {
+	table, columns, ok := d.tableColumns(c)
+	if !ok {
+		return
+	}
+
+	devRender(c, devDBRowFormPage(devDBRowFormData{
+		Table:   table,
+		Columns: columns,
+		IsNew:   true,
+	}))
+}
+
+func (d *DevDB) handleRowShow(c *gin.Context) {
+	table, columns, ok := d.tableColumns(c)
+	if !ok {
+		return
+	}
+
+	pkCols := devPKColumns(columns)
+	pkValues := make(map[string]string)
+	for _, col := range pkCols {
+		pkValues[col] = c.Query(col)
+	}
+
+	colNames, values, err := devSelectRow(d.db, table, pkValues)
+	if err != nil {
+		c.String(http.StatusNotFound, "row not found")
+		return
+	}
+
+	valueMap := make(map[string]string, len(colNames))
+	for i, col := range colNames {
+		valueMap[col] = values[i]
+	}
+
+	devRender(c, devDBRowFormPage(devDBRowFormData{
+		Table:    table,
+		Columns:  columns,
+		Values:   valueMap,
+		PKValues: pkValues,
+		IsNew:    false,
+	}))
+}
+
+func (d *DevDB) handleRowCreate(c *gin.Context) {
+	table, columns, ok := d.tableColumns(c)
+	if !ok {
+		return
+	}
+
+	values := make(map[string]string)
+	for _, col := range columns {
+		values[col.Name] = c.PostForm(col.Name)
+	}
+
+	if err := devInsertRow(d.db, table, columns, values); err != nil {
+		d.logger.Error("failed to insert row", "error", err)
+		c.String(http.StatusInternalServerError, "failed to insert row: %v", err)
+		return
+	}
+
+	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/dev/db/tables/%s", url.PathEscape(table)))
+}
+
+func (d *DevDB) handleRowUpdate(c *gin.Context) {
+	table, columns, ok := d.tableColumns(c)
+	if !ok {
+		return
+	}
+
+	pkCols := devPKColumns(columns)
+	pkValues := make(map[string]string)
+	for _, col := range pkCols {
+		pkValues[col] = c.PostForm("_pk_" + col)
+	}
+
+	values := make(map[string]string)
+	for _, col := range columns {
+		if !col.IsPrimaryKey {
+			values[col.Name] = c.PostForm(col.Name)
+		}
+	}
+
+	if err := devUpdateRow(d.db, table, columns, pkValues, values); err != nil {
+		d.logger.Error("failed to update row", "error", err)
+		c.String(http.StatusInternalServerError, "failed to update row: %v", err)
+		return
+	}
+
+	q := url.Values{}
+	for col, val := range pkValues {
+		q.Set(col, val)
+	}
+	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/dev/db/tables/%s/rows?%s", url.PathEscape(table), q.Encode()))
+}
+
+func (d *DevDB) handleRowDelete(c *gin.Context) {
+	table, columns, ok := d.tableColumns(c)
+	if !ok {
+		return
+	}
+
+	pkCols := devPKColumns(columns)
+	pkValues := make(map[string]string)
+	for _, col := range pkCols {
+		pkValues[col] = c.PostForm("_pk_" + col)
+	}
+
+	if err := devDeleteRow(d.db, table, pkValues); err != nil {
+		d.logger.Error("failed to delete row", "error", err)
+		c.String(http.StatusInternalServerError, "failed to delete row: %v", err)
+		return
+	}
+
+	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/dev/db/tables/%s", url.PathEscape(table)))
+}
+
+func devRender(c *gin.Context, component templ.Component) {
+	c.Status(http.StatusOK)
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	if err := component.Render(c.Request.Context(), c.Writer); err != nil {
+		c.String(http.StatusInternalServerError, "failed to render page")
+	}
+}
