@@ -110,6 +110,9 @@ func main() {
 {{- if .SMTP }}
 		mailer,
 {{- end }}
+{{- if .Storage }}
+		stor,
+{{- end }}
 		vars.BaseURL,
 		vars.Port,
 		vars.GinMode,

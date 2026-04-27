@@ -131,6 +131,19 @@ func TestGenerateVariants(t *testing.T) {
 			},
 		},
 		{
+			name: "storage_no_dashboard",
+			cfg: initialize.Config{
+				Quiet:               true,
+				Name:                "acme",
+				Database:            initialize.DatabaseSQLite3,
+				Git:                 false,
+				SMTP:                false,
+				Storage:             true,
+				DevStorageDashboard: false,
+				KeyValueStore:       initialize.KeyValueStoreNone,
+			},
+		},
+		{
 			name: "no_redis",
 			cfg: initialize.Config{
 				Quiet:               true,

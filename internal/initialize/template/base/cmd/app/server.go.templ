@@ -16,6 +16,9 @@ import (
 {{- if .SMTP }}
 	"{{ .Name }}/internal/smtp"
 {{- end }}
+{{- if .Storage }}
+	"{{ .Name }}/internal/storage"
+{{- end }}
 {{- if eq .KeyValueStore "redis" }}
 	"github.com/redis/go-redis/v9"
 {{- else if eq .KeyValueStore "valkey" }}
@@ -38,6 +41,9 @@ type server struct {
 {{- if .SMTP }}
 	mailer  smtp.Mailer
 {{- end }}
+{{- if .Storage }}
+	storage storage.Storage
+{{- end }}
 	baseURL string
 	port    int
 	router  *gin.Engine
@@ -57,6 +63,9 @@ func newServer(
 {{- if .SMTP }}
 	mailer smtp.Mailer,
 {{- end }}
+{{- if .Storage }}
+	stor storage.Storage,
+{{- end }}
 	baseURL string,
 	port int,
 	ginMode string,
@@ -75,6 +84,9 @@ func newServer(
 		logger:        logger,
 {{- if .SMTP }}
 		mailer:        mailer,
+{{- end }}
+{{- if .Storage }}
+		storage:       stor,
 {{- end }}
 		baseURL:       baseURL,
 		port:          port,
