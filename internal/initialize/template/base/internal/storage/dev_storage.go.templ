@@ -18,8 +18,8 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 {{- if .DevStorageDashboard }}
 	"github.com/gin-gonic/gin"
 {{- end }}
@@ -92,12 +92,12 @@ func (s *DevStorage) Get(key string) (string, error) {
 }
 
 // List returns stored objects matching prefix in reverse chronological order.
-func (s *DevStorage) List(prefix string) ([]*s3.Object, error) {
+func (s *DevStorage) List(prefix string) ([]types.Object, error) {
 	objects := s.ListObjects(prefix)
-	items := make([]*s3.Object, 0, len(objects))
+	items := make([]types.Object, 0, len(objects))
 	for _, object := range objects {
 		lastModified := object.CreatedAt
-		items = append(items, &s3.Object{
+		items = append(items, types.Object{
 			Key:          aws.String(object.Key),
 			Size:         aws.Int64(object.Size),
 			LastModified: &lastModified,

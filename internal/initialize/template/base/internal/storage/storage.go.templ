@@ -3,12 +3,12 @@ package storage
 import (
 	"mime/multipart"
 
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 type Storage interface {
 	Get(key string) (string, error)
-	List(prefix string) ([]*s3.Object, error)
+	List(prefix string) ([]types.Object, error)
 	Upload(key string, file multipart.File) (string, error)
 	Delete(prefix string) error
 }

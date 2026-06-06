@@ -1,15 +1,17 @@
 package storage
 
 import (
+	"context"
 	"io"
 	"mime/multipart"
 	"os"
 	"path"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 type S3Storage struct {
@@ -38,20 +40,25 @@ func NewS3Storage(cfg *S3StorageConfig) *S3Storage {
 	}
 }
 
-func (s *S3Storage) createSession() (*s3.S3, error) {
-	sess, err := session.NewSession(&aws.Config{
-		Credentials:      credentials.NewStaticCredentials(s.AccessKey, s.SecretKey, ""),
-		Region:           &s.Region,
-		Endpoint:         &s.EndpointURL,
-		DisableSSL:       aws.Bool(true),
-		S3ForcePathStyle: aws.Bool(true),
-	})
-
+func (s *S3Storage) createClient(ctx context.Context) (*s3.Client, error) {
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(s.Region),
+		config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(s.AccessKey, s.SecretKey, ""),
+		),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	return s3.New(sess), nil
+	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		if s.EndpointURL != "" {
+			o.BaseEndpoint = aws.String(s.EndpointURL)
+		}
+		o.UsePathStyle = true
+	})
+
+	return client, nil
 }
 
 func createLocalPath(keys ...string) (string, error) {
@@ -74,17 +81,20 @@ func (s *S3Storage) Get(key string) (string, error) {
 		return "", err
 	}
 
-	sess, err := s.createSession()
+	ctx := context.Background()
+	client, err := s.createClient(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	object, err := sess.GetObject(&s3.GetObjectInput{
+	object, err := client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: &s.Bucket,
+		Key:    &key,
 	})
 	if err != nil {
 		return "", err
 	}
+	defer object.Body.Close()
 
 	content, err := io.ReadAll(object.Body)
 	if err != nil {
@@ -99,13 +109,14 @@ func (s *S3Storage) Get(key string) (string, error) {
 	return localPath, nil
 }
 
-func (s *S3Storage) List(prefix string) ([]*s3.Object, error) {
-	sess, err := s.createSession()
+func (s *S3Storage) List(prefix string) ([]types.Object, error) {
+	ctx := context.Background()
+	client, err := s.createClient(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := sess.ListObjectsV2(&s3.ListObjectsV2Input{
+	resp, err := client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
 		Bucket: &s.Bucket,
 		Prefix: &prefix,
 	})
@@ -118,12 +129,13 @@ func (s *S3Storage) List(prefix string) ([]*s3.Object, error) {
 }
 
 func (s *S3Storage) Upload(key string, file multipart.File) (string, error) {
-	sess, err := s.createSession()
+	ctx := context.Background()
+	client, err := s.createClient(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	_, err = sess.PutObject(&s3.PutObjectInput{
+	_, err = client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: &s.Bucket,
 		Body:   file,
 		Key:    &key,
@@ -137,12 +149,13 @@ func (s *S3Storage) Upload(key string, file multipart.File) (string, error) {
 }
 
 func (s *S3Storage) Delete(key string) error {
-	sess, err := s.createSession()
+	ctx := context.Background()
+	client, err := s.createClient(ctx)
 	if err != nil {
 		return err
 	}
 
-	_, err = sess.DeleteObject(&s3.DeleteObjectInput{
+	_, err = client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: &s.Bucket,
 		Key:    &key,
 	})
