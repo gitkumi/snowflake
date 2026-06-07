@@ -71,7 +71,7 @@ func (d *DevDB) handleRowList(c *gin.Context) {
 	}
 
 	p := pagination.FromRequest(c)
-	colNames, rows, err := devSelectRows(d.db, table, columns, p.PerPage, p.Offset)
+	page, err := devSelectRows(d.db, table, columns, c.Query("cursor"), c.Query("dir"), p.Limit)
 	if err != nil {
 		d.logger.Error("failed to select rows", "error", err)
 		c.String(http.StatusInternalServerError, "failed to select rows")
@@ -79,24 +79,20 @@ func (d *DevDB) handleRowList(c *gin.Context) {
 	}
 
 	hasPK := len(devPKColumns(columns)) > 0
-	totalPages := int(total) / p.PerPage
-	if int(total)%p.PerPage != 0 {
-		totalPages++
-	}
-	if totalPages == 0 {
-		totalPages = 1
-	}
 
 	devRender(c, devDBRowsPage(devDBRowsData{
-		Table:      table,
-		Columns:    colNames,
-		ColInfo:    columns,
-		Rows:       rows,
-		HasPK:      hasPK,
-		Total:      total,
-		Page:       p.Page,
-		TotalPages: totalPages,
-		PerPage:    p.PerPage,
+		Table:       table,
+		Columns:     page.Columns,
+		ColInfo:     columns,
+		Rows:        page.Rows,
+		HasPK:       hasPK,
+		Total:       total,
+		Limit:       p.Limit,
+		Paginated:   page.Paginated,
+		FirstCursor: page.FirstCursor,
+		LastCursor:  page.LastCursor,
+		HasPrev:     page.HasPrev,
+		HasNext:     page.HasNext,
 	}))
 }
 

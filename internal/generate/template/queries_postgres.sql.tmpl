@@ -1,8 +1,8 @@
 -- name: List{{.NameTitle}} :many
 SELECT * FROM {{.PluralName}}
-ORDER BY created_at DESC
-LIMIT $1
-OFFSET $2;
+WHERE id < sqlc.arg(before_id)
+ORDER BY id DESC
+LIMIT sqlc.arg(row_limit);
 
 -- name: Get{{.NameTitle}} :one
 SELECT * FROM {{.PluralName}}

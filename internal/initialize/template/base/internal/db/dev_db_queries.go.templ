@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 {{- if eq .Database.String "postgres" }}
 
@@ -260,28 +261,110 @@ func devCountRows(db *sql.DB, table string) (int64, error) {
 	return count, err
 }
 
-func devSelectRows(db *sql.DB, table string, columns []columnInfo, limit, offset int) ([]string, [][]string, error) {
+// devRowPage is a single cursor page of rows from a table browse.
+type devRowPage struct {
+	Columns     []string
+	Rows        [][]string
+	FirstCursor string
+	LastCursor  string
+	HasPrev     bool
+	HasNext     bool
+	Paginated   bool
+}
+
+// devSelectRows returns a cursor page of rows ordered by the table's primary
+// key. Cursor pagination needs a single key column; tables with a composite key
+// or no key fall back to an unpaginated first page.
+func devSelectRows(db *sql.DB, table string, columns []columnInfo, cursor, dir string, limit int) (devRowPage, error) {
 	pkCols := devPKColumns(columns)
-	orderBy := ""
-	if len(pkCols) > 0 {
-		quoted := make([]string, len(pkCols))
-		for i, c := range pkCols {
-			quoted[i] = devQuoteIdent(c)
+
+	if len(pkCols) != 1 {
+		query := fmt.Sprintf("SELECT * FROM %s LIMIT %d", devQuoteIdent(table), limit)
+		rows, err := db.Query(query)
+		if err != nil {
+			return devRowPage{}, err
 		}
-		orderBy = " ORDER BY " + strings.Join(quoted, ", ")
+		defer rows.Close()
+
+		cols, data, _, err := devScanRows(rows, 0)
+		if err != nil {
+			return devRowPage{}, err
+		}
+		return devRowPage{Columns: cols, Rows: data}, nil
 	}
 
-	query := fmt.Sprintf("SELECT * FROM %s%s LIMIT %d OFFSET %d",
-		devQuoteIdent(table), orderBy, limit, offset)
+	pk := devQuoteIdent(pkCols[0])
 
-	rows, err := db.Query(query)
+	order, op := "ASC", ">"
+	if dir == "prev" {
+		order, op = "DESC", "<"
+	}
+
+	where := ""
+	var args []interface{}
+	if cursor != "" {
+		where = fmt.Sprintf(" WHERE %s %s %s", pk, op, devPlaceholder(1))
+		args = append(args, devCursorArg(cursor))
+	}
+
+	// Over-fetch one row so the presence of an extra row signals another page.
+	query := fmt.Sprintf("SELECT * FROM %s%s ORDER BY %s %s LIMIT %d",
+		devQuoteIdent(table), where, pk, order, limit+1)
+
+	rows, err := db.Query(query, args...)
 	if err != nil {
-		return nil, nil, err
+		return devRowPage{}, err
 	}
 	defer rows.Close()
 
 	cols, data, _, err := devScanRows(rows, 0)
-	return cols, data, err
+	if err != nil {
+		return devRowPage{}, err
+	}
+
+	page := devRowPage{Columns: cols, Paginated: true}
+
+	hasMore := len(data) > limit
+	if hasMore {
+		data = data[:limit]
+	}
+
+	if dir == "prev" {
+		// Rows were fetched descending; restore ascending display order.
+		for i, j := 0, len(data)-1; i < j; i, j = i+1, j-1 {
+			data[i], data[j] = data[j], data[i]
+		}
+		page.HasPrev = hasMore
+		page.HasNext = true
+	} else {
+		page.HasNext = hasMore
+		page.HasPrev = cursor != ""
+	}
+
+	page.Rows = data
+
+	pkIdx := -1
+	for i, name := range cols {
+		if name == pkCols[0] {
+			pkIdx = i
+			break
+		}
+	}
+	if pkIdx >= 0 && len(data) > 0 {
+		page.FirstCursor = data[0][pkIdx]
+		page.LastCursor = data[len(data)-1][pkIdx]
+	}
+
+	return page, nil
+}
+
+// devCursorArg keeps numeric keys comparable as numbers; other keys compare as
+// text. Passing a string for a numeric column would fail the comparison.
+func devCursorArg(s string) interface{} {
+	if n, err := strconv.ParseInt(s, 10, 64); err == nil {
+		return n
+	}
+	return s
 }
 
 func devSelectRow(db *sql.DB, table string, pkValues map[string]string) ([]string, []string, error) {

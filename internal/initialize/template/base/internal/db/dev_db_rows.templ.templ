@@ -8,15 +8,18 @@ import (
 )
 
 type devDBRowsData struct {
-	Table      string
-	Columns    []string
-	ColInfo    []columnInfo
-	Rows       [][]string
-	HasPK      bool
-	Total      int64
-	Page       int
-	TotalPages int
-	PerPage    int
+	Table       string
+	Columns     []string
+	ColInfo     []columnInfo
+	Rows        [][]string
+	HasPK       bool
+	Total       int64
+	Limit       int
+	Paginated   bool
+	FirstCursor string
+	LastCursor  string
+	HasPrev     bool
+	HasNext     bool
 }
 
 func devDBRowPKQuery(columns []columnInfo, row []string, colNames []string) string {
@@ -80,18 +83,19 @@ templ devDBRowsPage(data devDBRowsData) {
 			</div>
 		}
 		<hr/>
-		<div style="display: flex; gap: 12px; align-items: center;">
-			<span>Page { fmt.Sprintf("%d", data.Page) } of { fmt.Sprintf("%d", data.TotalPages) }</span>
-			if data.Page > 1 {
-				@ui.LinkButton("button", "prev", ui.LinkButtonStyle(false), templ.Attributes{
-					"onclick": fmt.Sprintf("window.location.href='/dev/db/tables/%s?page=%d&per_page=%d'", url.PathEscape(data.Table), data.Page-1, data.PerPage),
-				})
-			}
-			if data.Page < data.TotalPages {
-				@ui.LinkButton("button", "next", ui.LinkButtonStyle(false), templ.Attributes{
-					"onclick": fmt.Sprintf("window.location.href='/dev/db/tables/%s?page=%d&per_page=%d'", url.PathEscape(data.Table), data.Page+1, data.PerPage),
-				})
-			}
-		</div>
+		if data.Paginated {
+			<div style="display: flex; gap: 12px; align-items: center;">
+				if data.HasPrev {
+					@ui.LinkButton("button", "prev", ui.LinkButtonStyle(false), templ.Attributes{
+						"onclick": fmt.Sprintf("window.location.href='/dev/db/tables/%s?cursor=%s&dir=prev&limit=%d'", url.PathEscape(data.Table), url.QueryEscape(data.FirstCursor), data.Limit),
+					})
+				}
+				if data.HasNext {
+					@ui.LinkButton("button", "next", ui.LinkButtonStyle(false), templ.Attributes{
+						"onclick": fmt.Sprintf("window.location.href='/dev/db/tables/%s?cursor=%s&dir=next&limit=%d'", url.PathEscape(data.Table), url.QueryEscape(data.LastCursor), data.Limit),
+					})
+				}
+			</div>
+		}
 	}
 }

@@ -1,36 +1,56 @@
 package pagination
 
 import (
+	"math"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	defaultLimit = 10
+	maxLimit     = 100
+)
+
+// Settings holds cursor pagination parameters parsed from a request.
+//
+// Results are ordered by descending id, so Cursor is the id to page back from.
+// When no cursor is supplied it defaults to the maximum id, yielding the first
+// (newest) page.
 type Settings struct {
-	Page    int
-	PerPage int
-	Offset  int
+	Limit  int
+	Cursor int64
 }
 
+// FromRequest parses the `limit` and `cursor` query parameters.
 func FromRequest(c *gin.Context) Settings {
-	page := 1
-	perPage := 10
-
-	if p := c.Query("page"); p != "" {
-		if parsed, err := strconv.Atoi(p); err == nil && parsed > 0 {
-			page = parsed
+	limit := defaultLimit
+	if l := c.Query("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= maxLimit {
+			limit = parsed
 		}
 	}
 
-	if pp := c.Query("per_page"); pp != "" {
-		if parsed, err := strconv.Atoi(pp); err == nil && parsed > 0 && parsed <= 100 {
-			perPage = parsed
+	cursor := int64(math.MaxInt64)
+	if cu := c.Query("cursor"); cu != "" {
+		if parsed, err := strconv.ParseInt(cu, 10, 64); err == nil && parsed > 0 {
+			cursor = parsed
 		}
 	}
 
-	return Settings{
-		Page:    page,
-		PerPage: perPage,
-		Offset:  (page - 1) * perPage,
+	return Settings{Limit: limit, Cursor: cursor}
+}
+
+// Page trims an over-fetched result set to the requested limit and returns the
+// cursor for the next page. Callers should query Limit+1 rows so that the
+// presence of an extra row signals another page. The returned cursor is nil
+// when there are no more rows.
+func Page[T any](items []T, s Settings, idOf func(T) int64) ([]T, *int64) {
+	if len(items) <= s.Limit {
+		return items, nil
 	}
+
+	items = items[:s.Limit]
+	next := idOf(items[len(items)-1])
+	return items, &next
 }
