@@ -13,6 +13,7 @@ func Command() *cobra.Command {
 		quiet               bool
 		database            string
 		keyValueStore       string
+		jobProcessor        string
 		containerRuntime    string
 		outputDir           string
 		git                 bool
@@ -44,11 +45,17 @@ func Command() *cobra.Command {
 				log.Fatal(err)
 			}
 
+			jobProcessorEnum, err := initialize.ParseJobProcessor(jobProcessor)
+			if err != nil {
+				log.Fatal(err)
+			}
+
 			err = initialize.Run(&initialize.Config{
 				Quiet:               quiet,
 				Name:                args[0],
 				Database:            dbEnum,
 				KeyValueStore:       kvsEnum,
+				JobProcessor:        jobProcessorEnum,
 				ContainerRuntime:    containerRuntimeEnum,
 				Git:                 git,
 				OutputDir:           outputDir,
@@ -71,6 +78,7 @@ func Command() *cobra.Command {
 	cmd.Flags().BoolVar(&quiet, "quiet", false, "Disable project generation messages")
 	cmd.Flags().BoolVar(&git, "git", true, "Initialize git")
 	cmd.Flags().StringVar(&keyValueStore, "kvs", "none", fmt.Sprintf("Key-value store %v", initialize.AllKeyValueStores))
+	cmd.Flags().StringVar(&jobProcessor, "jobs", "none", fmt.Sprintf("Job processor, postgres only %v", initialize.AllJobProcessors))
 	cmd.Flags().BoolVar(&smtp, "smtp", false, "Add SMTP")
 	cmd.Flags().BoolVar(&storage, "storage", false, "Add Storage (S3)")
 	cmd.Flags().BoolVar(&templ, "templ", false, "Add HTML (templ)")

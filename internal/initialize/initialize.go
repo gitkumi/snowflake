@@ -24,6 +24,7 @@ type Config struct {
 	SMTP          bool
 	Storage       bool
 	KeyValueStore KeyValueStore
+	JobProcessor  JobProcessor
 	Templ         bool
 
 	DevDBDashboard      bool
@@ -63,7 +64,7 @@ func Finalize(cfg *Config) error {
 		}
 	}
 
-	printSuccessMessage(project.Name, project.Database, project.HasKeyValueStore(), cfg.Quiet)
+	printSuccessMessage(project.Name, project.Database, project.HasKeyValueStore(), project.HasJobs(), cfg.Quiet)
 
 	return nil
 }
@@ -176,8 +177,16 @@ func normalizeConfig(cfg *Config) error {
 	if cfg.KeyValueStore == "" {
 		cfg.KeyValueStore = KeyValueStoreNone
 	}
+	if cfg.JobProcessor == "" {
+		cfg.JobProcessor = JobProcessorNone
+	}
 	if cfg.ContainerRuntime == "" {
 		cfg.ContainerRuntime = ContainerRuntimePodman
+	}
+
+	// Job processing is currently only supported on Postgres.
+	if cfg.Database != DatabasePostgres {
+		cfg.JobProcessor = JobProcessorNone
 	}
 
 	// Dashboards are only valid when their parent feature is enabled.
@@ -201,6 +210,9 @@ func normalizeConfig(cfg *Config) error {
 	}
 	if !cfg.KeyValueStore.IsValid() {
 		return fmt.Errorf("invalid key-value store: %s. Must be one of: %v", cfg.KeyValueStore, AllKeyValueStores)
+	}
+	if !cfg.JobProcessor.IsValid() {
+		return fmt.Errorf("invalid job processor: %s. Must be one of: %v", cfg.JobProcessor, AllJobProcessors)
 	}
 	if !cfg.ContainerRuntime.IsValid() {
 		return fmt.Errorf("invalid container runtime: %s. Must be one of: %v", cfg.ContainerRuntime, AllContainerRuntimes)
@@ -227,7 +239,7 @@ func normalizeConfig(cfg *Config) error {
 	return nil
 }
 
-func printSuccessMessage(projectName string, database Database, hasKeyValueStore bool, quiet bool) {
+func printSuccessMessage(projectName string, database Database, hasKeyValueStore bool, hasJobs bool, quiet bool) {
 	if quiet {
 		return
 	}
@@ -246,6 +258,11 @@ Run your new project:
 	} else {
 		successMessage += `
   $ make app.dev`
+	}
+
+	if hasJobs {
+		successMessage += `
+  $ make app.worker # Start the job worker (in a separate terminal)`
 	}
 
 	fmt.Println(successMessage)

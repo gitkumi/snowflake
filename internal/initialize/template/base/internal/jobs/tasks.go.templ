@@ -1,0 +1,38 @@
+package jobs
+
+import (
+	"context"
+	"log/slog"
+
+	"github.com/earendil-works/absurd/sdks/go/absurd"
+)
+
+// ExampleJobParams are the parameters for the example job.
+type ExampleJobParams struct {
+	Message string `json:"message"`
+}
+
+// ExampleJobResult is the result of the example job.
+type ExampleJobResult struct {
+	Processed string `json:"processed"`
+}
+
+// ExampleJob is a sample durable task. Each task is decomposed into steps whose
+// results are checkpointed, so a task that crashes mid-way resumes from the last
+// completed step instead of restarting from scratch.
+var ExampleJob = absurd.Task(
+	"example-job",
+	func(ctx context.Context, params ExampleJobParams) (ExampleJobResult, error) {
+		task := absurd.MustTaskContext(ctx)
+
+		return absurd.Step(ctx, "process", func(ctx context.Context) (ExampleJobResult, error) {
+			slog.Info("processing example job", "task_id", task.TaskID(), "message", params.Message)
+			return ExampleJobResult{Processed: params.Message}, nil
+		})
+	},
+)
+
+// Register registers all application tasks on the worker client.
+func Register(client *absurd.Client) {
+	client.MustRegister(ExampleJob)
+}

@@ -123,6 +123,31 @@ func (k KeyValueStore) String() string {
 	return string(k)
 }
 
+type JobProcessor string
+
+const (
+	JobProcessorNone   JobProcessor = "none"
+	JobProcessorAbsurd JobProcessor = "absurd"
+)
+
+var AllJobProcessors = []JobProcessor{
+	JobProcessorNone,
+	JobProcessorAbsurd,
+}
+
+func (j JobProcessor) IsValid() bool {
+	for _, jp := range AllJobProcessors {
+		if jp == j {
+			return true
+		}
+	}
+	return false
+}
+
+func (j JobProcessor) String() string {
+	return string(j)
+}
+
 type ContainerRuntime string
 
 const (
@@ -174,4 +199,8 @@ func ParseKeyValueStore(value string) (KeyValueStore, error) {
 
 func ParseContainerRuntime(value string) (ContainerRuntime, error) {
 	return parseEnum[ContainerRuntime](value, ContainerRuntimePodman, "container runtime", AllContainerRuntimes)
+}
+
+func ParseJobProcessor(value string) (JobProcessor, error) {
+	return parseEnum[JobProcessor](value, JobProcessorNone, "job processor", AllJobProcessors)
 }

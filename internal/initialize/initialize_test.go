@@ -403,6 +403,87 @@ func TestGenerateNoDevDBDashboard(t *testing.T) {
 	}
 }
 
+func jobsFiles(projectDir string) []string {
+	return []string{
+		filepath.Join(projectDir, "internal", "jobs", "jobs.go"),
+		filepath.Join(projectDir, "internal", "jobs", "tasks.go"),
+		filepath.Join(projectDir, "internal", "jobs", "absurd.sql"),
+		filepath.Join(projectDir, "cmd", "worker", "main.go"),
+		filepath.Join(projectDir, "cmd", "app", "handlers", "jobs_handler.go"),
+	}
+}
+
+func TestGenerateJobs(t *testing.T) {
+	projectDir := generateProject(t, initialize.Config{
+		Quiet:        true,
+		Name:         "acme",
+		Database:     initialize.DatabasePostgres,
+		Git:          false,
+		JobProcessor: initialize.JobProcessorAbsurd,
+	})
+
+	for _, f := range jobsFiles(projectDir) {
+		if _, err := os.Stat(f); os.IsNotExist(err) {
+			t.Fatalf("jobs file not created at %s", f)
+		}
+	}
+
+	// The app must wire the jobs client and expose the example route.
+	router := mustReadFile(t, filepath.Join(projectDir, "cmd", "app", "router.go"))
+	if !strings.Contains(router, "HandleEnqueueExampleJob") {
+		t.Fatal("router should register the example job route when jobs are enabled")
+	}
+
+	// The migrator must install the absurd schema.
+	migrator := mustReadFile(t, filepath.Join(projectDir, "cmd", "migrator", "main.go"))
+	if !strings.Contains(migrator, "jobs.Setup") {
+		t.Fatal("migrator should set up jobs when jobs are enabled")
+	}
+
+	if err := assertInternalImportsResolve(projectDir, "acme"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGenerateNoJobs(t *testing.T) {
+	projectDir := generateProject(t, initialize.Config{
+		Quiet:        true,
+		Name:         "acme",
+		Database:     initialize.DatabasePostgres,
+		Git:          false,
+		JobProcessor: initialize.JobProcessorNone,
+	})
+
+	for _, f := range jobsFiles(projectDir) {
+		if _, err := os.Stat(f); !os.IsNotExist(err) {
+			t.Fatalf("jobs file should not exist at %s", f)
+		}
+	}
+
+	router := mustReadFile(t, filepath.Join(projectDir, "cmd", "app", "router.go"))
+	if strings.Contains(router, "HandleEnqueueExampleJob") {
+		t.Fatal("router should not reference jobs when jobs are disabled")
+	}
+}
+
+func TestGenerateJobsRequiresPostgres(t *testing.T) {
+	// Job processing is Postgres-only; it must be forced off for other databases
+	// even when explicitly requested.
+	projectDir := generateProject(t, initialize.Config{
+		Quiet:        true,
+		Name:         "acme",
+		Database:     initialize.DatabaseSQLite3,
+		Git:          false,
+		JobProcessor: initialize.JobProcessorAbsurd,
+	})
+
+	for _, f := range jobsFiles(projectDir) {
+		if _, err := os.Stat(f); !os.IsNotExist(err) {
+			t.Fatalf("jobs file should not exist for non-postgres database at %s", f)
+		}
+	}
+}
+
 func TestEnvFilesGenerated(t *testing.T) {
 	tmpDir := t.TempDir()
 

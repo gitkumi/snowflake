@@ -90,6 +90,16 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
+				"/internal/jobs/jobs.go",
+				"/internal/jobs/tasks.go",
+				"/internal/jobs/absurd.sql",
+				"/cmd/worker/main.go",
+				"/cmd/app/handlers/jobs_handler.go",
+			},
+			Check: func(p *Project) bool { return !p.HasJobs() },
+		},
+		{
+			FilePaths: []string{
 				"/internal/html/html.go",
 				"/internal/html/static/reset.css",
 				"/internal/html/pages/index.templ",
@@ -108,6 +118,10 @@ func NewProject(cfg *Config) *Project {
 
 func (p *Project) HasKeyValueStore() bool {
 	return p.KeyValueStore != KeyValueStoreNone
+}
+
+func (p *Project) HasJobs() bool {
+	return p.JobProcessor != JobProcessorNone
 }
 
 func (p *Project) HasDevEnv() bool {

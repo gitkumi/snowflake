@@ -32,6 +32,9 @@ func (s *server) newRouter() *gin.Engine {
 			Valkey: s.valkey,
 {{- end }}
 		}))
+{{- if .HasJobs }}
+		api.POST("/jobs/example", handlers.HandleEnqueueExampleJob(s.jobs))
+{{- end }}
 	}
 
 	return router

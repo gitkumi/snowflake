@@ -1,11 +1,18 @@
 package main
 
 import (
+{{- if .HasJobs }}
+	"context"
+{{- end }}
+	"errors"
 	"log"
 
 	"{{.Name}}/cmd/app/sql"
 	"{{.Name}}/internal/db"
 	internalenv "{{.Name}}/internal/env"
+{{- if .HasJobs }}
+	"{{.Name}}/internal/jobs"
+{{- end }}
 
 	"github.com/joho/godotenv"
 	"github.com/pressly/goose/v3"
@@ -28,7 +35,13 @@ func main() {
 		log.Fatal("failed to set dialect: ", err)
 	}
 
-	if err := goose.Up(database, "migrations"); err != nil {
+	if err := goose.Up(database, "migrations"); err != nil && !errors.Is(err, goose.ErrNoMigrationFiles) {
 		log.Fatal("failed to run migrations: ", err)
 	}
+{{- if .HasJobs }}
+
+	if err := jobs.Setup(context.Background(), database, internalenv.GetEnvWithDefault("JOBS_QUEUE_NAME", "default")); err != nil {
+		log.Fatal("failed to set up jobs: ", err)
+	}
+{{- end }}
 }

@@ -1,0 +1,32 @@
+package handlers
+
+import (
+	"net/http"
+
+	"{{ .Name }}/internal/jobs"
+
+	"github.com/earendil-works/absurd/sdks/go/absurd"
+	"github.com/gin-gonic/gin"
+)
+
+// HandleEnqueueExampleJob spawns the example durable job and returns its ids.
+func HandleEnqueueExampleJob(client *absurd.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var params jobs.ExampleJobParams
+		if err := c.ShouldBindJSON(&params); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		spawned, err := jobs.ExampleJob.Spawn(c.Request.Context(), client, params)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusAccepted, gin.H{
+			"task_id": spawned.TaskID,
+			"run_id":  spawned.RunID,
+		})
+	}
+}

@@ -20,6 +20,7 @@ func Command() *cobra.Command {
 			projectPath := ""
 			database := initialize.AllDatabases[0]
 			keyValueStore := initialize.AllKeyValueStores[0]
+			jobProcessor := initialize.AllJobProcessors[0]
 			containerRuntime := initialize.AllContainerRuntimes[0] // Defaults to Podman
 			selectedFeatures := []string{"Git"}
 			selectedDashboards := []string{}
@@ -67,6 +68,19 @@ func Command() *cobra.Command {
 					Value(&keyValueStore),
 			)
 
+			jobProcessorGroup := huh.NewGroup(
+				huh.NewSelect[initialize.JobProcessor]().
+					Title("Select job processor").
+					Options(
+						huh.NewOption("None", initialize.JobProcessorNone),
+						huh.NewOption("Absurd", initialize.JobProcessorAbsurd),
+					).
+					Value(&jobProcessor),
+			).WithHideFunc(func() bool {
+				// Job processing is currently only supported on Postgres.
+				return database != initialize.DatabasePostgres
+			})
+
 			dashboardsGroup := huh.NewGroup(
 				huh.NewMultiSelect[string]().
 					Title("Add dev dashboards").
@@ -105,6 +119,7 @@ func Command() *cobra.Command {
 				projectPathGroup,
 				databaseGroup,
 				keyValueStoreGroup,
+				jobProcessorGroup,
 				featuresGroup,
 				dashboardsGroup,
 				containerRuntimeGroup,
@@ -125,6 +140,7 @@ func Command() *cobra.Command {
 			cfg.OutputDir = outputDir
 			cfg.Database = database
 			cfg.KeyValueStore = keyValueStore
+			cfg.JobProcessor = jobProcessor
 			cfg.ContainerRuntime = containerRuntime
 
 			cfg.Git = contains(selectedFeatures, "Git")

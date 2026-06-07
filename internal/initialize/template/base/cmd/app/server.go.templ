@@ -19,6 +19,9 @@ import (
 {{- if .Storage }}
 	"{{ .Name }}/internal/storage"
 {{- end }}
+{{- if .HasJobs }}
+	"github.com/earendil-works/absurd/sdks/go/absurd"
+{{- end }}
 {{- if eq .KeyValueStore "redis" }}
 	"github.com/redis/go-redis/v9"
 {{- else if eq .KeyValueStore "valkey" }}
@@ -44,6 +47,9 @@ type server struct {
 {{- if .Storage }}
 	storage storage.Storage
 {{- end }}
+{{- if .HasJobs }}
+	jobs    *absurd.Client
+{{- end }}
 	baseURL string
 	port    int
 	router  *gin.Engine
@@ -66,6 +72,9 @@ func newServer(
 {{- if .Storage }}
 	stor storage.Storage,
 {{- end }}
+{{- if .HasJobs }}
+	jobsClient *absurd.Client,
+{{- end }}
 	baseURL string,
 	port int,
 	ginMode string,
@@ -87,6 +96,9 @@ func newServer(
 {{- end }}
 {{- if .Storage }}
 		storage:       stor,
+{{- end }}
+{{- if .HasJobs }}
+		jobs:          jobsClient,
 {{- end }}
 		baseURL:       baseURL,
 		port:          port,

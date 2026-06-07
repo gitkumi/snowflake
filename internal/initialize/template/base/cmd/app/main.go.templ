@@ -17,6 +17,9 @@ import (
 {{- if .Storage }}
 	"{{ .Name }}/internal/storage"
 {{- end }}
+{{- if .HasJobs }}
+	"{{ .Name }}/internal/jobs"
+{{- end }}
 {{- if eq .KeyValueStore "redis" }}
 	"github.com/redis/go-redis/v9"
 {{- else if eq .KeyValueStore "valkey" }}
@@ -97,6 +100,17 @@ func main() {
 	defer vk.Close()
 {{- end }}
 
+{{- if .HasJobs }}
+	jobsClient, err := jobs.New(&jobs.Config{
+		DB:        database,
+		QueueName: vars.JobsQueueName,
+	})
+	if err != nil {
+		log.Fatal("failed to create jobs client: ", err)
+	}
+	defer jobsClient.Close()
+{{- end }}
+
 	srv := newServer(
 {{- if ne .Database.String "none" }}
 		database,
@@ -112,6 +126,9 @@ func main() {
 {{- end }}
 {{- if .Storage }}
 		stor,
+{{- end }}
+{{- if .HasJobs }}
+		jobsClient,
 {{- end }}
 		vars.BaseURL,
 		vars.Port,

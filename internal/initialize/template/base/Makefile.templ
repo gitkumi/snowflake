@@ -63,6 +63,12 @@ app.run:
 .PHONY: app.dev
 app.dev:
 	air
+{{- if .HasJobs }}
+
+.PHONY: app.worker
+app.worker:
+	go run ./cmd/worker
+{{- end }}
 
 {{- if .Templ }}
 

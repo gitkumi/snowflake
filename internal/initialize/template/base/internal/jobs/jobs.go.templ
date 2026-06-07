@@ -1,0 +1,66 @@
+package jobs
+
+import (
+	"context"
+	"database/sql"
+	_ "embed"
+	"fmt"
+
+	"github.com/earendil-works/absurd/sdks/go/absurd"
+)
+
+// schemaSQL is the Absurd schema, applied to the database on setup.
+//
+//go:embed absurd.sql
+var schemaSQL string
+
+// Config configures the jobs client.
+type Config struct {
+	DB        *sql.DB
+	QueueName string
+}
+
+// New creates an Absurd client that reuses the application's database pool.
+//
+// Because the pool is shared, the returned client does not own it: calling
+// Close on the client is a no-op and the pool must be closed by its owner.
+func New(cfg *Config) (*absurd.Client, error) {
+	return absurd.New(absurd.Options{
+		DB:        cfg.DB,
+		QueueName: cfg.QueueName,
+	})
+}
+
+// Setup installs the Absurd schema and ensures the given queue exists.
+//
+// It is idempotent: the schema is only installed when absent and queue
+// creation is a no-op when the queue already exists.
+func Setup(ctx context.Context, db *sql.DB, queueName string) error {
+	if err := install(ctx, db); err != nil {
+		return err
+	}
+
+	client, err := New(&Config{DB: db, QueueName: queueName})
+	if err != nil {
+		return err
+	}
+
+	return client.CreateQueue(ctx, queueName)
+}
+
+// install applies the Absurd schema to the database if it is not already present.
+func install(ctx context.Context, db *sql.DB) error {
+	var installed bool
+	if err := db.QueryRowContext(ctx, `SELECT to_regnamespace('absurd') IS NOT NULL`).Scan(&installed); err != nil {
+		return fmt.Errorf("check absurd schema: %w", err)
+	}
+	if installed {
+		return nil
+	}
+
+	if _, err := db.ExecContext(ctx, schemaSQL); err != nil {
+		return fmt.Errorf("install absurd schema: %w", err)
+	}
+
+	return nil
+}
