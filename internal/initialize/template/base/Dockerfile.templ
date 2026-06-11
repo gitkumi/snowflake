@@ -48,8 +48,7 @@ ENV ENVIRONMENT=production \
     PORT=${PORT} \
     GIN_MODE=release
 {{- if ne .Database.String "none" }}
-ENV DATABASE_CONN_STRING=${DATABASE_CONN_STRING} \
-    MIGRATE_DATABASE=false
+ENV DATABASE_CONN_STRING=${DATABASE_CONN_STRING}
 {{- end }}
 {{- if .SMTP }}
 ENV SMTP_HOST=${SMTP_HOST} \
