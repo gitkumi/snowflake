@@ -1,15 +1,13 @@
 package main
 
 import (
-{{- if .HasJobs }}
 	"context"
-{{- end }}
 	"errors"
 	"log"
 
+	"{{.Name}}/cmd/app/env"
 	"{{.Name}}/cmd/app/sql"
 	"{{.Name}}/internal/db"
-	internalenv "{{.Name}}/internal/env"
 {{- if .HasJobs }}
 	"{{.Name}}/internal/jobs"
 {{- end }}
@@ -23,12 +21,16 @@ func main() {
 		log.Fatal("failed to load .env: ", err)
 	}
 
-	database, err := db.NewDB(&db.Config{
-		DatabaseConnString: internalenv.GetEnvWithDefault("DATABASE_CONN_STRING", ""),
+	vars := env.Load()
+	ctx := context.Background()
+
+	database, err := db.NewDB(ctx, &db.Config{
+		DatabaseConnString: vars.DatabaseConnString,
 	})
 	if err != nil {
 		log.Fatal("failed to create DB: ", err)
 	}
+	defer database.Close()
 
 	goose.SetBaseFS(sql.Migration)
 	if err := goose.SetDialect("{{.Database.Driver}}"); err != nil {
@@ -40,7 +42,7 @@ func main() {
 	}
 {{- if .HasJobs }}
 
-	if err := jobs.Setup(context.Background(), database, internalenv.GetEnvWithDefault("JOBS_QUEUE_NAME", "default")); err != nil {
+	if err := jobs.Setup(ctx, database, vars.JobsQueueName); err != nil {
 		log.Fatal("failed to set up jobs: ", err)
 	}
 {{- end }}

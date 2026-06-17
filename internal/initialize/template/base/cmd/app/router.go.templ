@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log/slog"
+	"time"
 {{- if .Templ }}
 	"net/http"
 	"{{ .Name }}/internal/html"
@@ -10,9 +12,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// newRouter sets up all HTTP routes for the service
+// newRouter sets up all HTTP routes for the service.
 func (s *server) newRouter() *gin.Engine {
-	router := gin.Default()
+	// gin.New (rather than gin.Default) so request logging flows through the
+	// application's slog logger instead of gin's separate stdout logger.
+	router := gin.New()
+	router.Use(requestLogger(s.logger), gin.Recovery())
+
+	// cors.Default allows all origins; tighten this before going to production.
 	router.Use(cors.Default())
 
 {{- if .Templ }}
@@ -35,7 +42,31 @@ func (s *server) newRouter() *gin.Engine {
 {{- if .HasJobs }}
 		api.POST("/jobs/example", handlers.HandleEnqueueExampleJob(s.jobs))
 {{- end }}
+{{- if .SMTP }}
+		api.POST("/send", handlers.HandleSendEmail(s.mailer))
+{{- end }}
+{{- if .Storage }}
+		api.POST("/storage/upload", handlers.HandleUploadObject(s.storage))
+		api.GET("/storage", handlers.HandleListObjects(s.storage))
+{{- end }}
 	}
 
 	return router
+}
+
+// requestLogger logs each request through the application's slog logger so HTTP
+// access logs share the format and destination of the rest of the service.
+func requestLogger(logger *slog.Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		c.Next()
+
+		logger.Info("request",
+			"method", c.Request.Method,
+			"path", c.Request.URL.Path,
+			"status", c.Writer.Status(),
+			"duration", time.Since(start),
+			"client_ip", c.ClientIP(),
+		)
+	}
 }

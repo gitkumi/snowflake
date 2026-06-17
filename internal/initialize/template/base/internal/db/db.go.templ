@@ -1,9 +1,12 @@
 package db
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"time"
 {{- if ne .Database.String "none" }}
+
 	_ "{{.Database.Import}}"
 {{- end }}
 )
@@ -12,8 +15,12 @@ type Config struct {
 	DatabaseConnString string
 }
 
-func NewDB(cfg *Config) (*sql.DB, error) {
-	db, err := sql.Open("{{ .Database.Driver }}", cfg.DatabaseConnString)
+// NewDB opens a database connection pool and verifies it is reachable.
+//
+// sql.Open is lazy and never contacts the server, so NewDB pings the database
+// to fail fast on a bad connection string or an unreachable host.
+func NewDB(ctx context.Context, cfg *Config) (*sql.DB, error) {
+	db, err := sql.Open("{{ .Database.SQLDriver }}", cfg.DatabaseConnString)
 	if err != nil {
 		return nil, err
 	}
@@ -21,6 +28,11 @@ func NewDB(cfg *Config) (*sql.DB, error) {
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(25)
 	db.SetConnMaxLifetime(2 * time.Minute)
+
+	if err := db.PingContext(ctx); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("ping database: %w", err)
+	}
 
 	return db, nil
 }

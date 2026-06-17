@@ -1,10 +1,9 @@
 package storage
 
 import (
-	"encoding/hex"
+	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"mime/multipart"
@@ -16,19 +15,20 @@ import (
 	"strings"
 	"sync"
 	"time"
+{{- if .DevStorageDashboard }}
+	"encoding/hex"
+	"fmt"
 	"unicode/utf8"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-{{- if .DevStorageDashboard }}
 	"github.com/gin-gonic/gin"
 {{- end }}
 )
 
-const (
-	maxObjects       = 1000
-	objectPreviewMax = 4096
-)
+const maxObjects = 1000
+{{- if .DevStorageDashboard }}
+
+const objectPreviewMax = 4096
+{{- end }}
 
 // StoredObject is a development-only snapshot of an uploaded object.
 type StoredObject struct {
@@ -71,7 +71,7 @@ func (s *DevStorage) Routes(rg *gin.RouterGroup) {
 {{- end }}
 
 // Get downloads an object into a temporary file and returns its local path.
-func (s *DevStorage) Get(key string) (string, error) {
+func (s *DevStorage) Get(ctx context.Context, key string) (string, error) {
 	object, ok := s.GetObject(key)
 	if !ok {
 		return "", os.ErrNotExist
@@ -92,22 +92,21 @@ func (s *DevStorage) Get(key string) (string, error) {
 }
 
 // List returns stored objects matching prefix in reverse chronological order.
-func (s *DevStorage) List(prefix string) ([]types.Object, error) {
+func (s *DevStorage) List(ctx context.Context, prefix string) ([]ObjectInfo, error) {
 	objects := s.ListObjects(prefix)
-	items := make([]types.Object, 0, len(objects))
+	items := make([]ObjectInfo, 0, len(objects))
 	for _, object := range objects {
-		lastModified := object.CreatedAt
-		items = append(items, types.Object{
-			Key:          aws.String(object.Key),
-			Size:         aws.Int64(object.Size),
-			LastModified: &lastModified,
+		items = append(items, ObjectInfo{
+			Key:          object.Key,
+			Size:         object.Size,
+			LastModified: object.CreatedAt,
 		})
 	}
 	return items, nil
 }
 
 // Upload stores an object locally for later inspection.
-func (s *DevStorage) Upload(key string, file multipart.File) (string, error) {
+func (s *DevStorage) Upload(ctx context.Context, key string, file multipart.File) (string, error) {
 	key = strings.TrimSpace(key)
 	if key == "" {
 		return "", errors.New("key is required")
@@ -150,7 +149,7 @@ func (s *DevStorage) Upload(key string, file multipart.File) (string, error) {
 }
 
 // Delete removes a stored object.
-func (s *DevStorage) Delete(key string) error {
+func (s *DevStorage) Delete(ctx context.Context, key string) error {
 	key = strings.TrimSpace(key)
 	if key == "" {
 		return errors.New("key is required")
@@ -248,7 +247,7 @@ func (s *DevStorage) load() {
 func (s *DevStorage) save() {
 	dir := filepath.Dir(s.path)
 	if dir != "." {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			s.logger.Error("failed to create storage directory", "path", dir, "error", err)
 			return
 		}
@@ -260,7 +259,7 @@ func (s *DevStorage) save() {
 		return
 	}
 
-	if err := os.WriteFile(s.path, data, 0644); err != nil {
+	if err := os.WriteFile(s.path, data, 0o644); err != nil {
 		s.logger.Error("failed to write storage file", "path", s.path, "error", err)
 	}
 }
@@ -270,6 +269,15 @@ func cloneObject(object StoredObject) StoredObject {
 	out.Data = append([]byte(nil), object.Data...)
 	return out
 }
+
+func tempPattern(key string) string {
+	key = strings.ReplaceAll(key, "/", "_")
+	if key == "" || key == "." {
+		return "object"
+	}
+	return key
+}
+{{- if .DevStorageDashboard }}
 
 func formatObjectSize(size int64) string {
 	switch {
@@ -345,11 +353,4 @@ func validUTF8Prefix(data []byte) []byte {
 	}
 	return data
 }
-
-func tempPattern(key string) string {
-	key = strings.ReplaceAll(key, "/", "_")
-	if key == "" || key == "." {
-		return "object"
-	}
-	return key
-}
+{{- end }}

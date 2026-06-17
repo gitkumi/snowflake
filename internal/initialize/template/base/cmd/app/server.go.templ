@@ -146,7 +146,6 @@ func (s *server) run() error {
 	}()
 
 	s.logger.Info("server starting", "address", fmt.Sprintf("http://%s:%d", s.baseURL, s.port))
-	fmt.Printf("\nServer started at http://%s:%d\n", s.baseURL, s.port)
 
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("listen and serve: %w", err)

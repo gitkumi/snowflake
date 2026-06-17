@@ -66,6 +66,25 @@ func (d Database) Driver() string {
 	}
 }
 
+// SQLDriver returns the database/sql driver name passed to sql.Open, matching
+// the driver registered by the imported package. This differs from Driver
+// (the goose dialect): PostgreSQL uses the "pgx" driver but the "postgres"
+// goose dialect.
+func (d Database) SQLDriver() string {
+	switch d {
+	case DatabaseSQLite3:
+		return "sqlite3"
+	case DatabasePostgres:
+		return "pgx"
+	case DatabaseMySQL:
+		return "mysql"
+	case DatabaseMariaDB:
+		return "mysql"
+	default:
+		return ""
+	}
+}
+
 func (d Database) SQLCEngine() string {
 	switch d {
 	case DatabaseSQLite3:
@@ -86,7 +105,7 @@ func (d Database) Import() string {
 	case DatabaseSQLite3:
 		return "github.com/mattn/go-sqlite3"
 	case DatabasePostgres:
-		return "github.com/lib/pq"
+		return "github.com/jackc/pgx/v5/stdlib"
 	case DatabaseMySQL:
 		return "github.com/go-sql-driver/mysql"
 	case DatabaseMariaDB:

@@ -59,7 +59,7 @@ func handleSend(store *DevMailbox) gin.HandlerFunc {
 			return
 		}
 
-		if err := store.Send(Email{
+		if err := store.Send(c.Request.Context(), Email{
 			To:      to,
 			Subject: subject,
 			Body:    body,

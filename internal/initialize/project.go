@@ -53,6 +53,7 @@ func NewProject(cfg *Config) *Project {
 				"/internal/storage/storage.go",
 				"/internal/storage/s3.go",
 				"/internal/storage/dev_storage.go",
+				"/cmd/app/handlers/storage_handler.go",
 			},
 			Check: func(p *Project) bool { return !p.Storage },
 		},

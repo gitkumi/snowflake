@@ -66,7 +66,7 @@ func handleUpload(store *DevStorage) gin.HandlerFunc {
 		}
 		defer file.Close()
 
-		if _, err := store.Upload(key, file); err != nil {
+		if _, err := store.Upload(c.Request.Context(), key, file); err != nil {
 			c.String(http.StatusInternalServerError, "failed to store object")
 			return
 		}
@@ -83,7 +83,7 @@ func handleDelete(store *DevStorage) gin.HandlerFunc {
 			return
 		}
 
-		if err := store.Delete(key); err != nil {
+		if err := store.Delete(c.Request.Context(), key); err != nil {
 			c.String(http.StatusNotFound, "object not found")
 			return
 		}

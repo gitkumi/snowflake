@@ -1,14 +1,22 @@
 package storage
 
 import (
+	"context"
 	"mime/multipart"
-
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"time"
 )
 
+// ObjectInfo describes a stored object. It is backend-agnostic so callers do
+// not depend on the underlying storage SDK's types.
+type ObjectInfo struct {
+	Key          string
+	Size         int64
+	LastModified time.Time
+}
+
 type Storage interface {
-	Get(key string) (string, error)
-	List(prefix string) ([]types.Object, error)
-	Upload(key string, file multipart.File) (string, error)
-	Delete(prefix string) error
+	Get(ctx context.Context, key string) (string, error)
+	List(ctx context.Context, prefix string) ([]ObjectInfo, error)
+	Upload(ctx context.Context, key string, file multipart.File) (string, error)
+	Delete(ctx context.Context, key string) error
 }

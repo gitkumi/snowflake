@@ -1,7 +1,10 @@
 package main
 
 import (
-	"log"
+{{- if or (ne .Database.String "none") .Storage }}
+	"context"
+{{- end }}
+	"fmt"
 	"log/slog"
 	"os"
 
@@ -28,22 +31,37 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		fmt.Fprintln(os.Stderr, "fatal:", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
 	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal("failed to load .env: ", err)
+		return fmt.Errorf("load .env: %w", err)
 	}
 	vars := env.Load()
 
 	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{
 		Level: slog.LevelDebug,
 	}))
+	// Make the configured logger the default so package-level slog calls (such
+	// as those in background jobs) share the same handler and destination.
+	slog.SetDefault(logger)
+
+{{- if or (ne .Database.String "none") .Storage }}
+	ctx := context.Background()
+{{- end }}
 
 {{- if ne .Database.String "none" }}
-	database, err := db.NewDB(&db.Config{
+	database, err := db.NewDB(ctx, &db.Config{
 		DatabaseConnString: vars.DatabaseConnString,
 	})
 	if err != nil {
-		log.Fatal("failed to create DB: ", err)
+		return fmt.Errorf("create DB: %w", err)
 	}
+	defer database.Close()
 {{- end }}
 
 {{- if .SMTP }}
@@ -58,7 +76,7 @@ func main() {
 			From:     vars.SMTPFrom,
 		})
 		if err != nil {
-			log.Fatal("failed to create mailer: ", err)
+			return fmt.Errorf("create mailer: %w", err)
 		}
 		mailer = m
 	default:
@@ -70,13 +88,17 @@ func main() {
 	var stor storage.Storage
 	switch vars.Environment {
 	case "production":
-		stor = storage.NewS3Storage(&storage.S3StorageConfig{
+		s3, err := storage.NewS3Storage(ctx, &storage.S3StorageConfig{
 			AccessKey:   vars.S3AccessKey,
 			SecretKey:   vars.S3SecretKey,
 			EndpointURL: vars.S3EndpointURL,
 			Region:      vars.S3Region,
 			Bucket:      vars.S3Bucket,
 		})
+		if err != nil {
+			return fmt.Errorf("create storage: %w", err)
+		}
+		stor = s3
 	default:
 		stor = storage.NewDevStorage("tmp/snowflake_dev_storage.json", logger)
 	}
@@ -88,6 +110,7 @@ func main() {
 		Password: vars.RedisPassword,
 		DB:       vars.RedisDB,
 	})
+	defer rdb.Close()
 {{- else if eq .KeyValueStore "valkey" }}
 	vk, err := valkey.NewClient(valkey.ClientOption{
 		InitAddress: []string{vars.ValkeyAddr},
@@ -95,7 +118,7 @@ func main() {
 		SelectDB:    vars.ValkeyDB,
 	})
 	if err != nil {
-		log.Fatal("failed to create valkey client: ", err)
+		return fmt.Errorf("create valkey client: %w", err)
 	}
 	defer vk.Close()
 {{- end }}
@@ -106,7 +129,7 @@ func main() {
 		QueueName: vars.JobsQueueName,
 	})
 	if err != nil {
-		log.Fatal("failed to create jobs client: ", err)
+		return fmt.Errorf("create jobs client: %w", err)
 	}
 	defer jobsClient.Close()
 
@@ -154,6 +177,8 @@ func main() {
 {{- end }}
 
 	if err := srv.run(); err != nil {
-		log.Fatal("server error: ", err)
+		return fmt.Errorf("run server: %w", err)
 	}
+
+	return nil
 }

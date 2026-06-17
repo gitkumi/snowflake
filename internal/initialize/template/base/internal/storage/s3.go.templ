@@ -11,15 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
 type S3Storage struct {
-	AccessKey   string
-	SecretKey   string
-	EndpointURL string
-	Region      string
-	Bucket      string
+	client *s3.Client
+	bucket string
 }
 
 type S3StorageConfig struct {
@@ -30,35 +26,26 @@ type S3StorageConfig struct {
 	Bucket      string
 }
 
-func NewS3Storage(cfg *S3StorageConfig) *S3Storage {
-	return &S3Storage{
-		AccessKey:   cfg.AccessKey,
-		SecretKey:   cfg.SecretKey,
-		EndpointURL: cfg.EndpointURL,
-		Region:      cfg.Region,
-		Bucket:      cfg.Bucket,
-	}
-}
-
-func (s *S3Storage) createClient(ctx context.Context) (*s3.Client, error) {
-	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(s.Region),
+// NewS3Storage builds the S3 client once and reuses it for all operations.
+func NewS3Storage(ctx context.Context, cfg *S3StorageConfig) (*S3Storage, error) {
+	awsCfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(cfg.Region),
 		config.WithCredentialsProvider(
-			credentials.NewStaticCredentialsProvider(s.AccessKey, s.SecretKey, ""),
+			credentials.NewStaticCredentialsProvider(cfg.AccessKey, cfg.SecretKey, ""),
 		),
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		if s.EndpointURL != "" {
-			o.BaseEndpoint = aws.String(s.EndpointURL)
+	client := s3.NewFromConfig(awsCfg, func(o *s3.Options) {
+		if cfg.EndpointURL != "" {
+			o.BaseEndpoint = aws.String(cfg.EndpointURL)
 		}
 		o.UsePathStyle = true
 	})
 
-	return client, nil
+	return &S3Storage{client: client, bucket: cfg.Bucket}, nil
 }
 
 func createLocalPath(keys ...string) (string, error) {
@@ -67,28 +54,21 @@ func createLocalPath(keys ...string) (string, error) {
 		localPath = path.Join(localPath, key)
 	}
 
-	err := os.MkdirAll(path.Dir(localPath), os.ModePerm)
-	if err != nil {
+	if err := os.MkdirAll(path.Dir(localPath), 0o755); err != nil {
 		return "", err
 	}
 
 	return localPath, nil
 }
 
-func (s *S3Storage) Get(key string) (string, error) {
+func (s *S3Storage) Get(ctx context.Context, key string) (string, error) {
 	localPath, err := createLocalPath(key)
 	if err != nil {
 		return "", err
 	}
 
-	ctx := context.Background()
-	client, err := s.createClient(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	object, err := client.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: &s.Bucket,
+	object, err := s.client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: &s.bucket,
 		Key:    &key,
 	})
 	if err != nil {
@@ -101,62 +81,55 @@ func (s *S3Storage) Get(key string) (string, error) {
 		return "", err
 	}
 
-	err = os.WriteFile(localPath, content, os.ModePerm)
-	if err != nil {
+	if err := os.WriteFile(localPath, content, 0o644); err != nil {
 		return "", err
 	}
 
 	return localPath, nil
 }
 
-func (s *S3Storage) List(prefix string) ([]types.Object, error) {
-	ctx := context.Background()
-	client, err := s.createClient(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
-		Bucket: &s.Bucket,
+func (s *S3Storage) List(ctx context.Context, prefix string) ([]ObjectInfo, error) {
+	resp, err := s.client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
+		Bucket: &s.bucket,
 		Prefix: &prefix,
 	})
-
 	if err != nil {
 		return nil, err
 	}
 
-	return resp.Contents, nil
-}
-
-func (s *S3Storage) Upload(key string, file multipart.File) (string, error) {
-	ctx := context.Background()
-	client, err := s.createClient(ctx)
-	if err != nil {
-		return "", err
+	objects := make([]ObjectInfo, 0, len(resp.Contents))
+	for _, obj := range resp.Contents {
+		info := ObjectInfo{}
+		if obj.Key != nil {
+			info.Key = *obj.Key
+		}
+		if obj.Size != nil {
+			info.Size = *obj.Size
+		}
+		if obj.LastModified != nil {
+			info.LastModified = *obj.LastModified
+		}
+		objects = append(objects, info)
 	}
 
-	_, err = client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: &s.Bucket,
+	return objects, nil
+}
+
+func (s *S3Storage) Upload(ctx context.Context, key string, file multipart.File) (string, error) {
+	if _, err := s.client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: &s.bucket,
 		Body:   file,
 		Key:    &key,
-	})
-
-	if err != nil {
+	}); err != nil {
 		return "", err
 	}
 
-	return key, err
+	return key, nil
 }
 
-func (s *S3Storage) Delete(key string) error {
-	ctx := context.Background()
-	client, err := s.createClient(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, err = client.DeleteObject(ctx, &s3.DeleteObjectInput{
-		Bucket: &s.Bucket,
+func (s *S3Storage) Delete(ctx context.Context, key string) error {
+	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: &s.bucket,
 		Key:    &key,
 	})
 

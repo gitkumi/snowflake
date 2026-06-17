@@ -25,34 +25,42 @@ type HealthDependencies struct {
 {{- end }}
 }
 
+// HandleHealth reports dependency health and returns 503 when any dependency is
+// unreachable, so it can be used directly as a readiness probe.
 func HandleHealth(deps HealthDependencies) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		response := gin.H{
-			"status": "ok",
-		}
+		status := http.StatusOK
+		response := gin.H{"status": "ok"}
 
 {{- if ne .Database.String "none" }}
-		if err := deps.DB.Ping(); err != nil {
+		if err := deps.DB.PingContext(c.Request.Context()); err != nil {
 			response["db"] = "error"
+			status = http.StatusServiceUnavailable
 		} else {
 			response["db"] = "ok"
 		}
 {{- end }}
 
 {{- if eq .KeyValueStore "redis" }}
-		if redisStatus, err := deps.Redis.Ping(c.Request.Context()).Result(); err != nil {
+		if err := deps.Redis.Ping(c.Request.Context()).Err(); err != nil {
 			response["redis"] = "error"
+			status = http.StatusServiceUnavailable
 		} else {
-			response["redis"] = redisStatus
+			response["redis"] = "ok"
 		}
 {{- else if eq .KeyValueStore "valkey" }}
 		if err := deps.Valkey.Do(c.Request.Context(), deps.Valkey.B().Ping().Build()).Error(); err != nil {
 			response["valkey"] = "error"
+			status = http.StatusServiceUnavailable
 		} else {
-			response["valkey"] = "PONG"
+			response["valkey"] = "ok"
 		}
 {{- end }}
 
-		c.JSON(http.StatusOK, response)
+		if status != http.StatusOK {
+			response["status"] = "error"
+		}
+
+		c.JSON(status, response)
 	}
 }

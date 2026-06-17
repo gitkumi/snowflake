@@ -69,6 +69,13 @@ func runPostCommands(project *Project, outputPath string, quiet bool) error {
 		Name:    "go",
 		Args:    []string{"mod", "tidy"},
 	}, Command{
+		// goimports groups imports (stdlib / third-party / local) so generated
+		// files are formatted the way the project's own `make tidy` expects,
+		// regardless of how the templates ordered their imports.
+		Message: "snowflake: goimports",
+		Name:    "go",
+		Args:    []string{"run", "golang.org/x/tools/cmd/goimports@latest", "-w", "-local", project.Name, "."},
+	}, Command{
 		Message: "snowflake: gofmt",
 		Name:    "gofmt",
 		Args:    []string{"-w", "-s", "."},

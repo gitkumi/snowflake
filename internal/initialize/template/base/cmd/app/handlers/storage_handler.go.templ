@@ -1,0 +1,48 @@
+package handlers
+
+import (
+	"net/http"
+
+	"{{ .Name }}/internal/storage"
+
+	"github.com/gin-gonic/gin"
+)
+
+// HandleUploadObject stores an uploaded multipart file under its filename.
+func HandleUploadObject(store storage.Storage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		fileHeader, err := c.FormFile("file")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "file is required"})
+			return
+		}
+
+		file, err := fileHeader.Open()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		defer file.Close()
+
+		key, err := store.Upload(c.Request.Context(), fileHeader.Filename, file)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, gin.H{"key": key})
+	}
+}
+
+// HandleListObjects lists stored objects, optionally filtered by a ?prefix query.
+func HandleListObjects(store storage.Storage) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		objects, err := store.List(c.Request.Context(), c.Query("prefix"))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"objects": objects})
+	}
+}

@@ -6,6 +6,9 @@ CONTAINER_RUNTIME := {{ .ContainerRuntime.String }}
 include .env
 {{- if ne .Database.String "none" }}
 
+# goose is run via `go run` (it is already a module dependency), so no
+# separately installed goose binary is required.
+GOOSE := go run github.com/pressly/goose/v3/cmd/goose
 GOOSE_DRIVER := {{ .Database.Driver }}
 GOOSE_DBSTRING := $(DATABASE_CONN_STRING)
 GOOSE_MIGRATION_DIR := $(APP_DIR)/sql/migrations
@@ -24,7 +27,7 @@ audit:
 .PHONY: tidy
 tidy:
 	go mod tidy -v
-	go fmt ./...
+	go run golang.org/x/tools/cmd/goimports@latest -w -local {{ .Name }} .
 
 .PHONY: tools.install
 tools.install:
@@ -32,7 +35,6 @@ tools.install:
 	@go install github.com/air-verse/air@latest
 	@go install gotest.tools/gotestsum@latest
 	{{- if ne .Database.String "none" }}
-	@go install github.com/pressly/goose/v3/cmd/goose@latest
 	@go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 	{{- end }}
 	{{- if .Templ }}
@@ -46,7 +48,6 @@ tools.check:
 	@command -v air >/dev/null 2>&1 || { echo "air is not installed. Run 'make tools.install'"; exit 1; }
 	@command -v gotestsum >/dev/null 2>&1 || { echo "gotestsum is not installed. Run 'make tools.install'"; exit 1; }
 	{{- if ne .Database.String "none" }}
-	@command -v goose >/dev/null 2>&1 || { echo "goose is not installed. Run 'make tools.install'"; exit 1; }
 	@command -v sqlc >/dev/null 2>&1 || { echo "sqlc is not installed. Run 'make tools.install'"; exit 1; }
 	{{- end }}
 	{{- if .Templ }}
@@ -101,7 +102,7 @@ sqlc:
 
 .PHONY: db
 db:
-	goose status
+	$(GOOSE) status
 
 .PHONY: db.up
 db.up:
@@ -109,11 +110,11 @@ db.up:
 
 .PHONY: db.down
 db.down:
-	goose down
+	$(GOOSE) down
 
 .PHONY: db.reset
 db.reset:
-	goose reset && go run ./cmd/migrator
+	$(GOOSE) reset && go run ./cmd/migrator
 {{- end }}
 
 {{- if eq .Database.String "mysql" }}

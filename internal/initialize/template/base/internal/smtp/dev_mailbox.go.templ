@@ -1,6 +1,7 @@
 package smtp
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -50,7 +51,7 @@ func NewDevMailbox(from string, path string, logger *slog.Logger) *DevMailbox {
 }
 
 // Send captures an email into the mailbox, implementing the Mailer interface.
-func (m *DevMailbox) Send(email Email) error {
+func (m *DevMailbox) Send(ctx context.Context, email Email) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

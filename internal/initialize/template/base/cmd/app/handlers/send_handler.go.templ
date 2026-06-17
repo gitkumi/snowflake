@@ -19,7 +19,7 @@ func HandleSendEmail(mailer smtp.Mailer) gin.HandlerFunc {
 			return
 		}
 
-		if err := mailer.Send(smtp.Email{
+		if err := mailer.Send(c.Request.Context(), smtp.Email{
 			To:      to,
 			Subject: subject,
 			Body:    body,

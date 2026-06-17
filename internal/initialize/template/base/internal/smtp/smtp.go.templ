@@ -1,12 +1,18 @@
 package smtp
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	"github.com/wneessen/go-mail"
 )
 
-const defaultTimeout = 10 * time.Second
+const (
+	defaultTimeout = 10 * time.Second
+	maxAttempts    = 5
+	initialBackoff = time.Second
+)
 
 type SMTPMailer struct {
 	client *mail.Client
@@ -22,20 +28,21 @@ type SMTPMailerConfig struct {
 }
 
 func NewSMTPMailer(cfg *SMTPMailerConfig) (*SMTPMailer, error) {
-	client, err := mail.NewClient(cfg.Host, mail.WithTimeout(defaultTimeout), mail.WithSMTPAuth(mail.SMTPAuthLogin), mail.WithPort(cfg.Port), mail.WithUsername(cfg.Username), mail.WithPassword(cfg.Password))
+	client, err := mail.NewClient(cfg.Host,
+		mail.WithTimeout(defaultTimeout),
+		mail.WithSMTPAuth(mail.SMTPAuthLogin),
+		mail.WithPort(cfg.Port),
+		mail.WithUsername(cfg.Username),
+		mail.WithPassword(cfg.Password),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	mailer := &SMTPMailer{
-		client: client,
-		from:   cfg.From,
-	}
-
-	return mailer, nil
+	return &SMTPMailer{client: client, from: cfg.From}, nil
 }
 
-func (m *SMTPMailer) Send(email Email) error {
+func (m *SMTPMailer) Send(ctx context.Context, email Email) error {
 	message := mail.NewMsg()
 	if err := message.From(m.from); err != nil {
 		return err
@@ -46,13 +53,23 @@ func (m *SMTPMailer) Send(email Email) error {
 	message.Subject(email.Subject)
 	message.SetBodyString(mail.TypeTextPlain, email.Body)
 
+	backoff := initialBackoff
+
 	var err error
-	for range 5 {
-		if err = m.client.DialAndSend(message); err == nil {
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		if err = m.client.DialAndSendWithContext(ctx, message); err == nil {
 			return nil
 		}
-		time.Sleep(2 * time.Second)
+		if attempt == maxAttempts {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(backoff):
+			backoff *= 2
+		}
 	}
 
-	return err
+	return fmt.Errorf("send email after %d attempts: %w", maxAttempts, err)
 }
