@@ -109,6 +109,8 @@ func main() {
 		log.Fatal("failed to create jobs client: ", err)
 	}
 	defer jobsClient.Close()
+
+	jobs.Register(jobsClient)
 {{- end }}
 
 	srv := newServer(

@@ -123,6 +123,16 @@ func (s *server) run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
+{{- if .HasJobs }}
+	go func() {
+		s.logger.Info("background worker started")
+		if err := s.jobs.RunWorker(ctx); err != nil && !errors.Is(err, context.Canceled) {
+			s.logger.Error("worker error", "error", err)
+		}
+		s.logger.Info("background worker stopped")
+	}()
+{{- end }}
+
 	go func() {
 		<-ctx.Done()
 

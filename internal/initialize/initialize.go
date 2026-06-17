@@ -64,7 +64,7 @@ func Finalize(cfg *Config) error {
 		}
 	}
 
-	printSuccessMessage(project.Name, project.Database, project.HasKeyValueStore(), project.HasJobs(), cfg.Quiet)
+	printSuccessMessage(project.Name, project.Database, project.HasKeyValueStore(), cfg.Quiet)
 
 	return nil
 }
@@ -239,7 +239,7 @@ func normalizeConfig(cfg *Config) error {
 	return nil
 }
 
-func printSuccessMessage(projectName string, database Database, hasKeyValueStore bool, hasJobs bool, quiet bool) {
+func printSuccessMessage(projectName string, database Database, hasKeyValueStore bool, quiet bool) {
 	if quiet {
 		return
 	}
@@ -253,16 +253,11 @@ Run your new project:
 
 	if database == DatabasePostgres || database == DatabaseMySQL || database == DatabaseMariaDB || hasKeyValueStore {
 		successMessage += `
-  $ make app.devenv.up # Initialize the dev environment
-  $ make app.dev`
+  $ make devenv.up # Initialize the dev environment
+  $ make dev`
 	} else {
 		successMessage += `
-  $ make app.dev`
-	}
-
-	if hasJobs {
-		successMessage += `
-  $ make app.worker # Start the job worker (in a separate terminal)`
+  $ make dev`
 	}
 
 	fmt.Println(successMessage)

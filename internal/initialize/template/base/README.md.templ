@@ -19,23 +19,22 @@ Note: Be sure to check the docs of each tools.
 - `make tools.check` - Check if required tools are installed
 
 **App:**
-- `make app.run` - Run the app
-- `make app.dev` - Run with hot reload (air)
-- `make app.build` - Build the app
-- `make app.test` - Run tests
-- `make app.clean` - Remove build artifacts
+- `make run` - Run the app
+- `make dev` - Run with hot reload (air)
+- `make build` - Build the app
+- `make test` - Run tests
 {{- if .Templ }}
-- `make app.templ` - Generate templ files
+- `make templ` - Generate templ files
 {{- end }}
 {{- if ne .Database.String "none" }}
-- `make app.sqlc` - Generate sqlc code
-- `make app.db.up` - Run database migrations
-- `make app.db.down` - Rollback last migration
-- `make app.db.reset` - Reset and re-run all migrations
+- `make sqlc` - Generate sqlc code
+- `make db.up` - Run database migrations
+- `make db.down` - Rollback last migration
+- `make db.reset` - Reset and re-run all migrations
 {{- end }}
 {{- if .HasDevEnv }}
-- `make app.devenv.up` - Start dev environment containers
-- `make app.devenv.down` - Stop dev environment containers
+- `make devenv.up` - Start dev environment containers
+- `make devenv.down` - Stop dev environment containers
 {{- end }}
-- `make app.docker.build` - Build Docker image
-- `make app.docker.run` - Run Docker container
+- `make docker.build` - Build Docker image
+- `make docker.run` - Run Docker container

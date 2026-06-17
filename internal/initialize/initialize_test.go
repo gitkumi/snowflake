@@ -408,7 +408,6 @@ func jobsFiles(projectDir string) []string {
 		filepath.Join(projectDir, "internal", "jobs", "jobs.go"),
 		filepath.Join(projectDir, "internal", "jobs", "tasks.go"),
 		filepath.Join(projectDir, "internal", "jobs", "absurd.sql"),
-		filepath.Join(projectDir, "cmd", "worker", "main.go"),
 		filepath.Join(projectDir, "cmd", "app", "handlers", "jobs_handler.go"),
 	}
 }
@@ -438,6 +437,16 @@ func TestGenerateJobs(t *testing.T) {
 	migrator := mustReadFile(t, filepath.Join(projectDir, "cmd", "migrator", "main.go"))
 	if !strings.Contains(migrator, "jobs.Setup") {
 		t.Fatal("migrator should set up jobs when jobs are enabled")
+	}
+
+	// The app must register tasks and run the worker in-process.
+	main := mustReadFile(t, filepath.Join(projectDir, "cmd", "app", "main.go"))
+	if !strings.Contains(main, "jobs.Register") {
+		t.Fatal("app main should register jobs when jobs are enabled")
+	}
+	server := mustReadFile(t, filepath.Join(projectDir, "cmd", "app", "server.go"))
+	if !strings.Contains(server, "RunWorker") {
+		t.Fatal("app server should run the worker when jobs are enabled")
 	}
 
 	if err := assertInternalImportsResolve(projectDir, "acme"); err != nil {

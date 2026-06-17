@@ -58,9 +58,9 @@ func runPostCommands(project *Project, outputPath string, quiet bool) error {
 	// templ generate must run before go mod tidy so _templ.go files exist
 	if project.Templ {
 		commands = append(commands, Command{
-			Message: "snowflake: make app.templ",
+			Message: "snowflake: make templ",
 			Name:    "make",
-			Args:    []string{"app.templ"},
+			Args:    []string{"templ"},
 		})
 	}
 
@@ -76,16 +76,16 @@ func runPostCommands(project *Project, outputPath string, quiet bool) error {
 
 	if project.Database != DatabaseNone && hasSQLFiles(filepath.Join(outputPath, "cmd", "app", "sql", "queries")) {
 		commands = append(commands, Command{
-			Message: "snowflake: make app.sqlc",
+			Message: "snowflake: make sqlc",
 			Name:    "make",
-			Args:    []string{"app.sqlc"},
+			Args:    []string{"sqlc"},
 		})
 	}
 
 	commands = append(commands, Command{
-		Message: "snowflake: make app.build",
+		Message: "snowflake: make build",
 		Name:    "make",
-		Args:    []string{"app.build"},
+		Args:    []string{"build"},
 	})
 
 	return runCommands(commands, outputPath, quiet)

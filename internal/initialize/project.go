@@ -93,7 +93,6 @@ func NewProject(cfg *Config) *Project {
 				"/internal/jobs/jobs.go",
 				"/internal/jobs/tasks.go",
 				"/internal/jobs/absurd.sql",
-				"/cmd/worker/main.go",
 				"/cmd/app/handlers/jobs_handler.go",
 			},
 			Check: func(p *Project) bool { return !p.HasJobs() },
