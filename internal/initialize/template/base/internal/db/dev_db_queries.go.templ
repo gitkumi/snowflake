@@ -180,29 +180,9 @@ func devListColumns(db *sql.DB, table string) ([]columnInfo, error) {
 	return cols, rows.Err()
 }
 
+{{- if ne .Database.String "sqlite3" }}
 func devPrimaryKeyCols(db *sql.DB, table string) ([]string, error) {
-{{- if eq .Database.String "sqlite3" }}
-	rows, err := db.Query(fmt.Sprintf("PRAGMA table_info(%s)", devQuoteIdent(table)))
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var cols []string
-	for rows.Next() {
-		var cid int
-		var name, dataType string
-		var notNull int
-		var dflt sql.NullString
-		var pk int
-		if err := rows.Scan(&cid, &name, &dataType, &notNull, &dflt, &pk); err != nil {
-			return nil, err
-		}
-		if pk > 0 {
-			cols = append(cols, name)
-		}
-	}
-{{- else if eq .Database.String "postgres" }}
+{{- if eq .Database.String "postgres" }}
 	rows, err := db.Query(`
 		SELECT kcu.column_name
 		FROM information_schema.table_constraints tc
@@ -252,6 +232,7 @@ func devPrimaryKeyCols(db *sql.DB, table string) ([]string, error) {
 {{- end }}
 	return cols, rows.Err()
 }
+{{- end }}
 
 func devCountRows(db *sql.DB, table string) (int64, error) {
 	var count int64

@@ -347,7 +347,6 @@ func validUTF8Prefix(data []byte) []byte {
 }
 
 func tempPattern(key string) string {
-	key = strings.ReplaceAll(key, string(filepath.Separator), "_")
 	key = strings.ReplaceAll(key, "/", "_")
 	if key == "" || key == "." {
 		return "object"

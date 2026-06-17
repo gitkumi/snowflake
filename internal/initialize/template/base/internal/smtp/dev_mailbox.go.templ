@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"slices"
 	"sync"
 	"time"
 {{- if .DevMailboxDashboard }}
@@ -93,9 +94,8 @@ func (m *DevMailbox) List() []StoredEmail {
 	defer m.mu.RUnlock()
 
 	out := make([]StoredEmail, len(m.emails))
-	for i, e := range m.emails {
-		out[len(m.emails)-1-i] = e
-	}
+	copy(out, m.emails)
+	slices.Reverse(out)
 	return out
 }
 

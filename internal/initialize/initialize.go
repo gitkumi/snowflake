@@ -253,12 +253,14 @@ Run your new project:
 
 	if database == DatabasePostgres || database == DatabaseMySQL || database == DatabaseMariaDB || hasKeyValueStore {
 		successMessage += `
-  $ make devenv.up # Initialize the dev environment
-  $ make dev`
-	} else {
-		successMessage += `
-  $ make dev`
+  $ make devenv.up # Start the dev environment`
 	}
+	if database != DatabaseNone {
+		successMessage += `
+  $ make db.up     # Run database migrations`
+	}
+	successMessage += `
+  $ make dev`
 
 	fmt.Println(successMessage)
 }

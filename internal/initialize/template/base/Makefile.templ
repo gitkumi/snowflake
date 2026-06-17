@@ -105,7 +105,7 @@ db:
 
 .PHONY: db.up
 db.up:
-	goose up
+	go run ./cmd/migrator
 
 .PHONY: db.down
 db.down:
@@ -113,7 +113,7 @@ db.down:
 
 .PHONY: db.reset
 db.reset:
-	goose reset && goose up
+	goose reset && go run ./cmd/migrator
 {{- end }}
 
 {{- if eq .Database.String "mysql" }}
@@ -173,7 +173,7 @@ docker.run:
 
 .PHONY: devenv.up
 devenv.up:
-	$(CONTAINER_RUNTIME) compose -f devenv.yaml up -d
+	$(CONTAINER_RUNTIME) compose -f devenv.yaml up -d --wait
 
 .PHONY: devenv.down
 devenv.down:

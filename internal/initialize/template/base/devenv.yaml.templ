@@ -5,6 +5,11 @@
     restart: unless-stopped
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
 {{- end }}
 
 {{- define "valkey" }}
@@ -14,6 +19,11 @@
     restart: unless-stopped
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
 {{- end }}
 
 {{- define "postgres" }}
@@ -29,6 +39,11 @@
       POSTGRES_DB: {{ .Name }}
     volumes:
       - postgres_{{ .Name }}_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d {{ .Name }}"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
 {{- end }}
 
 {{- define "mysql" }}
@@ -45,6 +60,11 @@
       MYSQL_DATABASE: {{ .Name }}
     volumes:
       - mysql_{{ .Name }}_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -pmysql --silent"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
 {{- end }}
 
 {{- define "mariadb" }}
@@ -61,6 +81,11 @@
       MARIADB_DATABASE: {{ .Name }}
     volumes:
       - mariadb_{{ .Name }}_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
 {{- end }}
 
 {{- $volName := "" -}}

@@ -28,6 +28,7 @@ Note: Be sure to check the docs of each tools.
 {{- end }}
 {{- if ne .Database.String "none" }}
 - `make sqlc` - Generate sqlc code
+- `make db` - Show migration status
 - `make db.up` - Run database migrations
 - `make db.down` - Rollback last migration
 - `make db.reset` - Reset and re-run all migrations

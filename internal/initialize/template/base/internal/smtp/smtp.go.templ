@@ -47,7 +47,7 @@ func (m *SMTPMailer) Send(email Email) error {
 	message.SetBodyString(mail.TypeTextPlain, email.Body)
 
 	var err error
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		if err = m.client.DialAndSend(message); err == nil {
 			return nil
 		}
