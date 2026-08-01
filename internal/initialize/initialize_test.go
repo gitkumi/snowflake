@@ -543,6 +543,83 @@ func TestEnvFilesGenerated(t *testing.T) {
 	}
 }
 
+func TestGenerateDevContainer(t *testing.T) {
+	projectDir := generateProject(t, initialize.Config{
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabasePostgres,
+		Git:           false,
+		KeyValueStore: initialize.KeyValueStoreRedis,
+	})
+
+	devcontainer := mustReadFile(t, filepath.Join(projectDir, ".devcontainer", "devcontainer.json"))
+	for _, want := range []string{`"dockerComposeFile": "compose.yaml"`, `"service": "app"`, `"workspaceFolder": "/workspaces/acme"`} {
+		if !strings.Contains(devcontainer, want) {
+			t.Fatalf("devcontainer.json missing %q", want)
+		}
+	}
+
+	compose := mustReadFile(t, filepath.Join(projectDir, ".devcontainer", "compose.yaml"))
+	for _, want := range []string{"  app:", "  db:", "  redis:", "..:/workspaces/acme:cached", "host=db", "REDIS_ADDR: redis:6379"} {
+		if !strings.Contains(compose, want) {
+			t.Fatalf("compose.yaml missing %q", want)
+		}
+	}
+
+	makefile := mustReadFile(t, filepath.Join(projectDir, "Makefile"))
+	for _, want := range []string{"devcontainer.up:", "devcontainer.down:", "devcontainer.shell:", ".devcontainer/compose.yaml"} {
+		if !strings.Contains(makefile, want) {
+			t.Fatalf("Makefile missing %q", want)
+		}
+	}
+	if strings.Contains(makefile, "devenv") {
+		t.Fatal("Makefile still references the old devenv targets")
+	}
+}
+
+func TestGenerateNoDevContainer(t *testing.T) {
+	// Neither a database service nor a key-value store means nothing to run
+	// alongside the app, so the devcontainer is skipped.
+	for _, database := range []initialize.Database{initialize.DatabaseSQLite3, initialize.DatabaseNone} {
+		t.Run(database.String(), func(t *testing.T) {
+			projectDir := generateProject(t, initialize.Config{
+				Quiet:         true,
+				Name:          "acme",
+				Database:      database,
+				Git:           false,
+				KeyValueStore: initialize.KeyValueStoreNone,
+			})
+
+			if _, err := os.Stat(filepath.Join(projectDir, ".devcontainer")); !os.IsNotExist(err) {
+				t.Fatal(".devcontainer should not be generated without any services")
+			}
+
+			makefile := mustReadFile(t, filepath.Join(projectDir, "Makefile"))
+			if strings.Contains(makefile, "devcontainer.up:") {
+				t.Fatal("Makefile should not define devcontainer targets without a devcontainer")
+			}
+		})
+	}
+}
+
+func TestGenerateDevContainerWithoutDatabase(t *testing.T) {
+	projectDir := generateProject(t, initialize.Config{
+		Quiet:         true,
+		Name:          "acme",
+		Database:      initialize.DatabaseNone,
+		Git:           false,
+		KeyValueStore: initialize.KeyValueStoreValkey,
+	})
+
+	compose := mustReadFile(t, filepath.Join(projectDir, ".devcontainer", "compose.yaml"))
+	if !strings.Contains(compose, "  valkey:") {
+		t.Fatal("compose.yaml should define the valkey service")
+	}
+	if strings.Contains(compose, "DATABASE_CONN_STRING") {
+		t.Fatal("compose.yaml should not override DATABASE_CONN_STRING without a database")
+	}
+}
+
 func TestGeneratedMailboxCreatesStorageDirectory(t *testing.T) {
 	projectDir := generateProject(t, initialize.Config{
 		Quiet:    true,

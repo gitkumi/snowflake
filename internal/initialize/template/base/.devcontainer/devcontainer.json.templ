@@ -1,0 +1,20 @@
+{
+  "name": "{{ .Name }}",
+  "dockerComposeFile": "compose.yaml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/{{ .Name }}",
+  "remoteUser": "vscode",
+  "postCreateCommand": "make tools.install",
+  "forwardPorts": [8080{{ if ne .Database.String "none" }}{{ if eq .Database.String "postgres" }}, 5432{{ else if or (eq .Database.String "mysql") (eq .Database.String "mariadb") }}, 3306{{ end }}{{ end }}{{ if .HasKeyValueStore }}, 6379{{ end }}],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go"{{ if .Templ }},
+        "a-h.templ"{{ end }}
+      ],
+      "settings": {
+        "go.toolsManagement.autoUpdate": false
+      }
+    }
+  }
+}

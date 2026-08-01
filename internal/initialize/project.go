@@ -22,12 +22,18 @@ func NewProject(cfg *Config) *Project {
 	project.fileExclusions = []FileExclusion{
 		{
 			FilePaths: []string{
-				"/devenv.yaml",
 				"/Dockerfile",
 			},
 			Check: func(p *Project) bool {
 				return p.Database == DatabaseSQLite3 && !p.HasKeyValueStore()
 			},
+		},
+		{
+			FilePaths: []string{
+				"/.devcontainer/devcontainer.json",
+				"/.devcontainer/compose.yaml",
+			},
+			Check: func(p *Project) bool { return !p.HasDevContainer() },
 		},
 		{
 			FilePaths: []string{
@@ -85,7 +91,6 @@ func NewProject(cfg *Config) *Project {
 				"/cmd/app/sql/sql.go",
 				"/cmd/migrator/main.go",
 				"/internal/db/db.go",
-				"/devenv.yaml",
 			},
 			Check: func(p *Project) bool { return p.Database == DatabaseNone },
 		},
@@ -124,8 +129,17 @@ func (p *Project) HasJobs() bool {
 	return p.JobProcessor != JobProcessorNone
 }
 
-func (p *Project) HasDevEnv() bool {
-	return !(p.Database == DatabaseSQLite3 && !p.HasKeyValueStore())
+// HasDatabaseService reports whether the database runs as its own container.
+// SQLite is a file, so it needs no service.
+func (p *Project) HasDatabaseService() bool {
+	return p.Database == DatabasePostgres || p.Database == DatabaseMySQL || p.Database == DatabaseMariaDB
+}
+
+// HasDevContainer reports whether the project gets a .devcontainer/. There is
+// nothing to run when the project has neither a database service nor a
+// key-value store, so the devcontainer is skipped in that case.
+func (p *Project) HasDevContainer() bool {
+	return p.HasDatabaseService() || p.HasKeyValueStore()
 }
 
 func (p *Project) ExcludeFile(templateFileName string) bool {
