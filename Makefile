@@ -38,7 +38,7 @@ build-all:
 	GOOS=darwin GOARCH=amd64 go build -o dist/snowflake_darwin_amd64 ./main.go; \
 	GOOS=darwin GOARCH=arm64 go build -o dist/snowflake_darwin_arm64 ./main.go; \
 	GOOS=windows GOARCH=amd64 go build -o dist/snowflake_windows_amd64.exe ./main.go;
-	@cd dist && sha256sum * > SHA256SUMS
+	@cd dist && sha256sum snowflake_* > SHA256SUMS
 	@echo "Done! Binaries are in the dist/ directory"
 
 .PHONY: tools.install

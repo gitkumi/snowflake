@@ -1,3 +1,4 @@
 template/devproject
 bin
+dist
 coverage.*

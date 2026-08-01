@@ -20,6 +20,8 @@ jobs:
   release:
     needs: validate-tag
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # required to create the GitHub Release
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -51,4 +53,14 @@ jobs:
         run: make build-all
 
       - name: Publish to Go proxy
-        run: GOPROXY=proxy.golang.org go list -m github.com/gitkumi/snowflake@${{ steps.get_version.outputs.VERSION }} 
+        run: GOPROXY=proxy.golang.org go list -m github.com/gitkumi/snowflake@${{ steps.get_version.outputs.VERSION }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.get_version.outputs.VERSION }}
+          files: |
+            dist/snowflake_*
+            dist/SHA256SUMS
+          generate_release_notes: true
+          fail_on_unmatched_files: true
