@@ -6,7 +6,19 @@ on:
       - 'v*'
 
 jobs:
+  validate-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # needs full tag history to find the previous version
+
+      - name: Validate version tag
+        run: ./scripts/validate-tag.sh "${GITHUB_REF#refs/tags/}"
+
   release:
+    needs: validate-tag
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

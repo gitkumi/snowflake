@@ -52,3 +52,11 @@ tools.install:
 .PHONY: versions
 versions:
 	@git tag -l --sort=-v:refname | head -n 10
+
+.PHONY: release.patch release.minor release.major
+release.patch:
+	@./scripts/release.sh patch
+release.minor:
+	@./scripts/release.sh minor
+release.major:
+	@./scripts/release.sh major
