@@ -253,11 +253,11 @@ Run your new project:
 
 	if database == DatabasePostgres || database == DatabaseMySQL || database == DatabaseMariaDB || hasKeyValueStore {
 		successMessage += `
-  $ make devcontainer.up # Start the dev environment`
+  $ make devenv.up # Start the dev environment`
 	}
 	if database != DatabaseNone {
 		successMessage += `
-  $ make db.up           # Run database migrations`
+  $ make db.up     # Run database migrations`
 	}
 	successMessage += `
   $ make dev`

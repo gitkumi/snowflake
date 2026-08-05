@@ -3,18 +3,8 @@ APP_DIR := cmd/app
 BUILD_DIR := bin
 CONTAINER_RUNTIME := {{ .ContainerRuntime.String }}
 
-{{- if ne .Database.String "none" }}
-# Captured before .env is included: .env points at localhost, which is right on
-# the host but not inside the devcontainer, where the compose service sets
-# DATABASE_CONN_STRING in the environment.
-DATABASE_CONN_STRING_ENV := $(DATABASE_CONN_STRING)
-{{- end }}
-
 include .env
 {{- if ne .Database.String "none" }}
-
-# A real environment variable wins over the .env value.
-DATABASE_CONN_STRING := $(or $(DATABASE_CONN_STRING_ENV),$(DATABASE_CONN_STRING))
 
 # goose is run via `go run` (it is already a module dependency), so no
 # separately installed goose binary is required.
@@ -63,9 +53,8 @@ tools.check:
 	{{- if .Templ }}
 	@command -v templ >/dev/null 2>&1 || { echo "templ is not installed. Run 'make tools.install'"; exit 1; }
 	{{- end }}
-	@# The container runtime lives on the host, not inside the devcontainer.
-	@[ -n "$(DEVCONTAINER)" ] || command -v {{ .ContainerRuntime.String }} >/dev/null 2>&1 || { echo "{{ .ContainerRuntime.String }} is not installed"; exit 1; }
-	@[ -n "$(DEVCONTAINER)" ] || command -v {{ .ContainerRuntime.String }} compose >/dev/null 2>&1 || { echo "{{ .ContainerRuntime.String }} compose is not installed"; exit 1; }
+	@command -v {{ .ContainerRuntime.String }} >/dev/null 2>&1 || { echo "{{ .ContainerRuntime.String }} is not installed"; exit 1; }
+	@command -v {{ .ContainerRuntime.String }} compose >/dev/null 2>&1 || { echo "{{ .ContainerRuntime.String }} compose is not installed"; exit 1; }
 	@echo "All required tools are installed!"
 
 .PHONY: run
@@ -181,27 +170,17 @@ docker.build:
 docker.run:
 	$(CONTAINER_RUNTIME) run --rm -p 8080:8080 -v $(CURDIR)/.env:/app/.env:ro {{ .Name }}-$(APP_NAME):latest
 
-{{- if .HasDevContainer }}
+{{- if .HasDevEnv }}
 
-DEVCONTAINER_COMPOSE := .devcontainer/compose.yaml
+.PHONY: devenv.up
+devenv.up:
+	$(CONTAINER_RUNTIME) compose -f devenv.yaml up -d --wait
 
-.PHONY: devcontainer.up
-devcontainer.up:
-	$(CONTAINER_RUNTIME) compose -f $(DEVCONTAINER_COMPOSE) up -d --wait
+.PHONY: devenv.down
+devenv.down:
+	$(CONTAINER_RUNTIME) compose -f devenv.yaml down -v
 
-.PHONY: devcontainer.down
-devcontainer.down:
-	$(CONTAINER_RUNTIME) compose -f $(DEVCONTAINER_COMPOSE) down -v
-
-.PHONY: devcontainer.logs
-devcontainer.logs:
-	$(CONTAINER_RUNTIME) compose -f $(DEVCONTAINER_COMPOSE) logs -f
-
-.PHONY: devcontainer.shell
-devcontainer.shell:
-	$(CONTAINER_RUNTIME) compose -f $(DEVCONTAINER_COMPOSE) exec app bash
-
-.PHONY: devcontainer.rebuild
-devcontainer.rebuild:
-	$(CONTAINER_RUNTIME) compose -f $(DEVCONTAINER_COMPOSE) up -d --build --force-recreate --wait
+.PHONY: devenv.logs
+devenv.logs:
+	$(CONTAINER_RUNTIME) compose -f devenv.yaml logs -f
 {{- end }}

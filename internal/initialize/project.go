@@ -30,10 +30,9 @@ func NewProject(cfg *Config) *Project {
 		},
 		{
 			FilePaths: []string{
-				"/.devcontainer/devcontainer.json",
-				"/.devcontainer/compose.yaml",
+				"/devenv.yaml",
 			},
-			Check: func(p *Project) bool { return !p.HasDevContainer() },
+			Check: func(p *Project) bool { return !p.HasDevEnv() },
 		},
 		{
 			FilePaths: []string{
@@ -135,10 +134,10 @@ func (p *Project) HasDatabaseService() bool {
 	return p.Database == DatabasePostgres || p.Database == DatabaseMySQL || p.Database == DatabaseMariaDB
 }
 
-// HasDevContainer reports whether the project gets a .devcontainer/. There is
-// nothing to run when the project has neither a database service nor a
-// key-value store, so the devcontainer is skipped in that case.
-func (p *Project) HasDevContainer() bool {
+// HasDevEnv reports whether the project gets a devenv.yaml. It holds the
+// accessory services only — the app itself runs natively on the host — so
+// there is nothing to run without a database service or a key-value store.
+func (p *Project) HasDevEnv() bool {
 	return p.HasDatabaseService() || p.HasKeyValueStore()
 }
 

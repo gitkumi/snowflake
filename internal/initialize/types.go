@@ -51,23 +51,6 @@ func (d Database) ConnString(projectName string) string {
 	}
 }
 
-// ContainerConnString is ConnString with the host swapped for the compose
-// service name, for processes running inside the devcontainer.
-func (d Database) ContainerConnString(projectName string) string {
-	switch d {
-	case DatabaseSQLite3:
-		return projectName + "_dev.db"
-	case DatabasePostgres:
-		return fmt.Sprintf("user=postgres password=postgres dbname=%s host=db port=5432 sslmode=disable", projectName)
-	case DatabaseMySQL:
-		return fmt.Sprintf("mysql:mysql@tcp(mysql:3306)/%s?parseTime=true", projectName)
-	case DatabaseMariaDB:
-		return fmt.Sprintf("mariadb:mariadb@tcp(mariadb:3306)/%s?parseTime=true", projectName)
-	default:
-		return ""
-	}
-}
-
 func (d Database) Driver() string {
 	switch d {
 	case DatabaseSQLite3:

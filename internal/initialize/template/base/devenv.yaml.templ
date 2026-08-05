@@ -89,49 +89,7 @@
 {{- end }}
 
 {{- $volName := "" -}}
-{{- $dbService := "" -}}
-{{- if eq .Database.String "postgres" }}{{ $dbService = "db" }}{{ else if eq .Database.String "mysql" }}{{ $dbService = "mysql" }}{{ else if eq .Database.String "mariadb" }}{{ $dbService = "mariadb" }}{{ end -}}
 services:
-  # Development container. The editor attaches here, so `make dev`, `make test`
-  # and the goose/sqlc targets all run inside this service.
-  app:
-    image: mcr.microsoft.com/devcontainers/go:1-bookworm
-    container_name: dev_{{ .Name }}_app
-    command: sleep infinity
-    working_dir: /workspaces/{{ .Name }}
-    volumes:
-      - ..:/workspaces/{{ .Name }}:cached
-    ports:
-      - "8080:8080"
-    environment:
-      DEVCONTAINER: "true"
-{{- if or $dbService .HasKeyValueStore }}
-      # .env points at localhost for host-side tooling. Inside the container the
-      # services are reachable by name instead. godotenv does not override
-      # variables that are already set, so these win over .env.
-  {{- if $dbService }}
-      DATABASE_CONN_STRING: {{ .Database.ContainerConnString .Name }}
-  {{- end }}
-  {{- if eq .KeyValueStore "redis" }}
-      REDIS_ADDR: redis:6379
-  {{- else if eq .KeyValueStore "valkey" }}
-      VALKEY_ADDR: valkey:6379
-  {{- end }}
-{{- end }}
-{{- if or $dbService .HasKeyValueStore }}
-    depends_on:
-  {{- if $dbService }}
-      {{ $dbService }}:
-        condition: service_healthy
-  {{- end }}
-  {{- if eq .KeyValueStore "redis" }}
-      redis:
-        condition: service_healthy
-  {{- else if eq .KeyValueStore "valkey" }}
-      valkey:
-        condition: service_healthy
-  {{- end }}
-{{- end }}
 {{- if eq .Database.String "postgres" }}
 {{ template "postgres" . }}
 {{- $volName = printf "postgres_%s_data" .Name }}
@@ -153,3 +111,4 @@ services:
 volumes:
   {{ $volName }}:
 {{- end }}
+

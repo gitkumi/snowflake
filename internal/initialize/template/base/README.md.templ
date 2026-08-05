@@ -3,34 +3,10 @@
 Snowflake project.
 
 ## Setup
-{{- if .HasDevContainer }}
-
-The project ships a devcontainer (`.devcontainer/`). Open it in an editor that
-supports the Dev Containers spec, or start the stack yourself:
-
-```sh
-make devcontainer.up
-make devcontainer.shell
-```
-
-The dev tools are installed inside the container by `postCreateCommand`; run
-`make tools.install` manually if you started the stack by hand. Inside the
-container the services are reachable by their compose service names
-({{ if .HasDatabaseService }}`{{ if eq .Database.String "postgres" }}db{{ else if eq .Database.String "mysql" }}mysql{{ else }}mariadb{{ end }}`{{ if .HasKeyValueStore }}, {{ end }}{{ end }}{{ if .HasKeyValueStore }}`{{ .KeyValueStore.String }}`{{ end }}) rather than `localhost`; the compose
-file sets the matching env vars, which take precedence over `.env`.
-
-To work on the host instead, the service ports are published to `localhost`,
-which is what `.env` points at:
 
 ```sh
 make tools.install
 ```
-{{- else }}
-
-```sh
-make tools.install
-```
-{{- end }}
 
 Note: Be sure to check the docs of each tools.
 
@@ -57,12 +33,9 @@ Note: Be sure to check the docs of each tools.
 - `make db.down` - Rollback last migration
 - `make db.reset` - Reset and re-run all migrations
 {{- end }}
-{{- if .HasDevContainer }}
-- `make devcontainer.up` - Start the devcontainer stack
-- `make devcontainer.down` - Stop the devcontainer stack (removes volumes)
-- `make devcontainer.logs` - Tail devcontainer logs
-- `make devcontainer.shell` - Open a shell inside the dev container
-- `make devcontainer.rebuild` - Recreate the devcontainer stack
+{{- if .HasDevEnv }}
+- `make devenv.up` - Start dev environment containers
+- `make devenv.down` - Stop dev environment containers
 {{- end }}
 - `make docker.build` - Build Docker image
 - `make docker.run` - Run Docker container
