@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"fmt"
 	"log"
+	"os"
 
 	"{{.Name}}/cmd/app/env"
-	"{{.Name}}/cmd/app/sql"
+	appsql "{{.Name}}/cmd/app/sql"
 	"{{.Name}}/internal/db"
 {{- if .HasJobs }}
 	"{{.Name}}/internal/jobs"
@@ -16,9 +19,22 @@ import (
 	"github.com/pressly/goose/v3"
 )
 
+const migrationsDir = "migrations"
+
 func main() {
+	command := "up"
+	if len(os.Args) > 1 {
+		command = os.Args[1]
+	}
+
+	if err := run(command); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run(command string) error {
 	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal("failed to load .env: ", err)
+		return fmt.Errorf("load .env: %w", err)
 	}
 
 	vars := env.Load()
@@ -28,22 +44,56 @@ func main() {
 		DatabaseConnString: vars.DatabaseConnString,
 	})
 	if err != nil {
-		log.Fatal("failed to create DB: ", err)
+		return fmt.Errorf("create DB: %w", err)
 	}
 	defer database.Close()
 
-	goose.SetBaseFS(sql.Migration)
+	goose.SetBaseFS(appsql.Migration)
 	if err := goose.SetDialect("{{.Database.Driver}}"); err != nil {
-		log.Fatal("failed to set dialect: ", err)
+		return fmt.Errorf("set dialect: %w", err)
 	}
 
-	if err := goose.Up(database, "migrations"); err != nil && !errors.Is(err, goose.ErrNoMigrationFiles) {
-		log.Fatal("failed to run migrations: ", err)
+	switch command {
+	case "up":
+		return up({{ if .HasJobs }}ctx, {{ end }}database{{ if .HasJobs }}, vars.JobsQueueName{{ end }})
+	case "down":
+		if err := ignoreNoMigrations(goose.Down(database, migrationsDir)); err != nil {
+			return fmt.Errorf("roll back migration: %w", err)
+		}
+		return nil
+	case "status":
+		if err := ignoreNoMigrations(goose.Status(database, migrationsDir)); err != nil {
+			return fmt.Errorf("read migration status: %w", err)
+		}
+		return nil
+	case "reset":
+		if err := ignoreNoMigrations(goose.Reset(database, migrationsDir)); err != nil {
+			return fmt.Errorf("reset migrations: %w", err)
+		}
+		return up({{ if .HasJobs }}ctx, {{ end }}database{{ if .HasJobs }}, vars.JobsQueueName{{ end }})
+	default:
+		return fmt.Errorf("unknown command %q: want up, down, status or reset", command)
+	}
+}
+
+func up({{ if .HasJobs }}ctx context.Context, {{ end }}database *sql.DB{{ if .HasJobs }}, queueName string{{ end }}) error {
+	if err := ignoreNoMigrations(goose.Up(database, migrationsDir)); err != nil {
+		return fmt.Errorf("run migrations: %w", err)
 	}
 {{- if .HasJobs }}
 
-	if err := jobs.Setup(ctx, database, vars.JobsQueueName); err != nil {
-		log.Fatal("failed to set up jobs: ", err)
+	if err := jobs.Setup(ctx, database, queueName); err != nil {
+		return fmt.Errorf("set up jobs: %w", err)
 	}
 {{- end }}
+
+	return nil
+}
+
+func ignoreNoMigrations(err error) error {
+	if errors.Is(err, goose.ErrNoMigrationFiles) {
+		return nil
+	}
+
+	return err
 }

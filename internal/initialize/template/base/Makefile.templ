@@ -3,18 +3,6 @@ APP_DIR := cmd/app
 BUILD_DIR := bin
 CONTAINER_RUNTIME := {{ .ContainerRuntime.String }}
 
-include .env
-{{- if ne .Database.String "none" }}
-
-# goose is run via `go run` (it is already a module dependency), so no
-# separately installed goose binary is required.
-GOOSE := go run github.com/pressly/goose/v3/cmd/goose
-GOOSE_DRIVER := {{ .Database.Driver }}
-GOOSE_DBSTRING := $(DATABASE_CONN_STRING)
-GOOSE_MIGRATION_DIR := $(APP_DIR)/sql/migrations
-export GOOSE_DRIVER GOOSE_DBSTRING GOOSE_MIGRATION_DIR
-{{- end }}
-
 .PHONY: audit
 audit:
 	go mod tidy -diff
@@ -102,19 +90,19 @@ sqlc:
 
 .PHONY: db
 db:
-	$(GOOSE) status
+	go run ./cmd/migrator status
 
 .PHONY: db.up
 db.up:
-	go run ./cmd/migrator
+	go run ./cmd/migrator up
 
 .PHONY: db.down
 db.down:
-	$(GOOSE) down
+	go run ./cmd/migrator down
 
 .PHONY: db.reset
 db.reset:
-	$(GOOSE) reset && go run ./cmd/migrator
+	go run ./cmd/migrator reset
 {{- end }}
 
 {{- if eq .Database.String "mysql" }}
