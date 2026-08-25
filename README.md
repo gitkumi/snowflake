@@ -52,3 +52,8 @@ Supports "sqlite3", "postgres", "mysql", "mariadb"
 #### Testing
 
 - [gotestsum](https://github.com/gotestyourself/gotestsum)
+
+
+## Inspired by
+
+https://grafana.com/blog/how-i-write-http-services-in-go-after-13-years/

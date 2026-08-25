@@ -15,7 +15,7 @@ make run               # run the CLI
 
 ## Architecture
 
-- `main.go` / `cmd/cli/main.go` — Cobra CLI wiring
+- `main.go` — Cobra CLI wiring
 - `internal/command/tui/` — interactive TUI (charmbracelet/huh)
 - `internal/command/run/` — non-interactive CLI flags
 - `internal/command/generate/` — `gen resource` and `gen migration` subcommands
